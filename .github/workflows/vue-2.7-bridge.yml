@@ -1,0 +1,134 @@
+name: Build Vue 2.7 bridge
+
+on:
+  push:
+    branches:
+      - chore/vue-2.7-bridge
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out migration branch
+        uses: actions/checkout@v6
+        with:
+          ref: chore/vue-2.7-bridge
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Migrate to Vue 2.7 native Composition API
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs')
+          const path = require('path')
+
+          const sourceExtensions = new Set(['.ts', '.vue'])
+
+          function walk(directory) {
+            for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+              const fullPath = path.join(directory, entry.name)
+              if (entry.isDirectory()) {
+                walk(fullPath)
+                continue
+              }
+              if (!sourceExtensions.has(path.extname(entry.name))) {
+                continue
+              }
+
+              const original = fs.readFileSync(fullPath, 'utf8')
+              const pluginIdentifiers = []
+              let updated = original.replace(
+                /^\s*import\s+([A-Za-z_$][\w$]*)\s+from\s+['"]@vue\/composition-api['"];?\s*\r?\n/gm,
+                (_match, identifier) => {
+                  pluginIdentifiers.push(identifier)
+                  return ''
+                }
+              )
+
+              for (const identifier of pluginIdentifiers) {
+                const escaped = identifier.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+                updated = updated.replace(
+                  new RegExp(`^\\s*Vue\\.use\\(\\s*${escaped}\\s*\\);?\\s*\\r?\\n`, 'gm'),
+                  ''
+                )
+              }
+
+              updated = updated.replace(
+                /(['"])@vue\/composition-api\1/g,
+                (_match, quote) => `${quote}vue${quote}`
+              )
+
+              if (updated !== original) {
+                fs.writeFileSync(fullPath, updated)
+              }
+            }
+          }
+
+          walk('src')
+
+          const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+          delete packageJson.dependencies['@vue/composition-api']
+          packageJson.dependencies.vue = '^2.7.16'
+          delete packageJson.devDependencies['vue-template-compiler']
+          fs.writeFileSync('package.json', `${JSON.stringify(packageJson, null, '\t')}\n`)
+
+          const tsconfig = JSON.parse(fs.readFileSync('tsconfig.json', 'utf8'))
+          tsconfig.vueCompilerOptions = {
+            ...(tsconfig.vueCompilerOptions || {}),
+            target: 2.7
+          }
+          fs.writeFileSync('tsconfig.json', `${JSON.stringify(tsconfig, null, '\t')}\n`)
+          NODE
+
+      - name: Regenerate lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Install migrated dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Format migrated source
+        run: npm run prettier-format
+
+      - name: Verify removed plugin references
+        shell: bash
+        run: |
+          if grep -R '@vue/composition-api' src package.json package-lock.json; then
+            echo 'Legacy Composition API plugin references remain.' >&2
+            exit 1
+          fi
+
+      - name: Run ESLint
+        run: npm run eslint
+
+      - name: Run Prettier check
+        run: npm run prettier-check
+
+      - name: Build Chrome and Firefox packages
+        run: npm run build
+
+      - name: Commit migration result
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/vue-2.7-bridge.yml .github/vue-2.7-trigger
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Migrate to Vue 2.7 native Composition API'
+          git push origin HEAD:chore/vue-2.7-bridge
