@@ -6,71 +6,73 @@ import ApiListMode from '../api/enum/ApiListMode'
 import ApiList from '../api/enum/ApiList'
 import PiHoleApiStatusEnum from '../api/enum/PiHoleApiStatusEnum'
 import { PiHoleAuth } from '../api/models/PiHoleAuth'
-import { PiHoleDomains } from '../api/models/PiHoleDomains'
+import { PiHoleDomain, PiHoleDomains } from '../api/models/PiHoleDomains'
+import { PiHoleGroup, PiHoleGroups } from '../api/models/PiHoleGroups'
+
+export type DomainMutationPayload = {
+  comment: string | null
+  groups: number[]
+  enabled: boolean
+}
 
 export default class PiHoleApiService {
+  public static async getConfiguredPiHoles(): Promise<PiHoleSettingsStorage[]> {
+    const piHoleSettingsArray = await StorageService.getPiHoleSettingsArray()
+    if (!piHoleSettingsArray || piHoleSettingsArray.length < 1) {
+      return Promise.reject('PiHoleSettings empty')
+    }
+
+    for (const piHole of piHoleSettingsArray) {
+      if (!piHole.pi_uri_base || typeof piHole.api_key === 'undefined') {
+        return Promise.reject('Some PiHoleSettings are undefined.')
+      }
+    }
+
+    return piHoleSettingsArray
+  }
+
   public static async getPiHoleStatusCombined(): Promise<PiHoleApiStatusEnum> {
-    return new Promise<PiHoleApiStatusEnum>(resolve => {
-      this.getPiHoleStatus()
-        .then(results => {
-          for (const result of results) {
-            const resultData = result.data
-            // If any PiHole is offline or has an error we use its status
-            if (
-              resultData.blocking === PiHoleApiStatusEnum.error ||
-              resultData.blocking === PiHoleApiStatusEnum.disabled
-            ) {
-              resolve(resultData.blocking)
-            }
-          }
-          resolve(PiHoleApiStatusEnum.enabled)
-        })
-        .catch(reason => {
-          console.warn(reason)
-          resolve(PiHoleApiStatusEnum.error)
-        })
-    })
+    try {
+      const results = await this.getPiHoleStatus()
+      const hasError = results.some(
+        result => result.data.blocking === PiHoleApiStatusEnum.error
+      )
+      if (hasError) {
+        return PiHoleApiStatusEnum.error
+      }
+
+      const hasDisabled = results.some(
+        result => result.data.blocking === PiHoleApiStatusEnum.disabled
+      )
+      return hasDisabled
+        ? PiHoleApiStatusEnum.disabled
+        : PiHoleApiStatusEnum.enabled
+    } catch (reason) {
+      console.warn(reason)
+      return PiHoleApiStatusEnum.error
+    }
   }
 
   public static async getPiHoleStatus(): Promise<
     AxiosResponse<PiHoleApiStatus>[]
   > {
-    const piHoleSettingsArray = await StorageService.getPiHoleSettingsArray()
-    if (typeof piHoleSettingsArray === 'undefined') {
-      return Promise.reject('PiHoleSettings empty')
-    }
+    const piHoleSettingsArray = await this.getConfiguredPiHoles()
 
-    const promiseArray = new Array<Promise<AxiosResponse<PiHoleApiStatus>>>()
-
-    for (const piHole of piHoleSettingsArray) {
-      if (
-        typeof piHole.pi_uri_base === 'undefined' ||
-        typeof piHole.api_key === 'undefined'
-      ) {
-        return Promise.reject('Some PiHoleSettings are undefined.')
-      }
-
-      promiseArray.push(
-        this.getAxiosInstance(piHole.pi_uri_base, piHole.api_key).get<
+    return Promise.all(
+      piHoleSettingsArray.map(piHole =>
+        this.getAxiosInstance(piHole.pi_uri_base!, piHole.api_key).get<
           PiHoleApiStatus
         >('/dns/blocking')
       )
-    }
-
-    return Promise.all(promiseArray)
+    )
   }
 
   public static async getPiHoleVersion(
     piHole: PiHoleSettingsStorage
   ): Promise<AxiosResponse<PiHoleVersionsV6>> {
-    if (
-      typeof piHole.pi_uri_base === 'undefined' ||
-      typeof piHole.api_key === 'undefined'
-    ) {
-      return Promise.reject('Some PiHoleSettings are undefined.')
-    }
+    this.assertValidPiHole(piHole)
 
-    return this.getAxiosInstance(piHole.pi_uri_base, piHole.api_key).get<
+    return this.getAxiosInstance(piHole.pi_uri_base!, piHole.api_key).get<
       PiHoleVersionsV6
     >('/info/version')
   }
@@ -79,118 +81,226 @@ export default class PiHoleApiService {
     mode: PiHoleApiStatusEnum,
     time: number
   ): Promise<AxiosResponse<PiHoleApiStatus>[]> {
-    const piHoleSettingsArray = await StorageService.getPiHoleSettingsArray()
-    if (typeof piHoleSettingsArray === 'undefined') {
-      return Promise.reject('PiHoleSettings empty')
-    }
+    const piHoleSettingsArray = await this.getConfiguredPiHoles()
 
     if (time < 0) {
       return Promise.reject(`Disable time smaller than allowed:${time}`)
     }
 
-    const promiseArray = new Array<Promise<AxiosResponse<PiHoleApiStatus>>>()
+    let blocking: boolean
+    if (mode === PiHoleApiStatusEnum.disabled) {
+      blocking = false
+    } else if (mode === PiHoleApiStatusEnum.enabled) {
+      blocking = true
+    } else {
+      return Promise.reject(`Mode ${mode} not allowed for this function.`)
+    }
 
-    for (const piHole of piHoleSettingsArray) {
-      if (
-        typeof piHole.pi_uri_base === 'undefined' ||
-        typeof piHole.api_key === 'undefined'
-      ) {
-        return Promise.reject('Some PiHoleSettings are undefined.')
-      }
-
-      let blocking
-      if (mode === PiHoleApiStatusEnum.disabled) {
-        blocking = false
-      } else if (mode === PiHoleApiStatusEnum.enabled) {
-        blocking = true
-      } else {
-        return Promise.reject(`Mode ${mode} not allowed for this function.`)
-      }
-
-      promiseArray.push(
-        this.getAxiosInstance(piHole.pi_uri_base, piHole.api_key).post<
+    return Promise.all(
+      piHoleSettingsArray.map(piHole =>
+        this.getAxiosInstance(piHole.pi_uri_base!, piHole.api_key).post<
           PiHoleApiStatus
         >('/dns/blocking', {
           blocking,
           timer: time === 0 || blocking ? null : time
         })
       )
-    }
-
-    return Promise.all(promiseArray)
+    )
   }
 
   public static async addDomainToList(
     list: ApiList,
     domain: string
-  ): Promise<AxiosResponse<PiHoleDomains>[]> {
+  ): Promise<void> {
     return this.changeDomainOnList(list, ApiListMode.add, domain)
   }
 
   public static async subDomainFromList(
     list: ApiList,
     domain: string
-  ): Promise<AxiosResponse<PiHoleDomains>[]> {
+  ): Promise<void> {
     return this.changeDomainOnList(list, ApiListMode.sub, domain)
+  }
+
+  public static async getExactDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    domain: string
+  ): Promise<PiHoleDomain | undefined> {
+    this.assertValidPiHole(piHole)
+    const response = await this.getAxiosInstance(
+      piHole.pi_uri_base!,
+      piHole.api_key
+    ).get<PiHoleDomains>(
+      `/domains/${list}/exact/${encodeURIComponent(domain)}`
+    )
+
+    return response.data.domains[0]
+  }
+
+  public static async addExactDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    domain: string,
+    payload: DomainMutationPayload
+  ): Promise<PiHoleDomain> {
+    this.assertValidPiHole(piHole)
+    const response = await this.getAxiosInstance(
+      piHole.pi_uri_base!,
+      piHole.api_key
+    ).post<PiHoleDomains>(`/domains/${list}/exact`, {
+      domain,
+      ...payload
+    })
+
+    return this.requireDomain(response.data, domain)
+  }
+
+  public static async replaceExactDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    domain: string,
+    payload: DomainMutationPayload
+  ): Promise<PiHoleDomain> {
+    this.assertValidPiHole(piHole)
+    const response = await this.getAxiosInstance(
+      piHole.pi_uri_base!,
+      piHole.api_key
+    ).put<PiHoleDomains>(
+      `/domains/${list}/exact/${encodeURIComponent(domain)}`,
+      {
+        type: list,
+        kind: 'exact',
+        ...payload
+      }
+    )
+
+    return this.requireDomain(response.data, domain)
+  }
+
+  public static async deleteExactDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    domain: string
+  ): Promise<void> {
+    this.assertValidPiHole(piHole)
+    await this.getAxiosInstance(piHole.pi_uri_base!, piHole.api_key).delete(
+      `/domains/${list}/exact/${encodeURIComponent(domain)}`
+    )
+  }
+
+  public static async getCommonGroups(): Promise<PiHoleGroup[]> {
+    const piHoles = await this.getConfiguredPiHoles()
+    const responses = await Promise.all(
+      piHoles.map(piHole =>
+        this.getAxiosInstance(piHole.pi_uri_base!, piHole.api_key).get<
+          PiHoleGroups
+        >('/groups')
+      )
+    )
+
+    const firstGroups = responses[0].data.groups
+    if (responses.length === 1) {
+      return firstGroups
+    }
+
+    const remainingGroupNames = responses.slice(1).map(
+      response => new Set(response.data.groups.map(group => group.name))
+    )
+
+    return firstGroups.filter(group =>
+      remainingGroupNames.every(names => names.has(group.name))
+    )
+  }
+
+  public static async getGroup(
+    piHole: PiHoleSettingsStorage,
+    name: string
+  ): Promise<PiHoleGroup | undefined> {
+    this.assertValidPiHole(piHole)
+    const response = await this.getAxiosInstance(
+      piHole.pi_uri_base!,
+      piHole.api_key
+    ).get<PiHoleGroups>(`/groups/${encodeURIComponent(name)}`)
+
+    return response.data.groups[0]
+  }
+
+  public static async replaceGroup(
+    piHole: PiHoleSettingsStorage,
+    originalName: string,
+    group: Pick<PiHoleGroup, 'name' | 'comment' | 'enabled'>
+  ): Promise<PiHoleGroup> {
+    this.assertValidPiHole(piHole)
+    const response = await this.getAxiosInstance(
+      piHole.pi_uri_base!,
+      piHole.api_key
+    ).put<PiHoleGroups>(`/groups/${encodeURIComponent(originalName)}`, group)
+
+    const updatedGroup = response.data.groups[0]
+    if (!updatedGroup) {
+      throw new Error(`Pi-hole did not return updated group ${originalName}`)
+    }
+    return updatedGroup
   }
 
   private static async changeDomainOnList(
     list: ApiList,
     mode: ApiListMode,
     domain: string
-  ): Promise<AxiosResponse<PiHoleDomains>[]> {
-    const piHoleSettingsArray = await StorageService.getPiHoleSettingsArray()
-
-    if (typeof piHoleSettingsArray === 'undefined') {
-      return Promise.reject('PiHoleSettings empty')
-    }
+  ): Promise<void> {
+    const piHoleSettingsArray = await this.getConfiguredPiHoles()
 
     if (domain.length < 1) {
       return Promise.reject("Domain can't be empty")
     }
 
-    const promiseArray = new Array<Promise<AxiosResponse<PiHoleDomains>>>()
-
-    for (const piHole of piHoleSettingsArray) {
-      if (
-        typeof piHole.pi_uri_base === 'undefined' ||
-        typeof piHole.api_key === 'undefined'
-      ) {
-        return Promise.reject('Some PiHoleSettings are undefined.')
-      }
-
-      const addPromise = () =>
-        this.getAxiosInstance(piHole.pi_uri_base!, piHole.api_key)
-          .post<PiHoleDomains>(`/domains/${list}/exact`, {
-            domain,
+    await Promise.all(
+      piHoleSettingsArray.map(async piHole => {
+        if (mode === ApiListMode.add) {
+          await this.addExactDomain(piHole, list, domain, {
             comment: 'From PiHole Extension',
             groups: [0],
             enabled: true
           })
-          .catch(
-            // Sub can fail if the domain is not in the list
-            // We can ignore this error
-            reason => {
-              console.warn(reason)
-              return reason
-            }
-          )
-      const subPromise = () =>
-        this.getAxiosInstance(piHole.pi_uri_base!, piHole.api_key)
-          .delete<PiHoleDomains>(`/domains/${list}/exact/${domain}`)
-          .catch(
-            // Sub can fail if the domain is not in the list
-            // We can ignore this error
-            reason => {
-              console.warn(reason)
-              return reason
-            }
-          )
+          return
+        }
 
-      promiseArray.push(mode === ApiListMode.add ? addPromise() : subPromise())
+        try {
+          await this.deleteExactDomain(piHole, list, domain)
+        } catch (reason) {
+          if (!this.isNotFound(reason)) {
+            throw reason
+          }
+        }
+      })
+    )
+  }
+
+  private static requireDomain(
+    response: PiHoleDomains,
+    domain: string
+  ): PiHoleDomain {
+    const updatedDomain = response.domains.find(item => item.domain === domain)
+    if (!updatedDomain) {
+      throw new Error(`Pi-hole did not return updated domain ${domain}`)
     }
+    return updatedDomain
+  }
 
-    return Promise.all(promiseArray)
+  private static assertValidPiHole(piHole: PiHoleSettingsStorage): void {
+    if (!piHole.pi_uri_base || typeof piHole.api_key === 'undefined') {
+      throw new Error('Some PiHoleSettings are undefined.')
+    }
+  }
+
+  private static isNotFound(reason: unknown): boolean {
+    return Boolean(
+      reason &&
+        typeof reason === 'object' &&
+        'response' in reason &&
+        (reason as { response?: { status?: number } }).response?.status === 404
+    )
   }
 
   private static createAxiosBaseInstance(domain: string): AxiosInstance {
@@ -209,16 +319,13 @@ export default class PiHoleApiService {
 
     const acquireSid = async () => {
       const axiosInstance = this.createAxiosBaseInstance(domain)
-
       const auth = await axiosInstance.post<PiHoleAuth>('/auth', {
         password: apiKey
       })
-
       return auth.data.session
     }
 
     instance.interceptors.request.use(async config => {
-      // No API key, no need to add it to the headers
       if (!apiKey) {
         return config
       }
@@ -234,20 +341,28 @@ export default class PiHoleApiService {
       await StorageService.saveSid(domain, session.sid)
       // eslint-disable-next-line no-param-reassign
       config.headers['X-FTL-SID'] = session.sid
-
       return config
     })
 
-    // Response interceptor to handle session expiration
     instance.interceptors.response.use(undefined, async error => {
-      const isAuthRoute = error.config.url === '/auth'
-      if (error.response.status === 401 && !isAuthRoute) {
+      const requestConfig = error.config as typeof error.config & {
+        piholeAuthRetried?: boolean
+      }
+      const isAuthRoute = requestConfig?.url === '/auth'
+      const isUnauthorized = error.response?.status === 401
+
+      if (
+        isUnauthorized &&
+        !isAuthRoute &&
+        requestConfig &&
+        !requestConfig.piholeAuthRetried
+      ) {
+        requestConfig.piholeAuthRetried = true
         console.warn('Session expired, acquiring new session')
         const session = await acquireSid()
         await StorageService.saveSid(domain, session.sid)
-        // eslint-disable-next-line no-param-reassign
-        error.config.headers['X-FTL-SID'] = session.sid
-        return axios.request(error.config)
+        requestConfig.headers['X-FTL-SID'] = session.sid
+        return instance.request(requestConfig)
       }
       return Promise.reject(error)
     })
