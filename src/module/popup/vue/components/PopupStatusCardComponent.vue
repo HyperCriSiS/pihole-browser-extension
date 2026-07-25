@@ -51,7 +51,7 @@
       <v-select
         v-model="selectedGroupDisableTime"
         :items="groupDurationItems"
-        :label="translate(I18NPopupKeys.popup_temporary_duration)"
+        :label="translate(I18NPopupKeys.popup_temporary_allow_duration)"
         outlined
         dense
       ></v-select>
