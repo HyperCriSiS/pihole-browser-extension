@@ -34,9 +34,7 @@ export enum ExtensionStorageEnum {
   session_storage = 'session_storage'
 }
 
-type Postfix = string
-type ExtensionStorageEnumWithPostfix = `${ExtensionStorageEnum}_${Postfix}`
-type MaybeExtensionStorageEnum = ExtensionStorageEnum | ExtensionStorageEnumWithPostfix
+type StorageKey = string
 type StorageValue<T> = {
   value: T,
 }
@@ -181,7 +179,7 @@ export class StorageService {
 
   public static async getSid(url: string): Promise<string | undefined> {
     const baseUrl = new URL(url).origin;
-    const key: MaybeExtensionStorageEnum = `${ExtensionStorageEnum.session_storage}_${baseUrl}`;
+    const key: StorageKey = `${ExtensionStorageEnum.session_storage}_${baseUrl}`;
     const value = await this.getStorageValue<StorageValue<string>>(key);
 
     return value?.value;
@@ -189,7 +187,7 @@ export class StorageService {
 
   public static async saveSid(url: string, sid: string): Promise<void> {
     const baseUrl = new URL(url).origin;
-    const key: MaybeExtensionStorageEnum = `${ExtensionStorageEnum.session_storage}_${baseUrl}`;
+    const key: StorageKey = `${ExtensionStorageEnum.session_storage}_${baseUrl}`;
     const value: StorageValue<string> = {
       value: sid,
     };
@@ -198,7 +196,7 @@ export class StorageService {
 
   public static async removeSid(url: string): Promise<void> {
     const baseUrl = new URL(url).origin;
-    const key: MaybeExtensionStorageEnum = `${ExtensionStorageEnum.session_storage}_${baseUrl}`;
+    const key: StorageKey = `${ExtensionStorageEnum.session_storage}_${baseUrl}`;
     await chrome.storage.local.remove(key);
   }
 
@@ -207,16 +205,16 @@ export class StorageService {
   }
 
   private static getStorageValue<T>(
-    key: MaybeExtensionStorageEnum,
+    key: StorageKey,
   ): Promise<T | undefined>
 
   private static getStorageValue<T>(
-    key: MaybeExtensionStorageEnum,
+    key: StorageKey,
     defaultUnsetValue: T,
   ): Promise<T>
 
   private static getStorageValue<T>(
-    key: MaybeExtensionStorageEnum,
+    key: StorageKey,
     defaultUnsetValue?: T,
   ): Promise<T | undefined> | Promise<T> {
     return new Promise(resolve => {
