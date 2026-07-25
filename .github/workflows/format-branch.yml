@@ -1,0 +1,47 @@
+name: Format feature branch
+
+on:
+  push:
+    branches:
+      - feature/temporary-allow-and-client-groups
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v6
+        with:
+          ref: feature/temporary-allow-and-client-groups
+          show-progress: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund --loglevel=error
+
+      - name: Format source files
+        run: npm run format
+
+      - name: Commit formatting
+        shell: bash
+        run: |
+          if git diff --quiet -- src; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src
+          git commit -m "Format temporary action changes"
+          git push origin HEAD:feature/temporary-allow-and-client-groups
