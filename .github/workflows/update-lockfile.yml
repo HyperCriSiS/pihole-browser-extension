@@ -1,0 +1,44 @@
+name: Update lockfile
+
+on:
+  push:
+    branches:
+      - chore/dependency-modernization
+    paths:
+      - package.json
+      - .github/workflows/update-lockfile.yml
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v6
+        with:
+          ref: chore/dependency-modernization
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Update package lock
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Commit package lock
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package-lock.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Update package lock'
+          git push origin HEAD:chore/dependency-modernization
