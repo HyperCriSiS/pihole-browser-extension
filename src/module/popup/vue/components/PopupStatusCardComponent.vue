@@ -48,6 +48,13 @@
         outlined
         dense
       ></v-select>
+      <v-select
+        v-model="selectedGroupDisableTime"
+        :items="groupDurationItems"
+        :label="translate(I18NPopupKeys.popup_temporary_duration)"
+        outlined
+        dense
+      ></v-select>
       <v-btn
         block
         color="orange"
@@ -56,14 +63,14 @@
           groupActionLoading ||
             groupsLoading ||
             !selectedGroup ||
-            defaultDisableTime < 1 ||
+            selectedGroupDisableTime < 1 ||
             defaultDisableTimeDisabled
         "
         @click="disableSelectedGroup"
       >
         {{ translate(I18NPopupKeys.popup_group_disable) }}
-        <span v-if="defaultDisableTime > 0">
-          &nbsp;({{ defaultDisableTime }} s)
+        <span v-if="selectedGroupDisableTime > 0">
+          &nbsp;({{ selectedGroupDisableTime }} s)
         </span>
       </v-btn>
       <div class="caption mt-2">
@@ -96,7 +103,8 @@ import { mdiAllInclusive, mdiCog, mdiTimerOutline } from '@mdi/js'
 import { computed, defineComponent, onMounted, ref } from '@vue/composition-api'
 import {
   PiHoleSettingsDefaults,
-  StorageService
+  StorageService,
+  TemporaryAllowTimeDefaults
 } from '../../../../service/StorageService'
 import { PiHoleApiStatus } from '../../../../api/models/PiHoleApiStatus'
 import {
@@ -132,6 +140,8 @@ export default defineComponent({
     )
     const groups = ref<PiHoleGroup[]>([])
     const selectedGroup = ref<string | null>(null)
+    const groupDisableTimes = ref<number[]>([...TemporaryAllowTimeDefaults])
+    const selectedGroupDisableTime = ref(TemporaryAllowTimeDefaults[0])
     const groupsLoading = ref(false)
     const groupLoadError = ref(false)
     const groupActionLoading = ref(false)
@@ -146,6 +156,12 @@ export default defineComponent({
         value: group.name
       }))
     )
+    const groupDurationItems = computed(() =>
+      groupDisableTimes.value.map(time => ({
+        text: `${time} s`,
+        value: time
+      }))
+    )
 
     const updateDefaultDisableTime = () => {
       StorageService.getDefaultDisableTime().then(time => {
@@ -155,11 +171,21 @@ export default defineComponent({
       })
     }
 
+    const updateGroupDisableTimes = async () => {
+      const storedTimes = await StorageService.getTemporaryAllowTimes()
+      if (storedTimes?.length === 3) {
+        groupDisableTimes.value = storedTimes
+        selectedGroupDisableTime.value = storedTimes[0]
+      }
+    }
+
     const loadGroups = async () => {
       groupsLoading.value = true
       groupLoadError.value = false
       try {
-        groups.value = await PiHoleApiService.getCommonGroups()
+        groups.value = (await PiHoleApiService.getCommonGroups()).filter(
+          group => group.enabled
+        )
         const preferredGroup =
           groups.value.find(group => group.name !== 'Default') ||
           groups.value[0]
@@ -287,7 +313,7 @@ export default defineComponent({
     }
 
     const disableSelectedGroup = async () => {
-      if (!selectedGroup.value || defaultDisableTime.value < 1) {
+      if (!selectedGroup.value || selectedGroupDisableTime.value < 1) {
         return
       }
 
@@ -296,7 +322,7 @@ export default defineComponent({
       try {
         await TemporaryActionService.temporarilyDisableGroup(
           selectedGroup.value,
-          defaultDisableTime.value
+          selectedGroupDisableTime.value
         )
         groupActionState.value = 'success'
         await loadGroups()
@@ -310,6 +336,7 @@ export default defineComponent({
 
     onMounted(() => {
       updateDefaultDisableTime()
+      updateGroupDisableTimes()
       updateStatus()
       loadGroups()
     })
@@ -324,7 +351,9 @@ export default defineComponent({
       sliderClicked,
       openOptions,
       groupItems,
+      groupDurationItems,
       selectedGroup,
+      selectedGroupDisableTime,
       groupsLoading,
       groupLoadError,
       groupActionLoading,
