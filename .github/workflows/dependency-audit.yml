@@ -1,0 +1,47 @@
+name: Dependency audit
+
+on:
+  push:
+    branches:
+      - chore/dependency-modernization
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v6
+        with:
+          ref: chore/dependency-modernization
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Record outdated dependencies
+        shell: bash
+        run: |
+          npm outdated --json > dependency-audit.json || true
+          test -s dependency-audit.json || printf '{}\n' > dependency-audit.json
+
+      - name: Commit audit report
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add dependency-audit.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'Record dependency audit'
+          git push origin HEAD:chore/dependency-modernization
