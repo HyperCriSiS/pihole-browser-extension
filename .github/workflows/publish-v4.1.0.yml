@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   release:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -92,4 +93,41 @@ jobs:
               --title 'PiHole Browser Extension 4.1.0' \
               --notes-file RELEASE_NOTES.md \
               --repo "$GITHUB_REPOSITORY"
+          fi
+
+      - name: Record successful release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          XPI_SHA=$(sha256sum pihole-browser-extension-4.1.0-unsigned.xpi | cut -d' ' -f1)
+          CHROME_SHA=$(sha256sum pihole-browser-extension-4.1.0-chrome.zip | cut -d' ' -f1)
+          cat > release-status.json <<EOF
+          {
+            "tag": "v4.1.0",
+            "release_url": "https://github.com/${GITHUB_REPOSITORY}/releases/tag/v4.1.0",
+            "xpi_url": "https://github.com/${GITHUB_REPOSITORY}/releases/download/v4.1.0/pihole-browser-extension-4.1.0-unsigned.xpi",
+            "xpi_sha256": "${XPI_SHA}",
+            "chrome_url": "https://github.com/${GITHUB_REPOSITORY}/releases/download/v4.1.0/pihole-browser-extension-4.1.0-chrome.zip",
+            "chrome_sha256": "${CHROME_SHA}",
+            "source_commit": "ecf77bc9bbc106a051f8122abd3e6eff405288e8"
+          }
+          EOF
+
+          CONTENT=$(base64 -w0 release-status.json)
+          STATUS_PATH='.release-status-v4.1.0.json'
+          EXISTING_SHA=$(gh api "repos/${GITHUB_REPOSITORY}/contents/${STATUS_PATH}?ref=release/v4.1.0-builder" --jq .sha 2>/dev/null || true)
+
+          if [ -n "$EXISTING_SHA" ]; then
+            gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/${STATUS_PATH}" \
+              -f message='Record successful v4.1.0 release' \
+              -f content="$CONTENT" \
+              -f branch='release/v4.1.0-builder' \
+              -f sha="$EXISTING_SHA"
+          else
+            gh api --method PUT "repos/${GITHUB_REPOSITORY}/contents/${STATUS_PATH}" \
+              -f message='Record successful v4.1.0 release' \
+              -f content="$CONTENT" \
+              -f branch='release/v4.1.0-builder'
           fi
