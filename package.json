@@ -1,6 +1,6 @@
 {
 	"name": "pihole-browser-extension",
-	"version": "4.0.3",
+	"version": "4.1.0",
 	"dependencies": {
 		"@vue/composition-api": "^1.4.0",
 		"axios": "^1.7.8",
@@ -55,7 +55,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/badsgahhl/pihole-browser-extension.git"
+		"url": "git+https://github.com/HyperCriSiS/pihole-browser-extension.git"
 	},
 	"keywords": [
 		"pihole",
@@ -68,7 +68,7 @@
 	"author": "Pascal Glaser",
 	"license": "MIT",
 	"bugs": {
-		"url": "https://github.com/badsgahhl/pihole-browser-extension/issues"
+		"url": "https://github.com/HyperCriSiS/pihole-browser-extension/issues"
 	},
-	"homepage": "https://github.com/badsgahhl/pihole-browser-extension/#readme"
+	"homepage": "https://github.com/HyperCriSiS/pihole-browser-extension#readme"
 }

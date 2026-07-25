@@ -2,7 +2,8 @@ import { Initializer } from '../../general/Initializer'
 import { LinkConfig } from '../../../service/i18NService'
 import {
   PiHoleSettingsDefaults,
-  StorageService
+  StorageService,
+  TemporaryAllowTimeDefaults
 } from '../../../service/StorageService'
 import {
   BadgeService,
@@ -11,11 +12,14 @@ import {
 
 export default class ChromeRuntimeInitializer implements Initializer {
   public init(): void {
+    this.initializeTemporaryAllowTimes()
+
     chrome.runtime.onInstalled.addListener(details => {
       if (details.reason === 'install') {
         StorageService.saveDefaultDisableTime(
           Number(PiHoleSettingsDefaults.default_disable_time)
         )
+        StorageService.saveTemporaryAllowTimes([...TemporaryAllowTimeDefaults])
         StorageService.saveReloadAfterDisable(true)
         StorageService.saveReloadAfterWhitelist(true)
       } else if (details.reason === 'update' && details.previousVersion) {
@@ -36,6 +40,9 @@ export default class ChromeRuntimeInitializer implements Initializer {
             StorageService.saveDefaultDisableTime(
               Number(PiHoleSettingsDefaults.default_disable_time)
             )
+            StorageService.saveTemporaryAllowTimes([
+              ...TemporaryAllowTimeDefaults
+            ])
             StorageService.saveReloadAfterDisable(true)
             StorageService.saveReloadAfterWhitelist(true)
             // Set badge to INFO
@@ -47,5 +54,13 @@ export default class ChromeRuntimeInitializer implements Initializer {
 
     // Hook to show a survey after uninstalling the extension
     chrome.runtime.setUninstallURL(LinkConfig.uninstall_survey)
+  }
+
+  private initializeTemporaryAllowTimes(): void {
+    StorageService.getTemporaryAllowTimes().then(times => {
+      if (typeof times === 'undefined') {
+        StorageService.saveTemporaryAllowTimes([...TemporaryAllowTimeDefaults])
+      }
+    })
   }
 }

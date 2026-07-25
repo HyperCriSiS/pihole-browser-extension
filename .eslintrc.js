@@ -1,5 +1,10 @@
 module.exports = {
     root: true,
+    env: {
+        browser: true,
+        webextensions: true,
+        es6: true,
+    },
     "parser": "vue-eslint-parser",
     "parserOptions": {
         parser: '@typescript-eslint/parser',
@@ -14,6 +19,30 @@ module.exports = {
         'airbnb-typescript/base',
         'plugin:vue/recommended',
         'prettier'
+    ],
+    overrides: [
+        {
+            files: [
+                'src/module/popup/vue/components/PopupListCardComponent.vue',
+                'src/module/popup/vue/components/PopupStatusCardComponent.vue',
+            ],
+            rules: {
+                'prefer-destructuring': 'off',
+            },
+        },
+        {
+            files: ['src/service/PiHoleApiService.ts'],
+            rules: {
+                'consistent-return': 'off',
+            },
+        },
+        {
+            files: ['src/service/TemporaryActionService.ts'],
+            rules: {
+                'no-await-in-loop': 'off',
+                'no-continue': 'off',
+            },
+        },
     ],
     "rules": {
         "import/no-extraneous-dependencies": "off",

@@ -1,6 +1,6 @@
 {
 	"manifest_description": {
-		"message": "Browser Erweiterung um dein PiHole zu steuern."
+		"message": "Browser-Erweiterung, um dein Pi-hole zu steuern."
 	},
 	"options_title": {
 		"message": "$page$ - PiHole Browser Extension",
@@ -26,7 +26,7 @@
 		"message": "Lizenzen"
 	},
 	"option_report_error_github": {
-		"message": "Problem auf Github erstellen"
+		"message": "Problem auf GitHub erstellen"
 	},
 	"option_troubleshooting": {
 		"message": "Fehlerbehandlung"
@@ -44,10 +44,10 @@
 		"message": "Spenden"
 	},
 	"options_headline_info": {
-		"message": "PiHole Konfiguration"
+		"message": "Pi-hole-Konfiguration"
 	},
 	"options_headline_additional_info": {
-		"message": "Gebe die Adresse und den API Key ein, welchen du unter API/Web interface in deinen PiHole Einstellungen findest."
+		"message": "Gib die Pi-hole-Adresse und das Passwort der Weboberfläche ein."
 	},
 	"options_default_time_label": {
 		"message": "Standard-Deaktivierungszeit:"
@@ -55,23 +55,32 @@
 	"options_default_time_unit": {
 		"message": "Sekunden"
 	},
+	"options_temporary_allow_times_title": {
+		"message": "Zeitvorgaben für temporäre Aktionen"
+	},
+	"options_temporary_allow_time_label": {
+		"message": "Vorgabe"
+	},
+	"options_temporary_allow_time_hint": {
+		"message": "Mindestens 10 Sekunden"
+	},
 	"options_reload_after_disable": {
 		"message": "Aktuellen Tab nach Deaktivierung neu laden"
 	},
 	"options_reload_after_white_list": {
-		"message": "Aktuellen Tab nach Whitelisting neu laden"
+		"message": "Aktuellen Tab nach dem Zulassen neu laden"
 	},
 	"options_api_key": {
 		"message": "Passwort"
 	},
 	"options_pi_hole_address": {
-		"message": "PiHole Adresse"
+		"message": "Pi-hole-Adresse"
 	},
 	"options_add_button": {
-		"message": "PiHole hinzufügen"
+		"message": "Pi-hole hinzufügen"
 	},
 	"options_remove_button": {
-		"message": "PiHole $num$ löschen",
+		"message": "Pi-hole $num$ löschen",
 		"placeholders": {
 			"num": {
 				"content": "$1"
@@ -79,60 +88,84 @@
 		}
 	},
 	"options_url_invalid_warning": {
-		"message": "Die URL ist invalide. (Fehlendes http(s), ungültiges Format oder leer)"
+		"message": "Die URL ist ungültig. (Fehlendes http(s), ungültiges Format oder leer)"
 	},
 	"popup_status_card_title": {
-		"message": "PiHole Switch"
+		"message": "Pi-hole-Schalter"
 	},
 	"popup_status_card_info_text": {
-		"message": "0 für 'dauerhaft'"
+		"message": "0 für dauerhaft"
 	},
 	"popup_second_card_current_url": {
-		"message": "Aktuelle Url:"
+		"message": "Aktuelle URL"
 	},
 	"popup_second_card_whitelist": {
-		"message": "Whitelist"
+		"message": "Dauerhaft zulassen"
 	},
 	"popup_second_card_blacklist": {
-		"message": "Blacklist"
+		"message": "Sperren"
+	},
+	"popup_temporary_whitelist": {
+		"message": "Zeitweise zulassen"
+	},
+	"popup_temporary_allow_duration": {
+		"message": "Dauer der temporären Aktion"
+	},
+	"popup_group_title": {
+		"message": "Client-Gruppe"
+	},
+	"popup_group_select": {
+		"message": "Gruppe auswählen"
+	},
+	"popup_group_disable": {
+		"message": "Gruppe deaktivieren"
+	},
+	"popup_group_warning": {
+		"message": "Dadurch wird die ausgewählte Pi-hole-Gruppe deaktiviert. Clients, die zusätzlich einer anderen aktiven Gruppe zugeordnet sind, können weiterhin gefiltert werden."
+	},
+	"popup_group_success": {
+		"message": "Gruppe wurde zeitweise deaktiviert."
+	},
+	"popup_group_error": {
+		"message": "Die Gruppenaktion ist fehlgeschlagen oder es gibt keine gemeinsame Gruppe."
 	},
 	"options_disable_list_feature": {
-		"message": "Deaktiviere das Black-/White-List Feature im Popup"
+		"message": "Black-/Whitelist-Funktion im Popup deaktivieren"
 	},
 	"option_hotkey_settings": {
-		"message": "Hotkey Einstellungen"
+		"message": "Hotkey-Einstellungen"
 	},
 	"option_disable_context_menu": {
-		"message": "Deaktiviere die Context Menu Shortcuts"
+		"message": "Kontextmenü-Kurzbefehle deaktivieren"
 	},
 	"popup_update_card_info": {
-		"message": "Updates für PiHole verfügbar"
+		"message": "Update für Pi-hole verfügbar"
 	},
 	"context_menu_toggle_pi_holes": {
-		"message": "PiHole(s) umschalten"
+		"message": "Pi-hole(s) umschalten"
 	},
 	"context_menu_blacklist_current_domain": {
-		"message": "Aktuelle URL blacklisten"
+		"message": "Aktuelle Domain sperren"
 	},
 	"context_menu_whitelist_current_domain": {
-		"message": "Aktuelle URL whitelisten"
+		"message": "Aktuelle Domain zulassen"
 	},
 	"context_menu_open_settings": {
 		"message": "Einstellungen öffnen"
 	},
 	"option_connection_check_idle": {
-		"message": "Prüfe Verbindung"
+		"message": "Verbindung wird geprüft"
 	},
 	"option_connection_check_ok": {
 		"message": "Verbindung erfolgreich hergestellt"
 	},
 	"option_connection_check_error": {
-		"message": "Verbindung fehlerhaft"
+		"message": "Verbindung fehlgeschlagen"
 	},
 	"option_connection_check_update_available": {
-		"message": "Update verfügbar für das PiHole"
+		"message": "Update für Pi-hole verfügbar"
 	},
 	"option_multiple_connections": {
-		"message": "Die Nutzung von mehreren PiHole kann je nach Setup instabil sein. Bitte nutze nach Möglichkeit nur ein PiHole."
+		"message": "Die Nutzung mehrerer Pi-hole-Instanzen kann je nach Einrichtung instabil sein."
 	}
 }
