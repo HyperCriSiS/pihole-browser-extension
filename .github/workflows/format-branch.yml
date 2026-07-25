@@ -31,8 +31,15 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund --loglevel=error
 
-      - name: Format source files
-        run: npm run format
+      - name: Format changed source files
+        run: |
+          npx prettier --write \
+            src/module/option/vue/settings/OptionDisableTimeComponent.vue \
+            src/module/popup/vue/components/PopupListCardComponent.vue \
+            src/module/popup/vue/components/PopupStatusCardComponent.vue \
+            src/service/PiHoleApiService.ts \
+            src/service/StorageService.ts \
+            src/service/TemporaryActionService.ts
 
       - name: Commit formatting
         shell: bash
