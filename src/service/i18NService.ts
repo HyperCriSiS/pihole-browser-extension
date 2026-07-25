@@ -27,6 +27,9 @@ export enum I18NOptionKeys {
   options_headline_info = 'options_headline_info',
   options_default_time_label = 'options_default_time_label',
   options_default_time_unit = 'options_default_time_unit',
+  options_temporary_allow_times_title = 'options_temporary_allow_times_title',
+  options_temporary_allow_time_label = 'options_temporary_allow_time_label',
+  options_temporary_allow_time_hint = 'options_temporary_allow_time_hint',
   options_reload_after_disable = 'options_reload_after_disable',
   options_reload_after_white_list = 'options_reload_after_white_list',
   options_api_key = 'options_api_key',
@@ -50,14 +53,22 @@ export enum I18NPopupKeys {
   popup_second_card_current_url = 'popup_second_card_current_url',
   popup_second_card_whitelist = 'popup_second_card_whitelist',
   popup_second_card_blacklist = 'popup_second_card_blacklist',
+  popup_temporary_whitelist = 'popup_temporary_whitelist',
+  popup_temporary_allow_duration = 'popup_temporary_allow_duration',
+  popup_group_title = 'popup_group_title',
+  popup_group_select = 'popup_group_select',
+  popup_group_disable = 'popup_group_disable',
+  popup_group_warning = 'popup_group_warning',
+  popup_group_success = 'popup_group_success',
+  popup_group_error = 'popup_group_error',
   popup_update_card_info = 'popup_update_card_info'
 }
 
 export enum LinkConfig {
   paypal_donation_link = 'https://www.paypal.com/donate/?hosted_button_id=CXLHH44DFQCY4',
-  github_troubleshooting = 'https://github.com/badsgahhl/pihole-browser-extension#troubleshooting',
+  github_troubleshooting = 'https://github.com/HyperCriSiS/pihole-browser-extension#troubleshooting',
   uninstall_survey = 'https://forms.gle/RsGUyrmB1jtsGhYQ9',
-  github_issue = 'https://github.com/badsgahhl/pihole-browser-extension/issues',
+  github_issue = 'https://github.com/HyperCriSiS/pihole-browser-extension/issues',
   github_user_badsgahhl = 'https://github.com/badsgahhl',
   github_user_erikr729 = 'https://github.com/Limatationz'
 }
