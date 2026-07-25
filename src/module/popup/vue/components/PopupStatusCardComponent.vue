@@ -57,12 +57,14 @@
           groupsLoading ||
           !selectedGroup ||
           defaultDisableTime < 1 ||
-          sliderDisabled
+          defaultDisableTimeDisabled
         "
         @click="disableSelectedGroup"
       >
         {{ translate(I18NPopupKeys.popup_group_disable) }}
-        <span v-if="defaultDisableTime > 0">&nbsp;({{ defaultDisableTime }} s)</span>
+        <span v-if="defaultDisableTime > 0">
+          &nbsp;({{ defaultDisableTime }} s)
+        </span>
       </v-btn>
       <div class="caption mt-2">
         {{ translate(I18NPopupKeys.popup_group_warning) }}
@@ -225,7 +227,7 @@ export default defineComponent({
     }
 
     const throwConsoleBadgeError = (
-      error_message: string,
+      error_message: unknown,
       refresh_status: boolean = false
     ) => {
       console.warn(error_message)
