@@ -16,7 +16,7 @@
         type="number"
         min="0"
         outlined
-        :rules="[v => typeof v === 'number' || v >= 0]"
+        :rules="[v => Number(v) >= 0 || '≥ 0']"
         :suffix="defaultDisableTime > 0 ? 's' : ''"
         :append-icon="timeUnitIcon"
       >
@@ -34,6 +34,57 @@
           @change="sliderClicked()"
         ></v-switch>
       </div>
+
+      <v-divider class="my-4"></v-divider>
+      <div class="subtitle-1 mb-2">
+        {{ translate(I18NPopupKeys.popup_group_title) }}
+      </div>
+      <v-select
+        v-model="selectedGroup"
+        :items="groupItems"
+        :label="translate(I18NPopupKeys.popup_group_select)"
+        :loading="groupsLoading"
+        :disabled="groupsLoading || groupItems.length === 0"
+        outlined
+        dense
+      ></v-select>
+      <v-btn
+        block
+        color="orange"
+        :loading="groupActionLoading"
+        :disabled="
+          groupActionLoading ||
+          groupsLoading ||
+          !selectedGroup ||
+          defaultDisableTime < 1 ||
+          sliderDisabled
+        "
+        @click="disableSelectedGroup"
+      >
+        {{ translate(I18NPopupKeys.popup_group_disable) }}
+        <span v-if="defaultDisableTime > 0">&nbsp;({{ defaultDisableTime }} s)</span>
+      </v-btn>
+      <div class="caption mt-2">
+        {{ translate(I18NPopupKeys.popup_group_warning) }}
+      </div>
+      <v-alert
+        v-if="groupActionState === 'success'"
+        class="mt-3 mb-0"
+        dense
+        outlined
+        type="success"
+      >
+        {{ translate(I18NPopupKeys.popup_group_success) }}
+      </v-alert>
+      <v-alert
+        v-if="groupActionState === 'error' || groupLoadError"
+        class="mt-3 mb-0"
+        dense
+        outlined
+        type="error"
+      >
+        {{ translate(I18NPopupKeys.popup_group_error) }}
+      </v-alert>
     </v-card-text>
   </v-card>
 </template>
@@ -54,6 +105,8 @@ import TabService from '../../../../service/TabService'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
 import PiHoleApiStatusEnum from '../../../../api/enum/PiHoleApiStatusEnum'
 import useTranslation from '../../../../hooks/translation'
+import TemporaryActionService from '../../../../service/TemporaryActionService'
+import { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
 
 export default defineComponent({
   name: 'PopupStatusCardComponent',
@@ -75,9 +128,21 @@ export default defineComponent({
     const defaultDisableTime = ref<number>(
       PiHoleSettingsDefaults.default_disable_time
     )
+    const groups = ref<PiHoleGroup[]>([])
+    const selectedGroup = ref<string | null>(null)
+    const groupsLoading = ref(false)
+    const groupLoadError = ref(false)
+    const groupActionLoading = ref(false)
+    const groupActionState = ref<'success' | 'error' | null>(null)
 
     const timeUnitIcon = computed(() =>
       defaultDisableTime.value < 1 ? mdiAllInclusive : mdiTimerOutline
+    )
+    const groupItems = computed(() =>
+      groups.value.map(group => ({
+        text: group.name,
+        value: group.name
+      }))
     )
 
     const updateDefaultDisableTime = () => {
@@ -86,6 +151,22 @@ export default defineComponent({
           defaultDisableTime.value = time
         }
       })
+    }
+
+    const loadGroups = async () => {
+      groupsLoading.value = true
+      groupLoadError.value = false
+      try {
+        groups.value = await PiHoleApiService.getCommonGroups()
+        const preferredGroup =
+          groups.value.find(group => group.name !== 'Default') || groups.value[0]
+        selectedGroup.value = preferredGroup?.name || null
+      } catch (reason) {
+        console.warn(reason)
+        groupLoadError.value = true
+      } finally {
+        groupsLoading.value = false
+      }
     }
 
     const updateComponentsByData = (data: PiHoleApiStatus) => {
@@ -164,7 +245,6 @@ export default defineComponent({
     }
 
     const openOptions = () => {
-      // eslint-disable-next-line no-undef
       chrome.runtime.openOptionsPage()
     }
 
@@ -184,7 +264,7 @@ export default defineComponent({
                 piHoleStatus.data.blocking !== currentMode
               ) {
                 throwConsoleBadgeError(
-                  'One PiHole returned Error from its request. Please check the API Key.',
+                  'One PiHole returned Error from its request. Please check the password.',
                   true
                 )
                 return
@@ -197,15 +277,38 @@ export default defineComponent({
           })
       } else {
         throwConsoleBadgeError(
-          'Time cannot be smaller than 0. Canceling api request.',
+          'Time cannot be smaller than 0. Canceling API request.',
           true
         )
+      }
+    }
+
+    const disableSelectedGroup = async () => {
+      if (!selectedGroup.value || defaultDisableTime.value < 1) {
+        return
+      }
+
+      groupActionLoading.value = true
+      groupActionState.value = null
+      try {
+        await TemporaryActionService.temporarilyDisableGroup(
+          selectedGroup.value,
+          defaultDisableTime.value
+        )
+        groupActionState.value = 'success'
+        await loadGroups()
+      } catch (reason) {
+        console.warn(reason)
+        groupActionState.value = 'error'
+      } finally {
+        groupActionLoading.value = false
       }
     }
 
     onMounted(() => {
       updateDefaultDisableTime()
       updateStatus()
+      loadGroups()
     })
 
     return {
@@ -217,6 +320,13 @@ export default defineComponent({
       mdiCog,
       sliderClicked,
       openOptions,
+      groupItems,
+      selectedGroup,
+      groupsLoading,
+      groupLoadError,
+      groupActionLoading,
+      groupActionState,
+      disableSelectedGroup,
       ...useTranslation()
     }
   }
