@@ -1,0 +1,50 @@
+name: Format diagnostics
+
+on:
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  prettier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          show-progress: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund --loglevel=error
+
+      - name: Capture Prettier report
+        shell: bash
+        run: |
+          set +e
+          npm run prettier:check > prettier.log 2>&1
+          echo "$?" > prettier.exit
+          exit 0
+
+      - name: Upload Prettier report
+        uses: actions/upload-artifact@v7
+        with:
+          name: prettier-report
+          path: |
+            prettier.log
+            prettier.exit
+          retention-days: 1
+
+      - name: Enforce result
+        run: test "$(cat prettier.exit)" = "0"
