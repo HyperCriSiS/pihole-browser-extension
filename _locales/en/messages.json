@@ -56,7 +56,7 @@
 		"message": "seconds"
 	},
 	"options_temporary_allow_times_title": {
-		"message": "Temporary allow presets"
+		"message": "Temporary action presets"
 	},
 	"options_temporary_allow_time_label": {
 		"message": "Preset"
@@ -112,7 +112,7 @@
 		"message": "Temporarily allow"
 	},
 	"popup_temporary_allow_duration": {
-		"message": "Temporary allow duration"
+		"message": "Temporary action duration"
 	},
 	"popup_group_title": {
 		"message": "Client group"
