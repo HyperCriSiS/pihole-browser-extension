@@ -8,9 +8,12 @@ export enum PiHoleSettingsDefaults {
   default_disable_time = 10
 }
 
+export const TemporaryAllowTimeDefaults = [60, 300, 900]
+
 export interface ExtensionStorage {
   pi_hole_settings?: PiHoleSettingsStorage[];
   default_disable_time?: number;
+  temporary_allow_times?: number[];
   reload_after_disable?: boolean;
   reload_after_white_list?: boolean;
   disable_list_feature?: boolean;
@@ -22,6 +25,7 @@ export interface ExtensionStorage {
 export enum ExtensionStorageEnum {
   pi_hole_settings = 'pi_hole_settings',
   default_disable_time = 'default_disable_time',
+  temporary_allow_times = 'temporary_allow_times',
   reload_after_disable = 'reload_after_disable',
   reload_after_white_list = 'reload_after_white_list',
   disable_list_feature = 'disable_list_feature',
@@ -87,6 +91,30 @@ export class StorageService {
   public static getDefaultDisableTime(): Promise<number | undefined> {
     return this.getStorageValue<number>(
       ExtensionStorageEnum.default_disable_time,
+    );
+  }
+
+  public static saveTemporaryAllowTimes(times: number[]): void {
+    const normalizedTimes = times.map(Number);
+    const isValid =
+      normalizedTimes.length === 3 &&
+      normalizedTimes.every(
+        time => Number.isInteger(time) && time >= 10,
+      );
+
+    if (!isValid) {
+      return;
+    }
+
+    const storage: ExtensionStorage = {
+      temporary_allow_times: normalizedTimes,
+    };
+    chrome.storage.local.set(storage);
+  }
+
+  public static getTemporaryAllowTimes(): Promise<number[] | undefined> {
+    return this.getStorageValue<number[]>(
+      ExtensionStorageEnum.temporary_allow_times,
     );
   }
 
@@ -200,6 +228,7 @@ export class StorageService {
           typeof storageValue === 'undefined'
         ) {
           resolve(defaultUnsetValue);
+          return;
         }
 
         resolve(storageValue);
