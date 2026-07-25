@@ -128,14 +128,22 @@ export default class PiHoleApiService {
     domain: string
   ): Promise<PiHoleDomain | undefined> {
     this.assertValidPiHole(piHole)
-    const response = await this.getAxiosInstance(
-      piHole.pi_uri_base!,
-      piHole.api_key
-    ).get<PiHoleDomains>(
-      `/domains/${list}/exact/${encodeURIComponent(domain)}`
-    )
 
-    return response.data.domains[0]
+    try {
+      const response = await this.getAxiosInstance(
+        piHole.pi_uri_base!,
+        piHole.api_key
+      ).get<PiHoleDomains>(
+        `/domains/${list}/exact/${encodeURIComponent(domain)}`
+      )
+
+      return response.data.domains[0]
+    } catch (reason) {
+      if (this.isNotFound(reason)) {
+        return undefined
+      }
+      throw reason
+    }
   }
 
   public static async addExactDomain(
@@ -218,12 +226,20 @@ export default class PiHoleApiService {
     name: string
   ): Promise<PiHoleGroup | undefined> {
     this.assertValidPiHole(piHole)
-    const response = await this.getAxiosInstance(
-      piHole.pi_uri_base!,
-      piHole.api_key
-    ).get<PiHoleGroups>(`/groups/${encodeURIComponent(name)}`)
 
-    return response.data.groups[0]
+    try {
+      const response = await this.getAxiosInstance(
+        piHole.pi_uri_base!,
+        piHole.api_key
+      ).get<PiHoleGroups>(`/groups/${encodeURIComponent(name)}`)
+
+      return response.data.groups[0]
+    } catch (reason) {
+      if (this.isNotFound(reason)) {
+        return undefined
+      }
+      throw reason
+    }
   }
 
   public static async replaceGroup(
@@ -258,11 +274,23 @@ export default class PiHoleApiService {
     await Promise.all(
       piHoleSettingsArray.map(async piHole => {
         if (mode === ApiListMode.add) {
-          await this.addExactDomain(piHole, list, domain, {
-            comment: 'From PiHole Extension',
-            groups: [0],
-            enabled: true
-          })
+          const current = await this.getExactDomain(piHole, list, domain)
+          if (!current) {
+            await this.addExactDomain(piHole, list, domain, {
+              comment: 'From PiHole Extension',
+              groups: [0],
+              enabled: true
+            })
+            return
+          }
+
+          if (!current.enabled || !current.groups.includes(0)) {
+            await this.replaceExactDomain(piHole, list, domain, {
+              comment: current.comment,
+              groups: Array.from(new Set([...current.groups, 0])),
+              enabled: true
+            })
+          }
           return
         }
 
