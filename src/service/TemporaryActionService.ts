@@ -67,7 +67,9 @@ export default class TemporaryActionService {
 
   public static async handleAlarm(alarmName: string): Promise<boolean> {
     if (alarmName.startsWith(DOMAIN_ALARM_PREFIX)) {
-      await this.restoreDomainAction(alarmName.slice(DOMAIN_ALARM_PREFIX.length))
+      await this.restoreDomainAction(
+        alarmName.slice(DOMAIN_ALARM_PREFIX.length)
+      )
       return true
     }
 
@@ -235,11 +237,15 @@ export default class TemporaryActionService {
         }
 
         // eslint-disable-next-line no-await-in-loop
-        const expected = await PiHoleApiService.replaceGroup(piHole, groupName, {
-          name: current.name,
-          comment: current.comment,
-          enabled: false
-        })
+        const expected = await PiHoleApiService.replaceGroup(
+          piHole,
+          groupName,
+          {
+            name: current.name,
+            comment: current.comment,
+            enabled: false
+          }
+        )
 
         action.targets.push({
           pi_uri_base: piHole.pi_uri_base!,
@@ -326,7 +332,9 @@ export default class TemporaryActionService {
   private static async restoreDomainTargets(
     action: TemporaryDomainAction
   ): Promise<TemporaryDomainTarget[]> {
-    const piHoles = await PiHoleApiService.getConfiguredPiHoles().catch(() => [])
+    const piHoles = await PiHoleApiService.getConfiguredPiHoles().catch(
+      () => []
+    )
     const failedTargets: TemporaryDomainTarget[] = []
 
     for (const target of action.targets) {
@@ -382,7 +390,9 @@ export default class TemporaryActionService {
   private static async restoreGroupTargets(
     action: TemporaryGroupAction
   ): Promise<TemporaryGroupTarget[]> {
-    const piHoles = await PiHoleApiService.getConfiguredPiHoles().catch(() => [])
+    const piHoles = await PiHoleApiService.getConfiguredPiHoles().catch(
+      () => []
+    )
     const failedTargets: TemporaryGroupTarget[] = []
 
     for (const target of action.targets) {

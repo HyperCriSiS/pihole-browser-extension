@@ -60,12 +60,7 @@ import {
   mdiCheckCircleOutline,
   mdiTimerOutline
 } from '@mdi/js'
-import {
-  computed,
-  defineComponent,
-  onMounted,
-  ref
-} from '@vue/composition-api'
+import { computed, defineComponent, onMounted, ref } from '@vue/composition-api'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
 import ApiList from '../../../../api/enum/ApiList'
 import useTranslation from '../../../../hooks/translation'

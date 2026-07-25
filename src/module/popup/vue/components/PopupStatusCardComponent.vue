@@ -54,10 +54,10 @@
         :loading="groupActionLoading"
         :disabled="
           groupActionLoading ||
-          groupsLoading ||
-          !selectedGroup ||
-          defaultDisableTime < 1 ||
-          defaultDisableTimeDisabled
+            groupsLoading ||
+            !selectedGroup ||
+            defaultDisableTime < 1 ||
+            defaultDisableTimeDisabled
         "
         @click="disableSelectedGroup"
       >
@@ -161,7 +161,8 @@ export default defineComponent({
       try {
         groups.value = await PiHoleApiService.getCommonGroups()
         const preferredGroup =
-          groups.value.find(group => group.name !== 'Default') || groups.value[0]
+          groups.value.find(group => group.name !== 'Default') ||
+          groups.value[0]
         selectedGroup.value = preferredGroup?.name || null
       } catch (reason) {
         console.warn(reason)

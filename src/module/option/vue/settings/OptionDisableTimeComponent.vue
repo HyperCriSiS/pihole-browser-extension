@@ -22,9 +22,11 @@
       >
         <v-text-field
           v-model.number="temporaryAllowTimes[index]"
-          :label="`${translate(
-            I18NOptionKeys.options_temporary_allow_time_label
-          )} ${index + 1}`"
+          :label="
+            `${translate(
+              I18NOptionKeys.options_temporary_allow_time_label
+            )} ${index + 1}`
+          "
           type="number"
           min="10"
           outlined
@@ -80,9 +82,7 @@ export default defineComponent({
         const normalizedTimes = times.map(Number)
         if (
           normalizedTimes.length === 3 &&
-          normalizedTimes.every(
-            time => Number.isInteger(time) && time >= 10
-          )
+          normalizedTimes.every(time => Number.isInteger(time) && time >= 10)
         ) {
           StorageService.saveTemporaryAllowTimes(normalizedTimes)
         }

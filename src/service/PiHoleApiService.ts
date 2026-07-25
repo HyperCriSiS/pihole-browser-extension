@@ -212,9 +212,9 @@ export default class PiHoleApiService {
       return firstGroups
     }
 
-    const remainingGroupNames = responses.slice(1).map(
-      response => new Set(response.data.groups.map(group => group.name))
-    )
+    const remainingGroupNames = responses
+      .slice(1)
+      .map(response => new Set(response.data.groups.map(group => group.name)))
 
     return firstGroups.filter(group =>
       remainingGroupNames.every(names => names.has(group.name))
