@@ -22,7 +22,10 @@ module.exports = {
     ],
     overrides: [
         {
-            files: ['src/module/popup/vue/components/PopupListCardComponent.vue'],
+            files: [
+                'src/module/popup/vue/components/PopupListCardComponent.vue',
+                'src/module/popup/vue/components/PopupStatusCardComponent.vue',
+            ],
             rules: {
                 'prefer-destructuring': 'off',
             },
