@@ -4,13 +4,7 @@
 </template>
 
 <script lang="ts">
-import {
-  defineComponent,
-  onMounted,
-  PropType,
-  ref,
-  watch
-} from '@vue/composition-api'
+import { defineComponent, onMounted, PropType, ref, watch } from 'vue'
 import useTranslation from '../../../../hooks/translation'
 import { I18NOptionKeys } from '../../../../service/i18NService'
 

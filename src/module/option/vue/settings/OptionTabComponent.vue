@@ -96,13 +96,7 @@
 
 <script lang="ts">
 import { debounce } from 'vue-debounce'
-import {
-  computed,
-  defineComponent,
-  onMounted,
-  ref,
-  watch
-} from '@vue/composition-api'
+import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import { mdiEyeOffOutline, mdiEyeOutline } from '@mdi/js'
 import {
   PiHoleSettingsStorage,
