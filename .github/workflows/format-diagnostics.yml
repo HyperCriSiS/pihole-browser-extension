@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          npm run prettier:check > prettier.log 2>&1
+          npm run prettier-check > prettier.log 2>&1
           echo "$?" > prettier.exit
           exit 0
 
