@@ -9,6 +9,7 @@ The dependency modernization is intentionally split into small, independently va
 3. ESLint flat-config migration with typescript-eslint 8, eslint-plugin-vue 10 and Prettier 3.
 4. ESLint 10 and eslint-webpack-plugin 6 upgrade.
 5. TypeScript 6, current browser type definitions and compatible Webpack tooling majors.
+6. Vue 3, Vue Router 5 and Vuetify 4 framework migration.
 
 The Vue 2.7 bridge removes `@vue/composition-api` and `vue-template-compiler`, updates all Composition API imports to use `vue`, and configures the Vue compiler target explicitly.
 
@@ -18,10 +19,11 @@ The ESLint 10 stage validates the final flat-config-only toolchain before the re
 
 The compiler stage updates TypeScript and the browser API definitions, replaces deprecated TypeScript module-resolution settings, upgrades compatible Webpack loaders and plugins, and replaces `url-loader` with built-in asset modules.
 
-## Planned stages
+The framework stage migrates application startup to `createApp`, adopts the current router API, updates the Vue compiler and loader integration, moves themes and SVG icons to `createVuetify`, and replaces removed Vuetify 2 template structures.
 
-1. Migrate the application bootstrap and components to Vue 3.
-2. Migrate Vuetify 2 components and themes to a supported Vuetify version.
-3. Add focused automated tests before the next public release.
+## Remaining release work
+
+1. Complete a manual popup and options-page smoke test in Firefox and Chromium.
+2. Add focused automated tests before the next public release.
 
 Each stage must pass dependency installation, ESLint, Prettier, Firefox and Chrome production builds, and CodeQL before it is merged.
