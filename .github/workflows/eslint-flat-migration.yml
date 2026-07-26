@@ -86,13 +86,28 @@ jobs:
         run: npm run prettier-check
 
       - name: Build Chrome and Firefox packages
-        run: npm run build
+        shell: bash
+        run: |
+          set +e
+          rm -f .github/build-migration-error.txt
+          npm run build > .github/build-migration-error.txt 2>&1
+          status=$?
+          cat .github/build-migration-error.txt
+          if [ "$status" -ne 0 ]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add .github/build-migration-error.txt
+            git commit -m 'Record build migration failure'
+            git push origin HEAD:chore/eslint-flat-config
+            exit "$status"
+          fi
+          rm -f .github/build-migration-error.txt
 
       - name: Commit migration result
         shell: bash
         run: |
           set -euo pipefail
-          rm -f .github/workflows/eslint-flat-migration.yml .github/eslint-flat-trigger .github/npm-install-error.txt .github/lint-migration-error.txt
+          rm -f .github/workflows/eslint-flat-migration.yml .github/eslint-flat-trigger .github/npm-install-error.txt .github/lint-migration-error.txt .github/build-migration-error.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
