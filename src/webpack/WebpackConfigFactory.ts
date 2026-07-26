@@ -1,3 +1,5 @@
+/// <reference path="./vue-loader-plugin.d.ts" />
+
 import { Configuration } from 'webpack'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import ZipPlugin from 'zip-webpack-plugin'
@@ -52,9 +54,7 @@ export class WebpackConfigFactory {
           },
           {
             test: /\.(woff|woff2|ttf|eot)$/,
-            use: {
-              loader: 'url-loader',
-            },
+            type: 'asset',
           },
         ],
       },

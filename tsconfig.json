@@ -12,9 +12,8 @@
 			"chrome",
 			"firefox-webext-browser"
 		],
-		"baseUrl": ".",
 		"module": "ESNext",
-		"moduleResolution": "Node",
+		"moduleResolution": "Bundler",
 		"esModuleInterop": true,
 		"experimentalDecorators": true,
 		"strict": true,
@@ -22,8 +21,7 @@
 	},
 	"exclude": [
 		"node_modules",
-		"src/webpack",
-		".eslintrc.js"
+		"src/webpack"
 	],
 	"include": [
 		"src/**/*"

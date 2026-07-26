@@ -471,7 +471,7 @@ export default class TemporaryActionService {
     return new Promise((resolve) => {
       chrome.storage.local.get(STORAGE_KEY, (values) => {
         resolve(
-          values[STORAGE_KEY] || {
+          (values[STORAGE_KEY] as TemporaryActionsStorage | undefined) || {
             domains: {},
             groups: {},
           },
