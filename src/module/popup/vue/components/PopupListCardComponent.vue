@@ -16,9 +16,7 @@
         :loading="whitelistingActive"
         @click="whitelistUrl"
       >
-        <v-icon class="mr-2" color="white">{{
-          mdiCheckCircleOutline
-        }}</v-icon>
+        <v-icon class="mr-2" color="white">{{ mdiCheckCircleOutline }}</v-icon>
         {{ translate(I18NPopupKeys.popup_second_card_whitelist) }}
       </v-btn>
 
@@ -49,9 +47,7 @@
         :loading="blacklistingActive"
         @click="blackListUrl"
       >
-        <v-icon class="mr-2" color="white">{{
-          mdiAlphaXCircleOutline
-        }}</v-icon>
+        <v-icon class="mr-2" color="white">{{ mdiAlphaXCircleOutline }}</v-icon>
         {{ translate(I18NPopupKeys.popup_second_card_blacklist) }}
       </v-btn>
     </v-card-text>

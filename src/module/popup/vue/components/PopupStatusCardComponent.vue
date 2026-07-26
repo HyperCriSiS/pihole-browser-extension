@@ -222,8 +222,7 @@ export default defineComponent({
         const preferredGroup =
           groups.value.find((group) => group.name !== 'Default') ||
           groups.value[0]
-        selectedPauseTarget.value =
-          preferredGroup?.name || ENTIRE_PIHOLE_TARGET
+        selectedPauseTarget.value = preferredGroup?.name || ENTIRE_PIHOLE_TARGET
       } catch (reason) {
         console.warn(reason)
         groupLoadError.value = true
