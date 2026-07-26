@@ -21,6 +21,8 @@ The compiler stage updates TypeScript and the browser API definitions, replaces 
 
 The framework stage migrates application startup to `createApp`, adopts the current router API, updates the Vue compiler and loader integration, moves themes and SVG icons to `createVuetify`, and replaces removed Vuetify 2 template structures.
 
+The popup keeps two separate action models. The pause control targets a remembered client group by default and offers the entire Pi-hole installation as an explicit alternative. Its duration uses `default_disable_time`. Domain management remains a separate card with permanent allow, three temporary allow preset buttons and permanent block actions. The three domain durations use `temporary_allow_times` exclusively.
+
 ## Remaining release work
 
 1. Complete a manual popup and options-page smoke test in Firefox and Chromium.
