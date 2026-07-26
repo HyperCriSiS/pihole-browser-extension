@@ -266,6 +266,45 @@ export default class PiHoleApiService {
     return updatedGroup
   }
 
+  public static async getGroupEnabledCombined(name: string): Promise<boolean> {
+    const piHoles = await this.getConfiguredPiHoles()
+    const groups = await Promise.all(
+      piHoles.map((piHole) => this.getGroup(piHole, name)),
+    )
+
+    if (groups.some((group) => !group)) {
+      throw new Error(`Group ${name} is missing on one Pi-hole`)
+    }
+
+    return groups.every((group) => group!.enabled)
+  }
+
+  public static async setGroupEnabled(
+    name: string,
+    enabled: boolean,
+  ): Promise<PiHoleGroup[]> {
+    const piHoles = await this.getConfiguredPiHoles()
+
+    return Promise.all(
+      piHoles.map(async (piHole) => {
+        const current = await this.getGroup(piHole, name)
+        if (!current) {
+          throw new Error(`Group ${name} is missing on one Pi-hole`)
+        }
+
+        if (current.enabled === enabled) {
+          return current
+        }
+
+        return this.replaceGroup(piHole, name, {
+          name: current.name,
+          comment: current.comment,
+          enabled,
+        })
+      }),
+    )
+  }
+
   private static async changeDomainOnList(
     list: ApiList,
     mode: ApiListMode,
