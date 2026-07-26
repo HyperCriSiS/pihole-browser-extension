@@ -301,6 +301,7 @@ export default defineComponent({
     }
 
     return {
+      PiHoleSettingsDefaults,
       mdiEyeOutline,
       mdiEyeOffOutline,
       currentTab,
