@@ -116,6 +116,7 @@ export class WebpackConfigFactory {
           }),
         new VueLoaderPlugin(),
         new ESLintWebpackPlugin({
+          configType: 'flat',
           cwd: repositoryRoot,
           extensions: ['ts', 'vue']
         })
