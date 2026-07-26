@@ -78,8 +78,6 @@ jobs:
           )
           NODE
 
-          npm run prettier-format
-
       - name: Regenerate lockfile
         shell: bash
         run: |
@@ -100,6 +98,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
+
+      - name: Format compatibility fixes
+        run: npm run prettier-format
 
       - name: Run ESLint
         run: npm run eslint
