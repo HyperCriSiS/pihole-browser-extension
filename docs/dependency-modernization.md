@@ -21,7 +21,7 @@ The compiler stage updates TypeScript and the browser API definitions, replaces 
 
 The framework stage migrates application startup to `createApp`, adopts the current router API, updates the Vue compiler and loader integration, moves themes and SVG icons to `createVuetify`, and replaces removed Vuetify 2 template structures.
 
-The popup keeps two separate action models. The pause control targets a remembered client group by default and offers the entire Pi-hole installation as an explicit alternative. Its duration uses `default_disable_time`. Domain management remains a separate card with permanent allow, three temporary allow preset buttons and permanent block actions. The three domain durations use `temporary_allow_times` exclusively.
+The popup keeps two separate action models. The pause control targets a remembered client group by default and offers the entire Pi-hole installation as an explicit alternative. A client-group pause does not disable or alter the group itself. It creates a dedicated allow-all regex rule assigned only to that group, records the previous rule state per configured Pi-hole and removes or restores the rule when blocking resumes or the timer expires. Its duration uses `default_disable_time`. Domain management remains a separate card with permanent allow, three temporary allow preset buttons and permanent block actions. The three domain durations use `temporary_allow_times` exclusively.
 
 ## Remaining release work
 
