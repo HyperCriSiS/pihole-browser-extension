@@ -4,15 +4,15 @@
       {{ translate(I18NPopupKeys.popup_second_card_current_url) }}
     </v-card-title>
     <v-card-text class="text-center">
-      <v-alert color="primary" outlined>
+      <v-alert color="primary" variant="outlined">
         {{ currentUrl }}
       </v-alert>
       <v-select
         v-model="selectedTemporaryAllowTime"
         :items="temporaryAllowTimeItems"
         :label="translate(I18NPopupKeys.popup_temporary_allow_duration)"
-        outlined
-        dense
+        variant="outlined"
+        density="compact"
         hide-details
       ></v-select>
     </v-card-text>
@@ -21,7 +21,7 @@
         id="list_action_white"
         :disabled="buttonsDisabled"
         :title="translate(I18NPopupKeys.popup_second_card_whitelist)"
-        size="sm"
+        size="small"
         color="green"
         :loading="whitelistingActive"
         @click="whitelistUrl"
@@ -32,7 +32,7 @@
         id="list_action_temporary_white"
         :disabled="buttonsDisabled"
         :title="translate(I18NPopupKeys.popup_temporary_whitelist)"
-        size="sm"
+        size="small"
         color="orange"
         :loading="temporaryWhitelistingActive"
         @click="temporarilyWhitelistUrl"
@@ -43,7 +43,7 @@
         id="list_action_black"
         :disabled="buttonsDisabled"
         :title="translate(I18NPopupKeys.popup_second_card_blacklist)"
-        size="sm"
+        size="small"
         color="red"
         :loading="blacklistingActive"
         @click="blackListUrl"
@@ -93,7 +93,7 @@ export default defineComponent({
 
     const temporaryAllowTimeItems = computed(() =>
       temporaryAllowTimes.value.map((time) => ({
-        text: `${time} s`,
+        title: `${time} s`,
         value: time,
       })),
     )
