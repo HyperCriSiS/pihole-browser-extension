@@ -1,0 +1,86 @@
+name: Build compiler and tooling upgrade
+
+on:
+  push:
+    branches:
+      - chore/compiler-build-tooling
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out upgrade branch
+        uses: actions/checkout@v6
+        with:
+          ref: chore/compiler-build-tooling
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Regenerate lockfile
+        shell: bash
+        run: |
+          set +e
+          rm -f package-lock.json .github/compiler-upgrade-error.txt
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund > .github/compiler-upgrade-error.txt 2>&1
+          status=$?
+          cat .github/compiler-upgrade-error.txt
+          if [ "$status" -ne 0 ]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add .github/compiler-upgrade-error.txt
+            git commit -m 'Record compiler dependency failure'
+            git push origin HEAD:chore/compiler-build-tooling
+            exit "$status"
+          fi
+          rm -f .github/compiler-upgrade-error.txt
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run ESLint
+        run: npm run eslint
+
+      - name: Run Prettier check
+        run: npm run prettier-check
+
+      - name: Build Chrome and Firefox packages
+        shell: bash
+        run: |
+          set +e
+          npm run build > .github/compiler-upgrade-error.txt 2>&1
+          status=$?
+          cat .github/compiler-upgrade-error.txt
+          if [ "$status" -ne 0 ]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add .github/compiler-upgrade-error.txt
+            git commit -m 'Record compiler build failure'
+            git push origin HEAD:chore/compiler-build-tooling
+            exit "$status"
+          fi
+          rm -f .github/compiler-upgrade-error.txt
+
+      - name: Commit upgrade result
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/compiler-build-upgrade.yml .github/compiler-build-trigger .github/compiler-upgrade-error.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Modernize compiler and build tooling'
+          git push origin HEAD:chore/compiler-build-tooling
