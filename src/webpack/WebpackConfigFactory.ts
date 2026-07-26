@@ -52,9 +52,7 @@ export class WebpackConfigFactory {
           },
           {
             test: /\.(woff|woff2|ttf|eot)$/,
-            use: {
-              loader: 'url-loader',
-            },
+            type: 'asset',
           },
         ],
       },
