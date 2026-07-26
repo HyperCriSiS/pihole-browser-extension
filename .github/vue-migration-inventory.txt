@@ -20,8 +20,6 @@ src/module/popup/vue/components/PopupStatusCardComponent.vue
 src/module/popup/vue/view/PopupComponent.vue
 
 # Vue and router bootstrap references
-src/plugins/vuetify.ts:6:Vue.use(Vuetify)
-src/plugins/vuetify.ts:46:const vuetify = new Vuetify(opts)
 src/module/popup/init/PopupInitializer.ts:14:    new Vue(vueComponent)
 src/module/option/init/OptionsInitializer.ts:11:    const router = new VueRouter({
 src/module/option/init/OptionsInitializer.ts:45:    Vue.use(VueRouter)
