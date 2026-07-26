@@ -6,7 +6,16 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['dist/**', 'node_modules/**', 'package.*.zip']
+    ignores: [
+      'dist/**',
+      '_locales/**',
+      'node_modules/**',
+      '.github/**',
+      'icon/**',
+      'icon_raw/**',
+      'src/webpack/**',
+      'package.*.zip'
+    ]
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -17,11 +26,6 @@ export default tseslint.config(
       globals: {
         ...globals.browser,
         ...globals.webextensions
-      },
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-        extraFileExtensions: ['.vue']
       }
     },
     rules: {
@@ -38,14 +42,12 @@ export default tseslint.config(
     languageOptions: {
       parserOptions: {
         parser: tseslint.parser,
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
         extraFileExtensions: ['.vue']
       }
     }
   },
   {
-    files: ['src/webpack/**/*.ts', '*.js', '*.mjs'],
+    files: ['*.js', '*.mjs'],
     languageOptions: {
       globals: {
         ...globals.node
