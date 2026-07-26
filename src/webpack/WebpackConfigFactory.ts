@@ -1,3 +1,5 @@
+/// <reference path="./vue-loader-plugin.d.ts" />
+
 import { Configuration } from 'webpack'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import ZipPlugin from 'zip-webpack-plugin'
