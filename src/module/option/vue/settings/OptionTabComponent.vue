@@ -22,7 +22,7 @@
           v-debounce:500ms="connectionCheck"
           variant="outlined"
           debounce-events="input"
-          :placeholder="PiHoleSettingsDefaults.pi_uri_base"
+          :placeholder="piHoleAddressPlaceholder"
           :rules="[
             (v) =>
               isValidUrlSchema(v) ||
@@ -181,6 +181,7 @@ export default defineComponent({
     const saving = ref(false)
     const saveState = ref<SaveState>(null)
     const settingsDirty = ref(false)
+    const piHoleAddressPlaceholder = PiHoleSettingsDefaults.pi_uri_base
 
     const currentSelectedSettings = computed(() => tabs.value[currentTab.value])
 
@@ -301,7 +302,7 @@ export default defineComponent({
     }
 
     return {
-      PiHoleSettingsDefaults,
+      piHoleAddressPlaceholder,
       mdiEyeOutline,
       mdiEyeOffOutline,
       currentTab,
