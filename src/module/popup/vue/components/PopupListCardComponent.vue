@@ -3,54 +3,58 @@
     <v-card-title>
       {{ translate(I18NPopupKeys.popup_second_card_current_url) }}
     </v-card-title>
-    <v-card-text class="text-center">
-      <v-alert color="primary" variant="outlined">
+    <v-card-text>
+      <v-alert color="primary" variant="outlined" class="mb-4">
         {{ currentUrl }}
       </v-alert>
-      <v-select
-        v-model="selectedTemporaryAllowTime"
-        :items="temporaryAllowTimeItems"
-        :label="translate(I18NPopupKeys.popup_temporary_allow_duration)"
-        variant="outlined"
-        density="compact"
-        hide-details
-      ></v-select>
-    </v-card-text>
-    <v-card-actions class="justify-center">
+
       <v-btn
         id="list_action_white"
-        :disabled="buttonsDisabled"
-        :title="translate(I18NPopupKeys.popup_second_card_whitelist)"
-        size="small"
+        block
         color="green"
+        :disabled="buttonsDisabled"
         :loading="whitelistingActive"
         @click="whitelistUrl"
       >
-        <v-icon color="white">{{ mdiCheckCircleOutline }}</v-icon>
+        <v-icon class="mr-2" color="white">{{
+          mdiCheckCircleOutline
+        }}</v-icon>
+        {{ translate(I18NPopupKeys.popup_second_card_whitelist) }}
       </v-btn>
-      <v-btn
-        id="list_action_temporary_white"
-        :disabled="buttonsDisabled"
-        :title="translate(I18NPopupKeys.popup_temporary_whitelist)"
-        size="small"
-        color="orange"
-        :loading="temporaryWhitelistingActive"
-        @click="temporarilyWhitelistUrl"
-      >
-        <v-icon color="white">{{ mdiTimerOutline }}</v-icon>
-      </v-btn>
+
+      <div class="text-subtitle-2 mt-4 mb-2">
+        {{ translate(I18NPopupKeys.popup_temporary_whitelist) }}
+      </div>
+      <div class="d-flex ga-2">
+        <v-btn
+          v-for="time in temporaryAllowTimes"
+          :key="time"
+          class="flex-grow-1"
+          color="orange"
+          :disabled="buttonsDisabled"
+          :loading="temporaryWhitelistingActive === time"
+          @click="temporarilyWhitelistUrl(time)"
+        >
+          <v-icon class="mr-1" color="white">{{ mdiTimerOutline }}</v-icon>
+          {{ time }} s
+        </v-btn>
+      </div>
+
       <v-btn
         id="list_action_black"
-        :disabled="buttonsDisabled"
-        :title="translate(I18NPopupKeys.popup_second_card_blacklist)"
-        size="small"
+        block
+        class="mt-4"
         color="red"
+        :disabled="buttonsDisabled"
         :loading="blacklistingActive"
         @click="blackListUrl"
       >
-        <v-icon color="white">{{ mdiAlphaXCircleOutline }}</v-icon>
+        <v-icon class="mr-2" color="white">{{
+          mdiAlphaXCircleOutline
+        }}</v-icon>
+        {{ translate(I18NPopupKeys.popup_second_card_blacklist) }}
       </v-btn>
-    </v-card-actions>
+    </v-card-text>
   </v-card>
 </template>
 
@@ -60,7 +64,7 @@ import {
   mdiCheckCircleOutline,
   mdiTimerOutline,
 } from '@mdi/js'
-import { computed, defineComponent, onMounted, ref } from 'vue'
+import { defineComponent, onMounted, ref } from 'vue'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
 import ApiList from '../../../../api/enum/ApiList'
 import useTranslation from '../../../../hooks/translation'
@@ -86,22 +90,14 @@ export default defineComponent({
   setup: ({ currentUrl }) => {
     const buttonsDisabled = ref(false)
     const whitelistingActive = ref(false)
-    const temporaryWhitelistingActive = ref(false)
+    const temporaryWhitelistingActive = ref<number | null>(null)
     const blacklistingActive = ref(false)
     const temporaryAllowTimes = ref<number[]>([...TemporaryAllowTimeDefaults])
-    const selectedTemporaryAllowTime = ref(TemporaryAllowTimeDefaults[0])
-
-    const temporaryAllowTimeItems = computed(() =>
-      temporaryAllowTimes.value.map((time) => ({
-        title: `${time} s`,
-        value: time,
-      })),
-    )
 
     const setActionFinished = () => {
       setTimeout(() => {
         whitelistingActive.value = false
-        temporaryWhitelistingActive.value = false
+        temporaryWhitelistingActive.value = null
         blacklistingActive.value = false
         buttonsDisabled.value = false
       }, 500)
@@ -146,13 +142,13 @@ export default defineComponent({
       }
     }
 
-    const temporarilyWhitelistUrl = async () => {
-      if (!currentUrl || selectedTemporaryAllowTime.value < 1) {
+    const temporarilyWhitelistUrl = async (durationSeconds: number) => {
+      if (!currentUrl || durationSeconds < 1) {
         return
       }
 
       buttonsDisabled.value = true
-      temporaryWhitelistingActive.value = true
+      temporaryWhitelistingActive.value = durationSeconds
 
       try {
         // Do not remove an existing deny entry. Exact allow entries have
@@ -160,7 +156,7 @@ export default defineComponent({
         // entry later restores the previous blocking behavior automatically.
         await TemporaryActionService.temporarilyAllowDomain(
           currentUrl,
-          selectedTemporaryAllowTime.value,
+          durationSeconds,
         )
         BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
         await reloadAfterWhitelist()
@@ -179,7 +175,6 @@ export default defineComponent({
       const storedTimes = await StorageService.getTemporaryAllowTimes()
       if (storedTimes?.length === 3) {
         temporaryAllowTimes.value = storedTimes
-        selectedTemporaryAllowTime.value = storedTimes[0]
       }
     })
 
@@ -188,8 +183,7 @@ export default defineComponent({
       temporaryWhitelistingActive,
       blacklistingActive,
       buttonsDisabled,
-      temporaryAllowTimeItems,
-      selectedTemporaryAllowTime,
+      temporaryAllowTimes,
       mdiCheckCircleOutline,
       mdiTimerOutline,
       mdiAlphaXCircleOutline,
