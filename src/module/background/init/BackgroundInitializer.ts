@@ -9,6 +9,7 @@ import PiHoleApiService from '../../../service/PiHoleApiService'
 import PiHoleApiStatusEnum from '../../../api/enum/PiHoleApiStatusEnum'
 import HotKeyInitializer from './HotKeyInitializer'
 import TemporaryActionService from '../../../service/TemporaryActionService'
+import GroupPauseService from '../../../service/GroupPauseService'
 
 export default class BackgroundInitializer implements Initializer {
   private readonly ALARM_NAME = 'pihole.checkStatus'
@@ -29,6 +30,9 @@ export default class BackgroundInitializer implements Initializer {
     })
     TemporaryActionService.initialize().catch((reason) => {
       console.error('Failed to initialize temporary actions', reason)
+    })
+    GroupPauseService.initialize().catch((reason) => {
+      console.error('Failed to initialize client-group pauses', reason)
     })
   }
 
@@ -52,8 +56,11 @@ export default class BackgroundInitializer implements Initializer {
         return
       }
 
-      TemporaryActionService.handleAlarm(alarm.name).catch((reason) => {
-        console.error('Failed to handle temporary action alarm', reason)
+      Promise.all([
+        GroupPauseService.handleAlarm(alarm.name),
+        TemporaryActionService.handleAlarm(alarm.name),
+      ]).catch((reason) => {
+        console.error('Failed to handle extension alarm', reason)
       })
     }
 
