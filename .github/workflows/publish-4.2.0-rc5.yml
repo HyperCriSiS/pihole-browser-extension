@@ -1,0 +1,166 @@
+name: Publish v4.2.0-rc.5
+
+on:
+  push:
+    branches:
+      - feat/vue3-vuetify-migration
+    paths:
+      - .github/release-candidate-rc5-trigger
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out release candidate branch
+        uses: actions/checkout@v6
+        with:
+          ref: feat/vue3-vuetify-migration
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Validate the release candidate
+        run: |
+          npm run eslint
+          npm run prettier-check
+          npm run build
+
+      - name: Prepare release candidate assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp package.firefox.zip pihole-browser-extension-4.2.0-rc.5-unsigned.xpi
+          cp package.chrome.zip pihole-browser-extension-4.2.0-rc.5-chrome.zip
+          unzip -t pihole-browser-extension-4.2.0-rc.5-unsigned.xpi
+          sha256sum \
+            pihole-browser-extension-4.2.0-rc.5-unsigned.xpi \
+            pihole-browser-extension-4.2.0-rc.5-chrome.zip \
+            > SHA256SUMS-4.2.0-rc.5.txt
+
+          cat > RELEASE_NOTES_RC5.md <<'EOF'
+          ## PiHole Browser Extension 4.2.0 RC5
+
+          This prerelease replaces RC1 through RC4 and is intended for manual browser testing.
+
+          ### Separated controls
+
+          - A dedicated global switch enables or disables blocking for every configured Pi-hole.
+          - Global switching is manual and no longer shares a timer with client-group actions.
+          - A separate client-group selector has its own manual blocking switch.
+          - Three independently configurable group buttons disable blocking for the selected group for preset durations.
+          - Client-group pauses keep the Pi-hole group and its configuration enabled.
+          - Three separate domain presets temporarily whitelist the current domain.
+          - Permanent Whitelist and Blacklist buttons remain available in the domain card.
+
+          ### Connection settings
+
+          - Pi-hole address and password changes are saved only through the explicit Save button.
+          - Add PiHole creates a new unsaved connection tab and is no longer an implicit save action.
+
+          ### Framework modernization
+
+          - Vue 3.5
+          - Vue Router 5
+          - Vuetify 4.1
+          - TypeScript 6
+          - ESLint 10 and Prettier 3
+
+          ### Firefox note
+
+          The XPI is not signed by Mozilla. Load it temporarily through `about:debugging`, or use Firefox Developer Edition with unsigned extensions enabled.
+          EOF
+
+      - name: Clean release-only files from the source branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA=$(git rev-parse HEAD)
+          echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
+
+          rm -f \
+            .github/workflows/publish-4.2.0-rc5.yml \
+            .github/release-candidate-rc5-trigger \
+            .github/release-candidate-4.2.0-rc.1.json \
+            .github/release-candidate-4.2.0-rc.2.json \
+            .github/release-candidate-4.2.0-rc.3.json \
+            .github/release-candidate-4.2.0-rc.4.json \
+            RELEASE_NOTES_RC3.md \
+            RELEASE_NOTES_RC4.md \
+            SHA256SUMS-4.2.0-rc.3.txt \
+            SHA256SUMS-4.2.0-rc.4.txt \
+            pihole-browser-extension-4.2.0-rc.3-chrome.zip \
+            pihole-browser-extension-4.2.0-rc.3-unsigned.xpi \
+            pihole-browser-extension-4.2.0-rc.4-chrome.zip \
+            pihole-browser-extension-4.2.0-rc.4-unsigned.xpi
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -u
+          git commit -m 'Clean release candidate artifacts from the source branch'
+          git push origin HEAD:feat/vue3-vuetify-migration
+          echo "TARGET_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Create or update the prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='v4.2.0-rc.5'
+          ASSETS=(
+            pihole-browser-extension-4.2.0-rc.5-unsigned.xpi
+            pihole-browser-extension-4.2.0-rc.5-chrome.zip
+            SHA256SUMS-4.2.0-rc.5.txt
+          )
+
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${ASSETS[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$TAG" \
+              --target "$TARGET_SHA" \
+              --title 'PiHole Browser Extension 4.2.0 RC5' \
+              --notes-file RELEASE_NOTES_RC5.md \
+              --prerelease \
+              --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" "${ASSETS[@]}" \
+              --target "$TARGET_SHA" \
+              --title 'PiHole Browser Extension 4.2.0 RC5' \
+              --notes-file RELEASE_NOTES_RC5.md \
+              --prerelease \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+
+      - name: Record the published test build
+        shell: bash
+        run: |
+          set -euo pipefail
+          XPI_SHA=$(sha256sum pihole-browser-extension-4.2.0-rc.5-unsigned.xpi | cut -d' ' -f1)
+          CHROME_SHA=$(sha256sum pihole-browser-extension-4.2.0-rc.5-chrome.zip | cut -d' ' -f1)
+          cat > .github/release-candidate-4.2.0-rc.5.json <<EOF
+          {
+            "tag": "v4.2.0-rc.5",
+            "release_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/tag/v4.2.0-rc.5",
+            "xpi_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.5/pihole-browser-extension-4.2.0-rc.5-unsigned.xpi",
+            "xpi_sha256": "$XPI_SHA",
+            "chrome_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.5/pihole-browser-extension-4.2.0-rc.5-chrome.zip",
+            "chrome_sha256": "$CHROME_SHA",
+            "source_commit": "$SOURCE_SHA",
+            "release_commit": "$TARGET_SHA"
+          }
+          EOF
+          git add .github/release-candidate-4.2.0-rc.5.json
+          git commit -m 'Record 4.2.0 release candidate 5'
+          git push origin HEAD:feat/vue3-vuetify-migration
