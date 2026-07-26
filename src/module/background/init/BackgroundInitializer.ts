@@ -1,6 +1,6 @@
 import {
   BadgeService,
-  ExtensionBadgeTextEnum
+  ExtensionBadgeTextEnum,
 } from '../../../service/BadgeService'
 import ContextMenuInitializer from './ContextMenuInitializer'
 import ChromeRuntimeInitializer from './ChromeRuntimeInitializer'
@@ -27,7 +27,7 @@ export default class BackgroundInitializer implements Initializer {
     this.createAlarm().catch(() => {
       console.error('Failed to create status alarm')
     })
-    TemporaryActionService.initialize().catch(reason => {
+    TemporaryActionService.initialize().catch((reason) => {
       console.error('Failed to initialize temporary actions', reason)
     })
   }
@@ -35,13 +35,13 @@ export default class BackgroundInitializer implements Initializer {
   private async createAlarm(): Promise<void> {
     if (typeof browser !== 'undefined') {
       browser.alarms.create(this.ALARM_NAME, {
-        periodInMinutes: this.INTERVAL_TIMEOUT / 60000
+        periodInMinutes: this.INTERVAL_TIMEOUT / 60000,
       })
       return
     }
 
     await chrome.alarms.create(this.ALARM_NAME, {
-      periodInMinutes: this.INTERVAL_TIMEOUT / 60000
+      periodInMinutes: this.INTERVAL_TIMEOUT / 60000,
     })
   }
 
@@ -52,7 +52,7 @@ export default class BackgroundInitializer implements Initializer {
         return
       }
 
-      TemporaryActionService.handleAlarm(alarm.name).catch(reason => {
+      TemporaryActionService.handleAlarm(alarm.name).catch((reason) => {
         console.error('Failed to handle temporary action alarm', reason)
       })
     }

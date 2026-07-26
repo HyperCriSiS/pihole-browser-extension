@@ -6,7 +6,7 @@
       type="number"
       min="10"
       outlined
-      :rules="[v => Number(v) >= 10 || '≥ 10']"
+      :rules="[(v) => Number(v) >= 10 || '≥ 10']"
       :suffix="translate(I18NOptionKeys.options_default_time_unit)"
     ></v-text-field>
 
@@ -22,15 +22,13 @@
       >
         <v-text-field
           v-model.number="temporaryAllowTimes[index]"
-          :label="
-            `${translate(
-              I18NOptionKeys.options_temporary_allow_time_label
-            )} ${index + 1}`
-          "
+          :label="`${translate(
+            I18NOptionKeys.options_temporary_allow_time_label,
+          )} ${index + 1}`"
           type="number"
           min="10"
           outlined
-          :rules="[v => Number(v) >= 10 || '≥ 10']"
+          :rules="[(v) => Number(v) >= 10 || '≥ 10']"
           :suffix="translate(I18NOptionKeys.options_default_time_unit)"
           :hint="translate(I18NOptionKeys.options_temporary_allow_time_hint)"
           persistent-hint
@@ -45,7 +43,7 @@ import { defineComponent, onMounted, ref, watch } from 'vue'
 import {
   PiHoleSettingsDefaults,
   StorageService,
-  TemporaryAllowTimeDefaults
+  TemporaryAllowTimeDefaults,
 } from '../../../../service/StorageService'
 import useTranslation from '../../../../hooks/translation'
 
@@ -59,7 +57,7 @@ export default defineComponent({
     const updateTimes = async () => {
       const [storedDisableTime, storedTemporaryAllowTimes] = await Promise.all([
         StorageService.getDefaultDisableTime(),
-        StorageService.getTemporaryAllowTimes()
+        StorageService.getTemporaryAllowTimes(),
       ])
 
       if (typeof storedDisableTime !== 'undefined') {
@@ -78,16 +76,16 @@ export default defineComponent({
 
     watch(
       temporaryAllowTimes,
-      times => {
+      (times) => {
         const normalizedTimes = times.map(Number)
         if (
           normalizedTimes.length === 3 &&
-          normalizedTimes.every(time => Number.isInteger(time) && time >= 10)
+          normalizedTimes.every((time) => Number.isInteger(time) && time >= 10)
         ) {
           StorageService.saveTemporaryAllowTimes(normalizedTimes)
         }
       },
-      { deep: true }
+      { deep: true },
     )
 
     onMounted(() => updateTimes())
@@ -96,8 +94,8 @@ export default defineComponent({
       translate,
       I18NOptionKeys,
       disableTime,
-      temporaryAllowTimes
+      temporaryAllowTimes,
     }
-  }
+  },
 })
 </script>

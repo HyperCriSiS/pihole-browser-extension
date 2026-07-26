@@ -4,7 +4,7 @@ export class I18NService {
    */
   public static translate(
     key: string,
-    substitutions?: string | string[]
+    substitutions?: string | string[],
   ): string {
     return chrome.i18n.getMessage(key, substitutions)
   }
@@ -44,7 +44,7 @@ export enum I18NOptionKeys {
   option_connection_check_idle = 'option_connection_check_idle',
   option_connection_check_ok = 'option_connection_check_ok',
   option_connection_check_error = 'option_connection_check_error',
-  option_multiple_connections = 'option_multiple_connections'
+  option_multiple_connections = 'option_multiple_connections',
 }
 
 export enum I18NPopupKeys {
@@ -61,7 +61,7 @@ export enum I18NPopupKeys {
   popup_group_warning = 'popup_group_warning',
   popup_group_success = 'popup_group_success',
   popup_group_error = 'popup_group_error',
-  popup_update_card_info = 'popup_update_card_info'
+  popup_update_card_info = 'popup_update_card_info',
 }
 
 export enum LinkConfig {
@@ -70,12 +70,12 @@ export enum LinkConfig {
   uninstall_survey = 'https://forms.gle/RsGUyrmB1jtsGhYQ9',
   github_issue = 'https://github.com/HyperCriSiS/pihole-browser-extension/issues',
   github_user_badsgahhl = 'https://github.com/badsgahhl',
-  github_user_erikr729 = 'https://github.com/Limatationz'
+  github_user_erikr729 = 'https://github.com/Limatationz',
 }
 
 export enum I18NContextMenuKeys {
   toggle_pi_holes = 'context_menu_toggle_pi_holes',
   blacklist_current_domain = 'context_menu_blacklist_current_domain',
   whitelist_current_domain = 'context_menu_whitelist_current_domain',
-  open_settings = 'context_menu_open_settings'
+  open_settings = 'context_menu_open_settings',
 }

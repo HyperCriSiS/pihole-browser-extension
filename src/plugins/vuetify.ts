@@ -16,7 +16,7 @@ if (
 
 const opts: Partial<UserVuetifyPreset> = {
   icons: {
-    iconfont: 'mdiSvg'
+    iconfont: 'mdiSvg',
   },
   theme: {
     dark: darkTheme,
@@ -28,7 +28,7 @@ const opts: Partial<UserVuetifyPreset> = {
         error: '#e91e63',
         warning: '#ffeb3b',
         info: '#607d8b',
-        success: '#4caf50'
+        success: '#4caf50',
       },
       light: {
         primary: '#ff5023',
@@ -37,10 +37,10 @@ const opts: Partial<UserVuetifyPreset> = {
         error: '#e91e63',
         warning: '#ffeb3b',
         info: '#607d8b',
-        success: '#4caf50'
-      }
-    }
-  }
+        success: '#4caf50',
+      },
+    },
+  },
 }
 
 const vuetify = new Vuetify(opts)

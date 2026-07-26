@@ -8,7 +8,7 @@ import ApiList from '../api/enum/ApiList'
 export default class BackgroundService {
   public static togglePiHole(): void {
     let newStatus: PiHoleApiStatusEnum
-    BadgeService.getBadgeText().then(result => {
+    BadgeService.getBadgeText().then((result) => {
       if (result === ExtensionBadgeTextEnum.disabled) {
         newStatus = PiHoleApiStatusEnum.enabled
       } else if (result === ExtensionBadgeTextEnum.enabled) {
@@ -17,21 +17,21 @@ export default class BackgroundService {
         return
       }
 
-      StorageService.getDefaultDisableTime().then(value => {
+      StorageService.getDefaultDisableTime().then((value) => {
         let disableTime = value
         if (typeof disableTime === 'undefined') {
           disableTime = PiHoleSettingsDefaults.default_disable_time
         }
 
         PiHoleApiService.changePiHoleStatus(newStatus, disableTime)
-          .then(data => {
+          .then((data) => {
             for (const piHoleStatus of data) {
               if (
                 piHoleStatus.data.blocking === PiHoleApiStatusEnum.error ||
                 piHoleStatus.data.blocking !== newStatus
               ) {
                 console.warn(
-                  'One PiHole returned Error from its request. Please check the API Key.'
+                  'One PiHole returned Error from its request. Please check the API Key.',
                 )
                 BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
                 return
@@ -40,16 +40,16 @@ export default class BackgroundService {
             BadgeService.setBadgeText(
               newStatus === PiHoleApiStatusEnum.disabled
                 ? ExtensionBadgeTextEnum.disabled
-                : ExtensionBadgeTextEnum.enabled
+                : ExtensionBadgeTextEnum.enabled,
             )
 
-            StorageService.getReloadAfterDisable().then(state => {
+            StorageService.getReloadAfterDisable().then((state) => {
               if (typeof state !== 'undefined' && state) {
                 TabService.reloadCurrentTab(1500)
               }
             })
           })
-          .catch(reason => {
+          .catch((reason) => {
             console.warn(reason)
             BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
           })
@@ -58,7 +58,7 @@ export default class BackgroundService {
   }
 
   public static blacklistCurrentDomain(): void {
-    TabService.getCurrentTabUrlCleaned().then(url => {
+    TabService.getCurrentTabUrlCleaned().then((url) => {
       if (url.length < 1) {
         return
       }
@@ -68,12 +68,12 @@ export default class BackgroundService {
             .then(() => {
               BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
             })
-            .catch(reason => {
+            .catch((reason) => {
               console.warn(reason)
               BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
             })
         })
-        .catch(reason => {
+        .catch((reason) => {
           console.warn(reason)
           BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
         })
@@ -81,7 +81,7 @@ export default class BackgroundService {
   }
 
   public static whitelistCurrentDomain(): void {
-    TabService.getCurrentTabUrlCleaned().then(url => {
+    TabService.getCurrentTabUrlCleaned().then((url) => {
       if (url.length < 1) {
         return
       }
@@ -89,7 +89,7 @@ export default class BackgroundService {
         .then(() => {
           PiHoleApiService.addDomainToList(ApiList.whitelist, url)
             .then(() => {
-              StorageService.getReloadAfterWhitelist().then(state => {
+              StorageService.getReloadAfterWhitelist().then((state) => {
                 if (typeof state === 'undefined') {
                   return
                 }
@@ -99,12 +99,12 @@ export default class BackgroundService {
               })
               BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
             })
-            .catch(reason => {
+            .catch((reason) => {
               console.warn(reason)
               BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
             })
         })
-        .catch(reason => {
+        .catch((reason) => {
           console.warn(reason)
           BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
         })

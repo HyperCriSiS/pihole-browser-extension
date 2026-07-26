@@ -22,9 +22,9 @@
           debounce-events="input"
           :placeholder="PiHoleSettingsDefaults.pi_uri_base"
           :rules="[
-            v =>
+            (v) =>
               isInvalidUrlSchema(v) ||
-              translate(I18NOptionKeys.options_url_invalid_warning)
+              translate(I18NOptionKeys.options_url_invalid_warning),
           ]"
           :label="translate(I18NOptionKeys.options_pi_hole_address)"
           required
@@ -50,7 +50,7 @@
             @click.prevent="removePiHole(currentTab)"
             >{{
               translate(I18NOptionKeys.options_remove_button, [
-                String(currentTab + 1)
+                String(currentTab + 1),
               ])
             }}
           </v-btn>
@@ -77,10 +77,10 @@
         <v-alert
           v-if="
             connectionCheckStatus === 'OK' &&
-              connectionCheckData !== null &&
-              (connectionCheckData.core_update ||
-                connectionCheckData.web_update ||
-                connectionCheckData.FTL_update)
+            connectionCheckData !== null &&
+            (connectionCheckData.core_update ||
+              connectionCheckData.web_update ||
+              connectionCheckData.FTL_update)
           "
           outlined
           type="info"
@@ -100,7 +100,7 @@ import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import { mdiEyeOffOutline, mdiEyeOutline } from '@mdi/js'
 import {
   PiHoleSettingsStorage,
-  StorageService
+  StorageService,
 } from '../../../../service/StorageService'
 import { PiHoleVersionsV6 } from '../../../../api/models/PiHoleVersions'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
@@ -109,12 +109,12 @@ import useTranslation from '../../../../hooks/translation'
 enum ConnectionCheckStatus {
   OK = 'OK',
   ERROR = 'ERROR',
-  IDLE = 'IDLE'
+  IDLE = 'IDLE',
 }
 
 enum PasswordInputType {
   password = 'password',
-  text = 'text'
+  text = 'text',
 }
 
 export default defineComponent({
@@ -123,8 +123,8 @@ export default defineComponent({
     const tabs = ref<PiHoleSettingsStorage[]>([
       {
         pi_uri_base: '',
-        api_key: ''
-      }
+        api_key: '',
+      },
     ])
 
     const currentTab = ref(0)
@@ -132,7 +132,7 @@ export default defineComponent({
     const passwordInputType = ref<PasswordInputType>(PasswordInputType.password)
 
     const connectionCheckStatus = ref<ConnectionCheckStatus>(
-      ConnectionCheckStatus.IDLE
+      ConnectionCheckStatus.IDLE,
     )
 
     const connectionCheckData = ref<PiHoleVersionsV6 | null>(null)
@@ -142,7 +142,7 @@ export default defineComponent({
     const connectionCheck = () => {
       connectionCheckStatus.value = ConnectionCheckStatus.IDLE
       PiHoleApiService.getPiHoleVersion(currentSelectedSettings.value)
-        .then(result => {
+        .then((result) => {
           if (typeof result.data === 'object') {
             connectionCheckStatus.value = ConnectionCheckStatus.OK
             connectionCheckData.value = result.data
@@ -184,7 +184,7 @@ export default defineComponent({
           if (typeof piHoleSetting.pi_uri_base !== 'undefined') {
             piHoleSetting.pi_uri_base = piHoleSetting.pi_uri_base.replace(
               /\s+/g,
-              ''
+              '',
             )
           } else {
             piHoleSetting.pi_uri_base = ''
@@ -197,7 +197,7 @@ export default defineComponent({
         }
         StorageService.savePiHoleSettingsArray(tabs.value)
       },
-      { deep: true }
+      { deep: true },
     )
 
     const connectionCheckVersionText = computed(() => {
@@ -244,8 +244,8 @@ export default defineComponent({
       connectionCheckVersionText,
       connectionCheckStatus,
       connectionCheckData,
-      ...useTranslation()
+      ...useTranslation(),
     }
-  }
+  },
 })
 </script>

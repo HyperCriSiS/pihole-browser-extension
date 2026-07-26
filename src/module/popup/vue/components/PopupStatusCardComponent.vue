@@ -16,7 +16,7 @@
         type="number"
         min="0"
         outlined
-        :rules="[v => Number(v) >= 0 || '≥ 0']"
+        :rules="[(v) => Number(v) >= 0 || '≥ 0']"
         :suffix="defaultDisableTime > 0 ? 's' : ''"
         :append-icon="timeUnitIcon"
       >
@@ -61,10 +61,10 @@
         :loading="groupActionLoading"
         :disabled="
           groupActionLoading ||
-            groupsLoading ||
-            !selectedGroup ||
-            selectedGroupDisableTime < 1 ||
-            defaultDisableTimeDisabled
+          groupsLoading ||
+          !selectedGroup ||
+          selectedGroupDisableTime < 1 ||
+          defaultDisableTimeDisabled
         "
         @click="disableSelectedGroup"
       >
@@ -104,12 +104,12 @@ import { computed, defineComponent, onMounted, ref } from 'vue'
 import {
   PiHoleSettingsDefaults,
   StorageService,
-  TemporaryAllowTimeDefaults
+  TemporaryAllowTimeDefaults,
 } from '../../../../service/StorageService'
 import { PiHoleApiStatus } from '../../../../api/models/PiHoleApiStatus'
 import {
   BadgeService,
-  ExtensionBadgeTextEnum
+  ExtensionBadgeTextEnum,
 } from '../../../../service/BadgeService'
 import TabService from '../../../../service/TabService'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
@@ -124,19 +124,19 @@ export default defineComponent({
   props: {
     isActiveByStatus: {
       type: Boolean,
-      required: true
+      required: true,
     },
     isActiveByBadge: {
       type: Boolean,
-      required: true
-    }
+      required: true,
+    },
   },
   setup: (props, { emit }) => {
     const sliderChecked = ref(props.isActiveByBadge)
     const sliderDisabled = ref(!props.isActiveByBadge)
     const defaultDisableTimeDisabled = ref(!props.isActiveByBadge)
     const defaultDisableTime = ref<number>(
-      PiHoleSettingsDefaults.default_disable_time
+      PiHoleSettingsDefaults.default_disable_time,
     )
     const groups = ref<PiHoleGroup[]>([])
     const selectedGroup = ref<string | null>(null)
@@ -148,23 +148,23 @@ export default defineComponent({
     const groupActionState = ref<'success' | 'error' | null>(null)
 
     const timeUnitIcon = computed(() =>
-      defaultDisableTime.value < 1 ? mdiAllInclusive : mdiTimerOutline
+      defaultDisableTime.value < 1 ? mdiAllInclusive : mdiTimerOutline,
     )
     const groupItems = computed(() =>
-      groups.value.map(group => ({
+      groups.value.map((group) => ({
         text: group.name,
-        value: group.name
-      }))
+        value: group.name,
+      })),
     )
     const groupDurationItems = computed(() =>
-      groupDisableTimes.value.map(time => ({
+      groupDisableTimes.value.map((time) => ({
         text: `${time} s`,
-        value: time
-      }))
+        value: time,
+      })),
     )
 
     const updateDefaultDisableTime = () => {
-      StorageService.getDefaultDisableTime().then(time => {
+      StorageService.getDefaultDisableTime().then((time) => {
         if (typeof time !== 'undefined') {
           defaultDisableTime.value = time
         }
@@ -184,10 +184,10 @@ export default defineComponent({
       groupLoadError.value = false
       try {
         groups.value = (await PiHoleApiService.getCommonGroups()).filter(
-          group => group.enabled
+          (group) => group.enabled,
         )
         const preferredGroup =
-          groups.value.find(group => group.name !== 'Default') ||
+          groups.value.find((group) => group.name !== 'Default') ||
           groups.value[0]
         selectedGroup.value = preferredGroup?.name || null
       } catch (reason) {
@@ -231,11 +231,11 @@ export default defineComponent({
       }
 
       PiHoleApiService.getPiHoleStatusCombined()
-        .then(value => {
+        .then((value) => {
           updateComponentsByData({ blocking: value })
         })
         .catch(() =>
-          updateComponentsByData({ blocking: PiHoleApiStatusEnum.error })
+          updateComponentsByData({ blocking: PiHoleApiStatusEnum.error }),
         )
     }
 
@@ -243,7 +243,7 @@ export default defineComponent({
       updateComponentsByData(data)
       if (data.blocking === PiHoleApiStatusEnum.disabled) {
         const reloadAfterDisableCallback = (
-          is_enabled: boolean | undefined
+          is_enabled: boolean | undefined,
         ) => {
           if (typeof is_enabled !== 'undefined' && is_enabled) {
             TabService.reloadCurrentTab(1000)
@@ -255,7 +255,7 @@ export default defineComponent({
 
     const throwConsoleBadgeError = (
       error_message: unknown,
-      refresh_status: boolean = false
+      refresh_status: boolean = false,
     ) => {
       console.warn(error_message)
 
@@ -263,11 +263,11 @@ export default defineComponent({
       if (refresh_status) {
         setTimeout(() => {
           PiHoleApiService.getPiHoleStatusCombined()
-            .then(data => updateComponentsByData({ blocking: data }))
+            .then((data) => updateComponentsByData({ blocking: data }))
             .catch(() =>
               updateComponentsByData({
-                blocking: PiHoleApiStatusEnum.error
-              })
+                blocking: PiHoleApiStatusEnum.error,
+              }),
             )
         }, 1500)
       }
@@ -286,7 +286,7 @@ export default defineComponent({
 
       if (time >= 0) {
         PiHoleApiService.changePiHoleStatus(currentMode, time)
-          .then(value => {
+          .then((value) => {
             for (const piHoleStatus of value) {
               if (
                 piHoleStatus.data.blocking === PiHoleApiStatusEnum.error ||
@@ -294,20 +294,20 @@ export default defineComponent({
               ) {
                 throwConsoleBadgeError(
                   'One PiHole returned Error from its request. Please check the password.',
-                  true
+                  true,
                 )
                 return
               }
             }
             onSliderClickSuccessHandler(value[0].data)
           })
-          .catch(reason => {
+          .catch((reason) => {
             throwConsoleBadgeError(reason)
           })
       } else {
         throwConsoleBadgeError(
           'Time cannot be smaller than 0. Canceling API request.',
-          true
+          true,
         )
       }
     }
@@ -322,7 +322,7 @@ export default defineComponent({
       try {
         await TemporaryActionService.temporarilyDisableGroup(
           selectedGroup.value,
-          selectedGroupDisableTime.value
+          selectedGroupDisableTime.value,
         )
         groupActionState.value = 'success'
         await loadGroups()
@@ -359,8 +359,8 @@ export default defineComponent({
       groupActionLoading,
       groupActionState,
       disableSelectedGroup,
-      ...useTranslation()
+      ...useTranslation(),
     }
-  }
+  },
 })
 </script>

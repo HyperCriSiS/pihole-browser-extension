@@ -6,14 +6,17 @@ The dependency modernization is intentionally split into small, independently va
 
 1. Compatible dependency updates within the existing Vue 2 and Vuetify 2 architecture.
 2. Vue 2.7 bridge migration using the native Composition API.
+3. ESLint 9 flat-config migration with typescript-eslint 8, eslint-plugin-vue 10 and Prettier 3.
 
 The Vue 2.7 bridge removes `@vue/composition-api` and `vue-template-compiler`, updates all Composition API imports to use `vue`, and configures the Vue compiler target explicitly.
 
+The lint modernization removes the legacy `.eslintrc.js` and `.eslintignore` files, moves the existing lint scope and exceptions into `eslint.config.mjs`, and keeps Webpack linting aligned with the standalone ESLint command.
+
 ## Planned stages
 
-1. Migrate the application bootstrap and components to Vue 3.
-2. Migrate Vuetify 2 components and themes to a supported Vuetify version.
-3. Modernize TypeScript, ESLint and the remaining build-tool major versions.
+1. Modernize TypeScript, browser type definitions and the remaining compatible build-tool majors.
+2. Migrate the application bootstrap and components to Vue 3.
+3. Migrate Vuetify 2 components and themes to a supported Vuetify version.
 4. Add focused automated tests before the next public release.
 
 Each stage must pass dependency installation, ESLint, Prettier, Firefox and Chrome production builds, and CodeQL before it is merged.

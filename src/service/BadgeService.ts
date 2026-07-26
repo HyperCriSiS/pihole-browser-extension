@@ -5,7 +5,7 @@ export enum ExtensionBadgeTextEnum {
   disabled = 'Off',
   error = 'Err',
   info = 'Info',
-  ok = 'Ok'
+  ok = 'Ok',
 }
 
 /**
@@ -24,7 +24,7 @@ export class BadgeService {
     }
 
     BadgeService.chromeAction.setBadgeBackgroundColor({
-      color: this.getColorForBadgeTextEnum(text)
+      color: this.getColorForBadgeTextEnum(text),
     })
 
     BadgeService.chromeAction.setBadgeText({ text })
@@ -34,7 +34,7 @@ export class BadgeService {
    * Returns the badge text as enum value.
    */
   public static getBadgeText(): Promise<ExtensionBadgeTextEnum> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       BadgeService.chromeAction.getBadgeText({}, (result: string) => {
         resolve(this.convertStringToBadgeTextEnum(result))
       })
@@ -47,7 +47,7 @@ export class BadgeService {
    */
   public static compareBadgeTextToApiStatusEnum(
     badge_text: ExtensionBadgeTextEnum,
-    api_status: PiHoleApiStatusEnum
+    api_status: PiHoleApiStatusEnum,
   ): boolean {
     switch (badge_text) {
       case ExtensionBadgeTextEnum.disabled:
@@ -63,7 +63,7 @@ export class BadgeService {
    * Converts an input string to the correct ExtensionBadgeText Enum
    */
   private static convertStringToBadgeTextEnum(
-    input: string
+    input: string,
   ): ExtensionBadgeTextEnum {
     switch (input) {
       case ExtensionBadgeTextEnum.disabled:
@@ -76,7 +76,7 @@ export class BadgeService {
   }
 
   private static getColorForBadgeTextEnum(
-    input: ExtensionBadgeTextEnum | string
+    input: ExtensionBadgeTextEnum | string,
   ): string {
     switch (input) {
       case ExtensionBadgeTextEnum.disabled:
