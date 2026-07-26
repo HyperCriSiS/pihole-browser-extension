@@ -14,6 +14,7 @@ export interface ExtensionStorage {
   pi_hole_settings?: PiHoleSettingsStorage[]
   default_disable_time?: number
   temporary_allow_times?: number[]
+  pause_target?: string
   reload_after_disable?: boolean
   reload_after_white_list?: boolean
   disable_list_feature?: boolean
@@ -26,6 +27,7 @@ export enum ExtensionStorageEnum {
   pi_hole_settings = 'pi_hole_settings',
   default_disable_time = 'default_disable_time',
   temporary_allow_times = 'temporary_allow_times',
+  pause_target = 'pause_target',
   reload_after_disable = 'reload_after_disable',
   reload_after_white_list = 'reload_after_white_list',
   disable_list_feature = 'disable_list_feature',
@@ -112,6 +114,21 @@ export class StorageService {
     return this.getStorageValue<number[]>(
       ExtensionStorageEnum.temporary_allow_times,
     )
+  }
+
+  public static savePauseTarget(target: string): void {
+    if (!target) {
+      return
+    }
+
+    const storage: ExtensionStorage = {
+      pause_target: target,
+    }
+    chrome.storage.local.set(storage)
+  }
+
+  public static getPauseTarget(): Promise<string | undefined> {
+    return this.getStorageValue<string>(ExtensionStorageEnum.pause_target)
   }
 
   public static saveReloadAfterDisable(state: boolean): void {
