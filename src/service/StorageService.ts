@@ -5,7 +5,7 @@ export interface PiHoleSettingsStorage {
 
 export enum PiHoleSettingsDefaults {
   pi_uri_base = 'http://pi.hole/admin',
-  default_disable_time = 10
+  default_disable_time = 10,
 }
 
 export const TemporaryAllowTimeDefaults = [60, 300, 900]
@@ -31,7 +31,7 @@ export enum ExtensionStorageEnum {
   disable_list_feature = 'disable_list_feature',
   disable_update_notification = 'disable_update_notification',
   disable_context_menu = 'disable_context_menu',
-  session_storage = 'session_storage'
+  session_storage = 'session_storage',
 }
 
 type StorageKey = string
@@ -41,11 +41,11 @@ type StorageValue<T> = {
 
 export class StorageService {
   public static async savePiHoleSettingsArray(
-    settings: PiHoleSettingsStorage[]
+    settings: PiHoleSettingsStorage[],
   ) {
     if (settings.length > 0) {
       const filteredSettings: PiHoleSettingsStorage[] = settings.filter(
-        value => value.pi_uri_base
+        (value) => value.pi_uri_base,
       )
 
       if (filteredSettings.length < 1) {
@@ -64,12 +64,12 @@ export class StorageService {
 
         secureSettings.push(secureSetting)
         // Reset the session
-        // eslint-disable-next-line no-await-in-loop
+
         await this.removeSid(setting.pi_uri_base!)
       }
 
       const storage: ExtensionStorage = {
-        pi_hole_settings: secureSettings
+        pi_hole_settings: secureSettings,
       }
 
       await chrome.storage.local.set(storage)
@@ -81,14 +81,14 @@ export class StorageService {
       return
     }
     const storage: ExtensionStorage = {
-      default_disable_time: time
+      default_disable_time: time,
     }
     chrome.storage.local.set(storage)
   }
 
   public static getDefaultDisableTime(): Promise<number | undefined> {
     return this.getStorageValue<number>(
-      ExtensionStorageEnum.default_disable_time
+      ExtensionStorageEnum.default_disable_time,
     )
   }
 
@@ -96,47 +96,47 @@ export class StorageService {
     const normalizedTimes = times.map(Number)
     const isValid =
       normalizedTimes.length === 3 &&
-      normalizedTimes.every(time => Number.isInteger(time) && time >= 10)
+      normalizedTimes.every((time) => Number.isInteger(time) && time >= 10)
 
     if (!isValid) {
       return
     }
 
     const storage: ExtensionStorage = {
-      temporary_allow_times: normalizedTimes
+      temporary_allow_times: normalizedTimes,
     }
     chrome.storage.local.set(storage)
   }
 
   public static getTemporaryAllowTimes(): Promise<number[] | undefined> {
     return this.getStorageValue<number[]>(
-      ExtensionStorageEnum.temporary_allow_times
+      ExtensionStorageEnum.temporary_allow_times,
     )
   }
 
   public static saveReloadAfterDisable(state: boolean): void {
     const storage: ExtensionStorage = {
-      reload_after_disable: state
+      reload_after_disable: state,
     }
     chrome.storage.local.set(storage)
   }
 
   public static getReloadAfterDisable(): Promise<boolean | undefined> {
     return this.getStorageValue<boolean>(
-      ExtensionStorageEnum.reload_after_disable
+      ExtensionStorageEnum.reload_after_disable,
     )
   }
 
   public static saveReloadAfterWhitelist(state: boolean): void {
     const storage: ExtensionStorage = {
-      reload_after_white_list: state
+      reload_after_white_list: state,
     }
     chrome.storage.local.set(storage)
   }
 
   public static getReloadAfterWhitelist(): Promise<boolean | undefined> {
     return this.getStorageValue<boolean>(
-      ExtensionStorageEnum.reload_after_white_list
+      ExtensionStorageEnum.reload_after_white_list,
     )
   }
 
@@ -144,19 +144,19 @@ export class StorageService {
     PiHoleSettingsStorage[] | undefined
   > {
     return this.getStorageValue<PiHoleSettingsStorage[]>(
-      ExtensionStorageEnum.pi_hole_settings
+      ExtensionStorageEnum.pi_hole_settings,
     )
   }
 
   public static getDisableListFeature(): Promise<boolean | undefined> {
     return this.getStorageValue<boolean>(
-      ExtensionStorageEnum.disable_list_feature
+      ExtensionStorageEnum.disable_list_feature,
     )
   }
 
   public static saveDisableListFeature(state: boolean): void {
     const storage: ExtensionStorage = {
-      disable_list_feature: state
+      disable_list_feature: state,
     }
     chrome.storage.local.set(storage)
   }
@@ -164,13 +164,13 @@ export class StorageService {
   public static getDisableContextMenu(): Promise<boolean> {
     return this.getStorageValue<boolean>(
       ExtensionStorageEnum.disable_context_menu,
-      false
+      false,
     )
   }
 
   public static saveDisableContextMenu(state: boolean): void {
     const storage: ExtensionStorage = {
-      disable_context_menu: state
+      disable_context_menu: state,
     }
     chrome.storage.local.set(storage)
   }
@@ -187,7 +187,7 @@ export class StorageService {
     const baseUrl = new URL(url).origin
     const key: StorageKey = `${ExtensionStorageEnum.session_storage}_${baseUrl}`
     const value: StorageValue<string> = {
-      value: sid
+      value: sid,
     }
     await chrome.storage.local.set({ [key]: value })
   }
@@ -206,15 +206,15 @@ export class StorageService {
 
   private static getStorageValue<T>(
     key: StorageKey,
-    defaultUnsetValue: T
+    defaultUnsetValue: T,
   ): Promise<T>
 
   private static getStorageValue<T>(
     key: StorageKey,
-    defaultUnsetValue?: T
+    defaultUnsetValue?: T,
   ): Promise<T | undefined> | Promise<T> {
-    return new Promise(resolve => {
-      chrome.storage.local.get(key, obj => {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(key, (obj) => {
         const storageValue: T | undefined = obj[key]
 
         if (

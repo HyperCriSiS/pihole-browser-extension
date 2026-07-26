@@ -14,8 +14,8 @@ export default tseslint.config(
       'icon/**',
       'icon_raw/**',
       'src/webpack/**',
-      'package.*.zip'
-    ]
+      'package.*.zip',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
@@ -25,8 +25,8 @@ export default tseslint.config(
     languageOptions: {
       globals: {
         ...globals.browser,
-        ...globals.webextensions
-      }
+        ...globals.webextensions,
+      },
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
@@ -34,47 +34,47 @@ export default tseslint.config(
       'no-restricted-syntax': ['off', 'ForOfStatement'],
       'prefer-promise-reject-errors': 'off',
       'no-plusplus': 'off',
-      'no-console': 'off'
-    }
+      'no-console': 'off',
+    },
   },
   {
     files: ['src/**/*.vue'],
     languageOptions: {
       parserOptions: {
         parser: tseslint.parser,
-        extraFileExtensions: ['.vue']
-      }
-    }
+        extraFileExtensions: ['.vue'],
+      },
+    },
   },
   {
     files: ['*.js', '*.mjs'],
     languageOptions: {
       globals: {
-        ...globals.node
-      }
-    }
+        ...globals.node,
+      },
+    },
   },
   {
     files: [
       'src/module/popup/vue/components/PopupListCardComponent.vue',
-      'src/module/popup/vue/components/PopupStatusCardComponent.vue'
+      'src/module/popup/vue/components/PopupStatusCardComponent.vue',
     ],
     rules: {
-      'prefer-destructuring': 'off'
-    }
+      'prefer-destructuring': 'off',
+    },
   },
   {
     files: ['src/service/PiHoleApiService.ts'],
     rules: {
-      'consistent-return': 'off'
-    }
+      'consistent-return': 'off',
+    },
   },
   {
     files: ['src/service/TemporaryActionService.ts'],
     rules: {
       'no-await-in-loop': 'off',
-      'no-continue': 'off'
-    }
+      'no-continue': 'off',
+    },
   },
-  eslintConfigPrettier
+  eslintConfigPrettier,
 )

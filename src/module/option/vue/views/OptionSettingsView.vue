@@ -52,7 +52,7 @@ export default defineComponent({
   components: {
     OptionDisableTimeComponent,
     OptionTabComponent,
-    OptionCheckboxComponent
+    OptionCheckboxComponent,
   },
   setup: () => {
     const { translate } = useTranslation()
@@ -62,19 +62,19 @@ export default defineComponent({
         labelTextKey: I18NOptionKeys.options_reload_after_disable,
         getterFunction: () => StorageService.getReloadAfterDisable(),
         setterFunction: (value: boolean) =>
-          StorageService.saveReloadAfterDisable(value)
+          StorageService.saveReloadAfterDisable(value),
       },
       {
         labelTextKey: I18NOptionKeys.options_reload_after_white_list,
         getterFunction: () => StorageService.getReloadAfterWhitelist(),
         setterFunction: (value: boolean) =>
-          StorageService.saveReloadAfterWhitelist(value)
+          StorageService.saveReloadAfterWhitelist(value),
       },
       {
         labelTextKey: I18NOptionKeys.option_disable_feature,
         getterFunction: () => StorageService.getDisableListFeature(),
         setterFunction: (value: boolean) =>
-          StorageService.saveDisableListFeature(value)
+          StorageService.saveDisableListFeature(value),
       },
       {
         labelTextKey: I18NOptionKeys.option_disable_context_menu,
@@ -82,16 +82,15 @@ export default defineComponent({
         setterFunction: (value: boolean) => {
           MessageBusService.sendContextMenuSwitchMessage(value)
           StorageService.saveDisableContextMenu(value)
-        }
-      }
+        },
+      },
     ]
 
     const isFirefox = computed(() => typeof browser !== 'undefined')
 
     const openHotKeySettings = () => {
-      // eslint-disable-next-line no-undef
       chrome.tabs.create({
-        url: 'chrome://extensions/shortcuts'
+        url: 'chrome://extensions/shortcuts',
       })
     }
 
@@ -100,9 +99,9 @@ export default defineComponent({
       isFirefox,
       checkboxOptions,
       translate,
-      I18NOptionKeys
+      I18NOptionKeys,
     }
-  }
+  },
 })
 
 /**

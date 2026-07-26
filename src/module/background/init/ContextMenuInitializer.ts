@@ -3,7 +3,7 @@ import { I18NContextMenuKeys, I18NService } from '../../../service/i18NService'
 import BackgroundService from '../../../service/BackgroundService'
 import {
   ContextMenuSwitchMessage,
-  MessageEnum
+  MessageEnum,
 } from '../../../service/MessageBusService'
 import { StorageService } from '../../../service/StorageService'
 import CreateProperties = chrome.contextMenus.CreateProperties
@@ -16,44 +16,44 @@ export default class ContextMenuInitializer implements Initializer {
         contexts: ['page'],
         onclick: () => {
           BackgroundService.togglePiHole()
-        }
+        },
       },
       {
         type: 'separator',
-        contexts: ['page']
+        contexts: ['page'],
       },
       {
         title: I18NService.translate(
-          I18NContextMenuKeys.blacklist_current_domain
+          I18NContextMenuKeys.blacklist_current_domain,
         ),
         contexts: ['page'],
         onclick: () => {
           BackgroundService.blacklistCurrentDomain()
-        }
+        },
       },
       {
         title: I18NService.translate(
-          I18NContextMenuKeys.whitelist_current_domain
+          I18NContextMenuKeys.whitelist_current_domain,
         ),
         contexts: ['page'],
         onclick: () => {
           BackgroundService.whitelistCurrentDomain()
-        }
+        },
       },
       {
         type: 'separator',
-        contexts: ['page']
+        contexts: ['page'],
       },
       {
         title: I18NService.translate(I18NContextMenuKeys.open_settings),
         contexts: ['page'],
-        onclick: () => BackgroundService.openOptions()
-      }
+        onclick: () => BackgroundService.openOptions(),
+      },
     ]
   }
 
   init(): void {
-    StorageService.getDisableContextMenu().then(value => {
+    StorageService.getDisableContextMenu().then((value) => {
       this.removeOrCreateContextMenuByBoolean(value)
     })
     this.initMessageListener()
@@ -65,7 +65,7 @@ export default class ContextMenuInitializer implements Initializer {
         if (request.message === MessageEnum.ContextMenuSwitch) {
           this.removeOrCreateContextMenuByBoolean(request.payload)
         }
-      }
+      },
     )
   }
 
@@ -78,18 +78,18 @@ export default class ContextMenuInitializer implements Initializer {
 
   private createContextMenu(): void {
     for (const [idx, contextMenusConfiguration] of Object.entries(
-      this.contextMenusConfigurations
+      this.contextMenusConfigurations,
     )) {
       chrome.contextMenus.create({
         ...contextMenusConfiguration,
         id: idx,
-        onclick: undefined
+        onclick: undefined,
       })
     }
     chrome.contextMenus.onClicked.addListener((info, tab) => {
       this.contextMenusConfigurations[info.menuItemId as number].onclick?.(
         info,
-        tab!
+        tab!,
       )
     })
   }

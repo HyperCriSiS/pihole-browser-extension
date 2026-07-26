@@ -8,9 +8,9 @@ export default class PopupInitializer implements Initializer {
     const vueComponent = {
       vuetify,
       el: '#main',
-      render: (h: any) => h(PopupComponent)
+      render: (h: any) => h(PopupComponent),
     }
-    // eslint-disable-next-line no-new
+
     new Vue(vueComponent)
   }
 }

@@ -22,7 +22,7 @@ import PopupStatusCardComponent from '../components/PopupStatusCardComponent.vue
 import PopupListCardComponent from '../components/PopupListCardComponent.vue'
 import {
   BadgeService,
-  ExtensionBadgeTextEnum
+  ExtensionBadgeTextEnum,
 } from '../../../../service/BadgeService'
 import { StorageService } from '../../../../service/StorageService'
 import TabService from '../../../../service/TabService'
@@ -31,7 +31,7 @@ export default defineComponent({
   name: 'PopupComponent',
   components: {
     PopupListCardComponent,
-    PopupStatusCardComponent
+    PopupStatusCardComponent,
   },
   setup: () => {
     const isActiveByBadge = ref(false)
@@ -55,7 +55,8 @@ export default defineComponent({
     }
 
     const updateListFeatureDisabled = async () => {
-      const listFeatureDisabledByStorage = await StorageService.getDisableListFeature()
+      const listFeatureDisabledByStorage =
+        await StorageService.getDisableListFeature()
 
       if (listFeatureDisabledByStorage !== undefined) {
         listFeatureDisabled.value = listFeatureDisabledByStorage
@@ -69,7 +70,7 @@ export default defineComponent({
       () =>
         !listFeatureDisabled.value &&
         isActiveByRealStatus.value &&
-        currentUrl.value.length > 0
+        currentUrl.value.length > 0,
     )
 
     onMounted(() => {
@@ -83,9 +84,9 @@ export default defineComponent({
       isActiveByBadge,
       isActiveByBadgeLoaded,
       isActiveByRealStatus,
-      isListFeatureActive
+      isListFeatureActive,
     }
-  }
+  },
 })
 </script>
 

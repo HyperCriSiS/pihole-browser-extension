@@ -6,15 +6,15 @@ export default class TabService {
    * Returns the current tab url. Cleaned only the real domain without the parameters etc.
    */
   public static async getCurrentTabUrlCleaned(): Promise<string> {
-    const currentTabUrlPromise: Promise<string> = new Promise(resolve => {
+    const currentTabUrlPromise: Promise<string> = new Promise((resolve) => {
       chrome.tabs.query(
         { active: true, lastFocusedWindow: true, currentWindow: true },
-        tabs => {
+        (tabs) => {
           if (tabs[0]) {
             const tabUrl = tabs[0].url ?? ''
             resolve(tabUrl)
           }
-        }
+        },
       )
     })
     let url = ''
@@ -57,11 +57,11 @@ export default class TabService {
     const queryInfo = {
       active: true,
       lastFocusedWindow: true,
-      currentWindow: true
+      currentWindow: true,
     }
     const queryFunction = (tabs: Tab[]) => {
       if (tabs[0]) {
-        this.getCurrentTabUrlCleaned().then(url => {
+        this.getCurrentTabUrlCleaned().then((url) => {
           if (url && tabs[0].id) {
             chrome.tabs.reload(tabs[0].id)
           }

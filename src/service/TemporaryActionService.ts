@@ -46,20 +46,16 @@ export default class TemporaryActionService {
 
     for (const [key, action] of Object.entries(storage.domains)) {
       if (action.expiresAt <= now) {
-        // eslint-disable-next-line no-await-in-loop
         await this.restoreDomainAction(key)
       } else {
-        // eslint-disable-next-line no-await-in-loop
         await this.createAlarm(`${DOMAIN_ALARM_PREFIX}${key}`, action.expiresAt)
       }
     }
 
     for (const [key, action] of Object.entries(storage.groups)) {
       if (action.expiresAt <= now) {
-        // eslint-disable-next-line no-await-in-loop
         await this.restoreGroupAction(key)
       } else {
-        // eslint-disable-next-line no-await-in-loop
         await this.createAlarm(`${GROUP_ALARM_PREFIX}${key}`, action.expiresAt)
       }
     }
@@ -68,7 +64,7 @@ export default class TemporaryActionService {
   public static async handleAlarm(alarmName: string): Promise<boolean> {
     if (alarmName.startsWith(DOMAIN_ALARM_PREFIX)) {
       await this.restoreDomainAction(
-        alarmName.slice(DOMAIN_ALARM_PREFIX.length)
+        alarmName.slice(DOMAIN_ALARM_PREFIX.length),
       )
       return true
     }
@@ -83,7 +79,7 @@ export default class TemporaryActionService {
 
   public static async temporarilyAllowDomain(
     domain: string,
-    durationSeconds: number
+    durationSeconds: number,
   ): Promise<boolean> {
     this.assertDuration(durationSeconds)
     if (!domain) {
@@ -99,7 +95,7 @@ export default class TemporaryActionService {
       await this.saveStorage(storage)
       await this.createAlarm(
         `${DOMAIN_ALARM_PREFIX}${key}`,
-        existingAction.expiresAt
+        existingAction.expiresAt,
       )
       return true
     }
@@ -112,17 +108,16 @@ export default class TemporaryActionService {
     const action: TemporaryDomainAction = {
       domain,
       expiresAt: Date.now() + durationSeconds * 1000,
-      targets: []
+      targets: [],
     }
 
     try {
       const piHoles = await PiHoleApiService.getConfiguredPiHoles()
       for (const piHole of piHoles) {
-        // eslint-disable-next-line no-await-in-loop
         const current = await PiHoleApiService.getExactDomain(
           piHole,
           ApiList.whitelist,
-          domain
+          domain,
         )
 
         if (current?.enabled && current.groups.includes(0)) {
@@ -132,34 +127,33 @@ export default class TemporaryActionService {
         const payload = {
           comment: current?.comment ?? TEMPORARY_ALLOW_COMMENT,
           groups: current ? Array.from(new Set([...current.groups, 0])) : [0],
-          enabled: true
+          enabled: true,
         }
 
-        // eslint-disable-next-line no-await-in-loop
         const expected = current
           ? await PiHoleApiService.replaceExactDomain(
               piHole,
               ApiList.whitelist,
               domain,
-              payload
+              payload,
             )
           : await PiHoleApiService.addExactDomain(
               piHole,
               ApiList.whitelist,
               domain,
-              payload
+              payload,
             )
 
         action.targets.push({
           pi_uri_base: piHole.pi_uri_base!,
           original: current ? this.cloneDomain(current) : null,
-          expected: this.cloneDomain(expected)
+          expected: this.cloneDomain(expected),
         })
 
         storage.domains[key] = action
         // Persist after each successful Pi-hole mutation so a service-worker
         // shutdown cannot leave an untracked temporary allow entry behind.
-        // eslint-disable-next-line no-await-in-loop
+
         await this.saveStorage(storage)
       }
 
@@ -192,7 +186,7 @@ export default class TemporaryActionService {
 
   public static async temporarilyDisableGroup(
     groupName: string,
-    durationSeconds: number
+    durationSeconds: number,
   ): Promise<boolean> {
     this.assertDuration(durationSeconds)
     if (!groupName) {
@@ -208,7 +202,7 @@ export default class TemporaryActionService {
       await this.saveStorage(storage)
       await this.createAlarm(
         `${GROUP_ALARM_PREFIX}${key}`,
-        existingAction.expiresAt
+        existingAction.expiresAt,
       )
       return true
     }
@@ -221,13 +215,12 @@ export default class TemporaryActionService {
     const action: TemporaryGroupAction = {
       groupName,
       expiresAt: Date.now() + durationSeconds * 1000,
-      targets: []
+      targets: [],
     }
 
     try {
       const piHoles = await PiHoleApiService.getConfiguredPiHoles()
       for (const piHole of piHoles) {
-        // eslint-disable-next-line no-await-in-loop
         const current = await PiHoleApiService.getGroup(piHole, groupName)
         if (!current) {
           throw new Error(`Group ${groupName} is missing on one Pi-hole`)
@@ -236,25 +229,24 @@ export default class TemporaryActionService {
           continue
         }
 
-        // eslint-disable-next-line no-await-in-loop
         const expected = await PiHoleApiService.replaceGroup(
           piHole,
           groupName,
           {
             name: current.name,
             comment: current.comment,
-            enabled: false
-          }
+            enabled: false,
+          },
         )
 
         action.targets.push({
           pi_uri_base: piHole.pi_uri_base!,
           original: this.cloneGroup(current),
-          expected: this.cloneGroup(expected)
+          expected: this.cloneGroup(expected),
         })
 
         storage.groups[key] = action
-        // eslint-disable-next-line no-await-in-loop
+
         await this.saveStorage(storage)
       }
 
@@ -330,10 +322,10 @@ export default class TemporaryActionService {
   }
 
   private static async restoreDomainTargets(
-    action: TemporaryDomainAction
+    action: TemporaryDomainAction,
   ): Promise<TemporaryDomainTarget[]> {
     const piHoles = await PiHoleApiService.getConfiguredPiHoles().catch(
-      () => []
+      () => [],
     )
     const failedTargets: TemporaryDomainTarget[] = []
 
@@ -345,11 +337,10 @@ export default class TemporaryActionService {
       }
 
       try {
-        // eslint-disable-next-line no-await-in-loop
         const current = await PiHoleApiService.getExactDomain(
           piHole,
           ApiList.whitelist,
-          action.domain
+          action.domain,
         )
 
         // A user changed or removed the entry while the timer was running.
@@ -359,7 +350,6 @@ export default class TemporaryActionService {
         }
 
         if (target.original) {
-          // eslint-disable-next-line no-await-in-loop
           await PiHoleApiService.replaceExactDomain(
             piHole,
             ApiList.whitelist,
@@ -367,15 +357,14 @@ export default class TemporaryActionService {
             {
               comment: target.original.comment,
               groups: target.original.groups,
-              enabled: target.original.enabled
-            }
+              enabled: target.original.enabled,
+            },
           )
         } else {
-          // eslint-disable-next-line no-await-in-loop
           await PiHoleApiService.deleteExactDomain(
             piHole,
             ApiList.whitelist,
-            action.domain
+            action.domain,
           )
         }
       } catch (reason) {
@@ -388,10 +377,10 @@ export default class TemporaryActionService {
   }
 
   private static async restoreGroupTargets(
-    action: TemporaryGroupAction
+    action: TemporaryGroupAction,
   ): Promise<TemporaryGroupTarget[]> {
     const piHoles = await PiHoleApiService.getConfiguredPiHoles().catch(
-      () => []
+      () => [],
     )
     const failedTargets: TemporaryGroupTarget[] = []
 
@@ -403,21 +392,19 @@ export default class TemporaryActionService {
       }
 
       try {
-        // eslint-disable-next-line no-await-in-loop
         const current = await PiHoleApiService.getGroup(
           piHole,
-          action.groupName
+          action.groupName,
         )
 
         if (!current || !this.groupsEqual(current, target.expected)) {
           continue
         }
 
-        // eslint-disable-next-line no-await-in-loop
         await PiHoleApiService.replaceGroup(piHole, action.groupName, {
           name: target.original.name,
           comment: target.original.comment,
-          enabled: target.original.enabled
+          enabled: target.original.enabled,
         })
       } catch (reason) {
         console.warn('Failed to restore temporary group state', reason)
@@ -430,14 +417,14 @@ export default class TemporaryActionService {
 
   private static findPiHole(
     piHoles: PiHoleSettingsStorage[],
-    baseUrl: string
+    baseUrl: string,
   ): PiHoleSettingsStorage | undefined {
-    return piHoles.find(piHole => piHole.pi_uri_base === baseUrl)
+    return piHoles.find((piHole) => piHole.pi_uri_base === baseUrl)
   }
 
   private static domainsEqual(
     left: PiHoleDomain,
-    right: PiHoleDomain
+    right: PiHoleDomain,
   ): boolean {
     return (
       left.domain === right.domain &&
@@ -481,20 +468,20 @@ export default class TemporaryActionService {
   }
 
   private static async getStorage(): Promise<TemporaryActionsStorage> {
-    return new Promise(resolve => {
-      chrome.storage.local.get(STORAGE_KEY, values => {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(STORAGE_KEY, (values) => {
         resolve(
           values[STORAGE_KEY] || {
             domains: {},
-            groups: {}
-          }
+            groups: {},
+          },
         )
       })
     })
   }
 
   private static async saveStorage(
-    storage: TemporaryActionsStorage
+    storage: TemporaryActionsStorage,
   ): Promise<void> {
     await chrome.storage.local.set({ [STORAGE_KEY]: storage })
   }

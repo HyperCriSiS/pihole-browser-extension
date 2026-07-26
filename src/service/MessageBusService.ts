@@ -8,14 +8,14 @@ export interface ContextMenuSwitchMessage extends Message {
 }
 
 export enum MessageEnum {
-  ContextMenuSwitch = 'context_menu_switch'
+  ContextMenuSwitch = 'context_menu_switch',
 }
 
 export default class MessageBusService {
   public static sendContextMenuSwitchMessage(contextMenuState: boolean): void {
     const message: ContextMenuSwitchMessage = {
       message: MessageEnum.ContextMenuSwitch,
-      payload: contextMenuState
+      payload: contextMenuState,
     }
     this.sendMessage(message)
   }

@@ -58,7 +58,7 @@
 import {
   mdiAlphaXCircleOutline,
   mdiCheckCircleOutline,
-  mdiTimerOutline
+  mdiTimerOutline,
 } from '@mdi/js'
 import { computed, defineComponent, onMounted, ref } from 'vue'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
@@ -67,12 +67,12 @@ import useTranslation from '../../../../hooks/translation'
 import TemporaryActionService from '../../../../service/TemporaryActionService'
 import {
   StorageService,
-  TemporaryAllowTimeDefaults
+  TemporaryAllowTimeDefaults,
 } from '../../../../service/StorageService'
 import TabService from '../../../../service/TabService'
 import {
   BadgeService,
-  ExtensionBadgeTextEnum
+  ExtensionBadgeTextEnum,
 } from '../../../../service/BadgeService'
 
 export default defineComponent({
@@ -80,8 +80,8 @@ export default defineComponent({
   props: {
     currentUrl: {
       type: String,
-      required: true
-    }
+      required: true,
+    },
   },
   setup: ({ currentUrl }) => {
     const buttonsDisabled = ref(false)
@@ -92,10 +92,10 @@ export default defineComponent({
     const selectedTemporaryAllowTime = ref(TemporaryAllowTimeDefaults[0])
 
     const temporaryAllowTimeItems = computed(() =>
-      temporaryAllowTimes.value.map(time => ({
+      temporaryAllowTimes.value.map((time) => ({
         text: `${time} s`,
-        value: time
-      }))
+        value: time,
+      })),
     )
 
     const setActionFinished = () => {
@@ -130,7 +130,7 @@ export default defineComponent({
         // opposite exact entry before adding the requested one.
         await PiHoleApiService.subDomainFromList(
           mode === ApiList.whitelist ? ApiList.blacklist : ApiList.whitelist,
-          currentUrl
+          currentUrl,
         )
         await PiHoleApiService.addDomainToList(mode, currentUrl)
         BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
@@ -160,7 +160,7 @@ export default defineComponent({
         // entry later restores the previous blocking behavior automatically.
         await TemporaryActionService.temporarilyAllowDomain(
           currentUrl,
-          selectedTemporaryAllowTime.value
+          selectedTemporaryAllowTime.value,
         )
         BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
         await reloadAfterWhitelist()
@@ -196,8 +196,8 @@ export default defineComponent({
       whitelistUrl,
       temporarilyWhitelistUrl,
       blackListUrl,
-      ...useTranslation()
+      ...useTranslation(),
     }
-  }
+  },
 })
 </script>

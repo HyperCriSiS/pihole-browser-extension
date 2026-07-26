@@ -18,8 +18,8 @@ export default defineComponent({
   name: 'OptionAboutTab',
   components: {
     OptionAboutReportIssue,
-    OptionAboutExtension
+    OptionAboutExtension,
   },
-  setup: () => ({ ...useTranslation() })
+  setup: () => ({ ...useTranslation() }),
 })
 </script>

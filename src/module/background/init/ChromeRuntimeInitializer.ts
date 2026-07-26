@@ -3,34 +3,31 @@ import { LinkConfig } from '../../../service/i18NService'
 import {
   PiHoleSettingsDefaults,
   StorageService,
-  TemporaryAllowTimeDefaults
+  TemporaryAllowTimeDefaults,
 } from '../../../service/StorageService'
 import {
   BadgeService,
-  ExtensionBadgeTextEnum
+  ExtensionBadgeTextEnum,
 } from '../../../service/BadgeService'
 
 export default class ChromeRuntimeInitializer implements Initializer {
   public init(): void {
     this.initializeTemporaryAllowTimes()
 
-    chrome.runtime.onInstalled.addListener(details => {
+    chrome.runtime.onInstalled.addListener((details) => {
       if (details.reason === 'install') {
         StorageService.saveDefaultDisableTime(
-          Number(PiHoleSettingsDefaults.default_disable_time)
+          Number(PiHoleSettingsDefaults.default_disable_time),
         )
         StorageService.saveTemporaryAllowTimes([...TemporaryAllowTimeDefaults])
         StorageService.saveReloadAfterDisable(true)
         StorageService.saveReloadAfterWhitelist(true)
       } else if (details.reason === 'update' && details.previousVersion) {
         const previousVersion = Number(
-          details.previousVersion.split('.').join('')
+          details.previousVersion.split('.').join(''),
         )
         const thisVersion = Number(
-          chrome.runtime
-            .getManifest()
-            .version.split('.')
-            .join('')
+          chrome.runtime.getManifest().version.split('.').join(''),
         )
         console.log(`Updated from ${previousVersion} to ${thisVersion}!`)
 
@@ -38,10 +35,10 @@ export default class ChromeRuntimeInitializer implements Initializer {
         if (previousVersion < 400 && thisVersion >= 400) {
           StorageService.clearStorage().then(() => {
             StorageService.saveDefaultDisableTime(
-              Number(PiHoleSettingsDefaults.default_disable_time)
+              Number(PiHoleSettingsDefaults.default_disable_time),
             )
             StorageService.saveTemporaryAllowTimes([
-              ...TemporaryAllowTimeDefaults
+              ...TemporaryAllowTimeDefaults,
             ])
             StorageService.saveReloadAfterDisable(true)
             StorageService.saveReloadAfterWhitelist(true)
@@ -57,7 +54,7 @@ export default class ChromeRuntimeInitializer implements Initializer {
   }
 
   private initializeTemporaryAllowTimes(): void {
-    StorageService.getTemporaryAllowTimes().then(times => {
+    StorageService.getTemporaryAllowTimes().then((times) => {
       if (typeof times === 'undefined') {
         StorageService.saveTemporaryAllowTimes([...TemporaryAllowTimeDefaults])
       }

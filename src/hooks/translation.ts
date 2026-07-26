@@ -2,7 +2,7 @@ import {
   I18NOptionKeys,
   I18NPopupKeys,
   I18NService,
-  LinkConfig
+  LinkConfig,
 } from '../service/i18NService'
 import { PiHoleSettingsDefaults } from '../service/StorageService'
 
@@ -12,6 +12,6 @@ export default function useTranslation() {
     I18NOptionKeys,
     PiHoleSettingsDefaults,
     LinkConfig,
-    translate: I18NService.translate
+    translate: I18NService.translate,
   }
 }

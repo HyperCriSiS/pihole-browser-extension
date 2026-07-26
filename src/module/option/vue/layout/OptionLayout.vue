@@ -104,8 +104,8 @@ export default defineComponent({
       mdiCog,
       mdiInformationOutline,
       mdiGift,
-      mdiFire
+      mdiFire,
     }
-  }
+  },
 })
 </script>

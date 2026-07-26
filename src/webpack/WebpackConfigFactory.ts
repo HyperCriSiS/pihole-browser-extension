@@ -9,7 +9,7 @@ import ESLintWebpackPlugin from 'eslint-webpack-plugin'
 export class WebpackConfigFactory {
   public static createConfig(
     browser: Browsers,
-    isProduction: boolean
+    isProduction: boolean,
   ): Configuration {
     const mainEntryName =
       browser === Browsers.Chrome ? 'service-worker' : 'background'
@@ -24,84 +24,84 @@ export class WebpackConfigFactory {
           __dirname,
           '../',
           'module/background',
-          'background.ts'
-        )
+          'background.ts',
+        ),
       },
       devtool: isProduction ? false : 'inline-source-map',
       output: {
         path: path.join(__dirname, '../../dist/' + browser),
-        filename: '[name].js'
+        filename: '[name].js',
       },
       module: {
         rules: [
           {
             test: /\.vue$/,
-            loader: 'vue-loader'
+            loader: 'vue-loader',
           },
           {
             test: /\.tsx?$/,
             loader: 'ts-loader',
             exclude: /node_modules/,
             options: {
-              appendTsSuffixTo: [/\.vue$/]
-            }
+              appendTsSuffixTo: [/\.vue$/],
+            },
           },
           {
             test: /\.(scss|css)$/,
-            use: ['style-loader', 'css-loader', 'sass-loader']
+            use: ['style-loader', 'css-loader', 'sass-loader'],
           },
           {
             test: /\.(woff|woff2|ttf|eot)$/,
             use: {
-              loader: 'url-loader'
-            }
-          }
-        ]
+              loader: 'url-loader',
+            },
+          },
+        ],
       },
       resolve: {
         extensions: ['.js', '.ts', '.vue'],
         alias: {
-          vue$: 'vue/dist/vue.esm.js'
-        }
+          vue$: 'vue/dist/vue.esm.js',
+        },
       },
       optimization: {
         splitChunks: {
           chunks(chunk) {
             return chunk.name !== 'service-worker'
-          }
-        }
+          },
+        },
       },
       plugins: [
         new CopyWebpackPlugin({
           patterns: [
             {
               from: 'manifest.' + browser + '.json',
-              to: 'manifest.json'
+              to: 'manifest.json',
             },
             {
               from: '_locales',
-              to: '_locales'
+              to: '_locales',
             },
             {
               from: 'icon',
-              to: 'icon'
-            }
-          ]
+              to: 'icon',
+            },
+          ],
         }),
         new HtmlWebpackPlugin({
           template: path.join(__dirname, '../', 'module/popup', 'popup.html'),
           filename: 'popup.html',
-          chunks: ['popup']
+          chunks: ['popup'],
         }),
         new HtmlWebpackPlugin({
           template: path.join(
             __dirname,
             '../',
             'module/option',
-            'options.html'
+            'options.html',
           ),
           filename: 'options.html',
-          chunks: ['options']
+          chunks: ['options'],
         }),
         mainEntryName === 'background' &&
           new HtmlWebpackPlugin({
@@ -109,25 +109,25 @@ export class WebpackConfigFactory {
               __dirname,
               '../',
               'module/background',
-              'background.html'
+              'background.html',
             ),
             filename: 'background.html',
-            chunks: ['background']
+            chunks: ['background'],
           }),
         new VueLoaderPlugin(),
         new ESLintWebpackPlugin({
           configType: 'flat',
           cwd: repositoryRoot,
-          extensions: ['ts', 'vue']
-        })
-      ].filter(Boolean)
+          extensions: ['ts', 'vue'],
+        }),
+      ].filter(Boolean),
     }
 
     if (isProduction) {
       if (config.plugins) {
         const zip_options: ZipPlugin.Options = {
           filename: 'package.' + browser + '.zip',
-          path: path.join(__dirname, '../../')
+          path: path.join(__dirname, '../../'),
         }
         // @ts-ignore
         config.plugins.push(new ZipPlugin(zip_options))
@@ -150,5 +150,5 @@ export interface CliConfigOptions {
 
 export enum Browsers {
   Chrome = 'chrome',
-  Firefox = 'firefox'
+  Firefox = 'firefox',
 }

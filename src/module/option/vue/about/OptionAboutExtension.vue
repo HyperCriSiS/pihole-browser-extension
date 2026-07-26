@@ -27,6 +27,6 @@ import useTranslation from '../../../../hooks/translation'
 
 export default defineComponent({
   name: 'OptionAboutExtension',
-  setup: () => ({ ...useTranslation() })
+  setup: () => ({ ...useTranslation() }),
 })
 </script>

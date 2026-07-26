@@ -1,6 +1,6 @@
 enum ApiList {
   whitelist = 'allow',
-  blacklist = 'deny'
+  blacklist = 'deny',
 }
 
 export default ApiList
