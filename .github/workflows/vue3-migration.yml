@@ -6,6 +6,11 @@ on:
       - feat/vue3-vuetify-migration
     paths:
       - .github/vue3-migration-trigger
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/vue3-migration-trigger
 
 permissions:
   contents: write
