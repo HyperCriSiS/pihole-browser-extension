@@ -10,9 +10,19 @@
       </v-icon>
     </v-card-title>
     <v-card-text>
+      <v-select
+        v-model="selectedPauseTarget"
+        :items="pauseTargetItems"
+        :label="translate(I18NPopupKeys.popup_group_select)"
+        :loading="groupsLoading"
+        :disabled="groupsLoading || pauseActionLoading"
+        variant="outlined"
+        density="compact"
+      ></v-select>
+
       <v-text-field
         v-model.number="defaultDisableTime"
-        :disabled="defaultDisableTimeDisabled"
+        :disabled="pauseActionLoading"
         type="number"
         min="0"
         variant="outlined"
@@ -24,60 +34,25 @@
           {{ translate(I18NPopupKeys.popup_status_card_info_text) }}
         </template>
       </v-text-field>
+
       <div class="d-flex flex justify-center">
         <v-switch
-          v-model="sliderChecked"
-          style="transform: scale(1.5)"
+          :model-value="sliderChecked"
+          :label="translate(I18NPopupKeys.popup_blocking_active)"
+          style="transform: scale(1.15)"
           inset
           color="green"
-          :disabled="sliderDisabled"
-          @update:model-value="sliderClicked"
+          :loading="pauseActionLoading"
+          :disabled="sliderDisabled || pauseActionLoading"
+          @update:model-value="changePauseState"
         ></v-switch>
       </div>
 
-      <v-divider class="my-4"></v-divider>
-      <div class="text-subtitle-1 mb-2">
-        {{ translate(I18NPopupKeys.popup_group_title) }}
-      </div>
-      <v-select
-        v-model="selectedGroup"
-        :items="groupItems"
-        :label="translate(I18NPopupKeys.popup_group_select)"
-        :loading="groupsLoading"
-        :disabled="groupsLoading || groupItems.length === 0"
-        variant="outlined"
-        density="compact"
-      ></v-select>
-      <v-select
-        v-model="selectedGroupDisableTime"
-        :items="groupDurationItems"
-        :label="translate(I18NPopupKeys.popup_temporary_allow_duration)"
-        variant="outlined"
-        density="compact"
-      ></v-select>
-      <v-btn
-        block
-        color="orange"
-        :loading="groupActionLoading"
-        :disabled="
-          groupActionLoading ||
-          groupsLoading ||
-          !selectedGroup ||
-          selectedGroupDisableTime < 1 ||
-          defaultDisableTimeDisabled
-        "
-        @click="disableSelectedGroup"
-      >
-        {{ translate(I18NPopupKeys.popup_group_disable) }}
-        <span v-if="selectedGroupDisableTime > 0">
-          &nbsp;({{ selectedGroupDisableTime }} s)
-        </span>
-      </v-btn>
-      <div class="text-caption mt-2">
+      <div v-if="!isEntirePiHole" class="text-caption mt-2">
         {{ translate(I18NPopupKeys.popup_group_warning) }}
       </div>
       <v-alert
-        v-if="groupActionState === 'success'"
+        v-if="pauseActionState === 'success'"
         class="mt-3 mb-0"
         density="compact"
         variant="outlined"
@@ -86,7 +61,7 @@
         {{ translate(I18NPopupKeys.popup_group_success) }}
       </v-alert>
       <v-alert
-        v-if="groupActionState === 'error' || groupLoadError"
+        v-if="pauseActionState === 'error' || groupLoadError"
         class="mt-3 mb-0"
         density="compact"
         variant="outlined"
@@ -100,11 +75,10 @@
 
 <script lang="ts">
 import { mdiAllInclusive, mdiCog, mdiTimerOutline } from '@mdi/js'
-import { computed, defineComponent, onMounted, ref } from 'vue'
+import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import {
   PiHoleSettingsDefaults,
   StorageService,
-  TemporaryAllowTimeDefaults,
 } from '../../../../service/StorageService'
 import { PiHoleApiStatus } from '../../../../api/models/PiHoleApiStatus'
 import {
@@ -117,6 +91,8 @@ import PiHoleApiStatusEnum from '../../../../api/enum/PiHoleApiStatusEnum'
 import useTranslation from '../../../../hooks/translation'
 import TemporaryActionService from '../../../../service/TemporaryActionService'
 import { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
+
+const ENTIRE_PIHOLE_TARGET = '__entire_pihole__'
 
 export default defineComponent({
   name: 'PopupStatusCardComponent',
@@ -132,144 +108,218 @@ export default defineComponent({
   },
   emits: ['update:modelValue'],
   setup: (props, { emit }) => {
+    const { translate, I18NPopupKeys, I18NOptionKeys } = useTranslation()
     const sliderChecked = ref(props.isActiveByBadge)
-    const sliderDisabled = ref(!props.isActiveByBadge)
-    const defaultDisableTimeDisabled = ref(!props.isActiveByBadge)
+    const sliderDisabled = ref(true)
     const defaultDisableTime = ref<number>(
       PiHoleSettingsDefaults.default_disable_time,
     )
     const groups = ref<PiHoleGroup[]>([])
-    const selectedGroup = ref<string | null>(null)
-    const groupDisableTimes = ref<number[]>([...TemporaryAllowTimeDefaults])
-    const selectedGroupDisableTime = ref(TemporaryAllowTimeDefaults[0])
+    const selectedPauseTarget = ref<string | null>(null)
     const groupsLoading = ref(false)
     const groupLoadError = ref(false)
-    const groupActionLoading = ref(false)
-    const groupActionState = ref<'success' | 'error' | null>(null)
+    const pauseActionLoading = ref(false)
+    const pauseActionState = ref<'success' | 'error' | null>(null)
 
     const timeUnitIcon = computed(() =>
       defaultDisableTime.value < 1 ? mdiAllInclusive : mdiTimerOutline,
     )
-    const groupItems = computed(() =>
-      groups.value.map((group) => ({
+    const isEntirePiHole = computed(
+      () => selectedPauseTarget.value === ENTIRE_PIHOLE_TARGET,
+    )
+    const pauseTargetItems = computed(() => [
+      ...groups.value.map((group) => ({
         title: group.name,
         value: group.name,
       })),
-    )
-    const groupDurationItems = computed(() =>
-      groupDisableTimes.value.map((time) => ({
-        title: `${time} s`,
-        value: time,
-      })),
-    )
+      {
+        title: translate(I18NPopupKeys.popup_entire_pihole),
+        value: ENTIRE_PIHOLE_TARGET,
+      },
+    ])
 
-    const updateDefaultDisableTime = () => {
-      StorageService.getDefaultDisableTime().then((time) => {
-        if (typeof time !== 'undefined') {
-          defaultDisableTime.value = time
-        }
-      })
-    }
-
-    const updateGroupDisableTimes = async () => {
-      const storedTimes = await StorageService.getTemporaryAllowTimes()
-      if (storedTimes?.length === 3) {
-        groupDisableTimes.value = storedTimes
-        selectedGroupDisableTime.value = storedTimes[0]
+    const updateDefaultDisableTime = async () => {
+      const time = await StorageService.getDefaultDisableTime()
+      if (typeof time !== 'undefined') {
+        defaultDisableTime.value = time
       }
     }
 
-    const loadGroups = async () => {
+    const applyGlobalStatus = (data: PiHoleApiStatus) => {
+      if (data.blocking === PiHoleApiStatusEnum.disabled) {
+        BadgeService.setBadgeText(ExtensionBadgeTextEnum.disabled)
+        emit('update:modelValue', false)
+        if (isEntirePiHole.value) {
+          sliderChecked.value = false
+          sliderDisabled.value = false
+        }
+        return
+      }
+
+      if (data.blocking === PiHoleApiStatusEnum.enabled) {
+        BadgeService.setBadgeText(ExtensionBadgeTextEnum.enabled)
+        emit('update:modelValue', true)
+        if (isEntirePiHole.value) {
+          sliderChecked.value = true
+          sliderDisabled.value = false
+        }
+        return
+      }
+
+      BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
+      emit('update:modelValue', false)
+      if (isEntirePiHole.value) {
+        sliderChecked.value = false
+        sliderDisabled.value = true
+      }
+    }
+
+    const updateGlobalStatus = async () => {
+      const blocking = await PiHoleApiService.getPiHoleStatusCombined()
+      applyGlobalStatus({ blocking })
+    }
+
+    const updateSelectedTargetStatus = async () => {
+      const target = selectedPauseTarget.value
+      if (!target) {
+        sliderDisabled.value = true
+        return
+      }
+
+      sliderDisabled.value = true
+      groupLoadError.value = false
+      try {
+        if (target === ENTIRE_PIHOLE_TARGET) {
+          await updateGlobalStatus()
+        } else {
+          sliderChecked.value =
+            await PiHoleApiService.getGroupEnabledCombined(target)
+          sliderDisabled.value = false
+        }
+      } catch (reason) {
+        console.warn(reason)
+        sliderChecked.value = false
+        sliderDisabled.value = true
+        groupLoadError.value = true
+      }
+    }
+
+    const loadPauseTargets = async () => {
       groupsLoading.value = true
       groupLoadError.value = false
       try {
-        groups.value = (await PiHoleApiService.getCommonGroups()).filter(
-          (group) => group.enabled,
+        groups.value = await PiHoleApiService.getCommonGroups()
+        const storedTarget = await StorageService.getPauseTarget()
+        const storedGroupExists = groups.value.some(
+          (group) => group.name === storedTarget,
         )
+
+        if (storedTarget === ENTIRE_PIHOLE_TARGET || storedGroupExists) {
+          selectedPauseTarget.value = storedTarget!
+          return
+        }
+
         const preferredGroup =
           groups.value.find((group) => group.name !== 'Default') ||
           groups.value[0]
-        selectedGroup.value = preferredGroup?.name || null
+        selectedPauseTarget.value =
+          preferredGroup?.name || ENTIRE_PIHOLE_TARGET
       } catch (reason) {
         console.warn(reason)
         groupLoadError.value = true
+        selectedPauseTarget.value = ENTIRE_PIHOLE_TARGET
       } finally {
         groupsLoading.value = false
       }
     }
 
-    const updateComponentsByData = (data: PiHoleApiStatus) => {
-      if (data.blocking === PiHoleApiStatusEnum.disabled) {
-        defaultDisableTimeDisabled.value = true
-        sliderChecked.value = false
-        sliderDisabled.value = false
-        BadgeService.setBadgeText(ExtensionBadgeTextEnum.disabled)
-        emit('update:modelValue', false)
-      } else if (data.blocking === PiHoleApiStatusEnum.enabled) {
-        defaultDisableTimeDisabled.value = false
-        sliderDisabled.value = false
-        sliderChecked.value = true
-        BadgeService.setBadgeText(ExtensionBadgeTextEnum.enabled)
-        emit('update:modelValue', true)
-      } else {
-        defaultDisableTimeDisabled.value = true
-        sliderDisabled.value = true
-        sliderChecked.value = false
-        BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
-        emit('update:modelValue', false)
+    const reloadAfterPause = async () => {
+      if (await StorageService.getReloadAfterDisable()) {
+        TabService.reloadCurrentTab(1000)
       }
     }
 
-    const updateStatus = async () => {
-      const isEnabledByBadge =
-        (await BadgeService.getBadgeText()) === ExtensionBadgeTextEnum.enabled
-
-      if (isEnabledByBadge) {
-        sliderChecked.value = true
-        sliderDisabled.value = false
-        defaultDisableTimeDisabled.value = false
-      }
-
-      PiHoleApiService.getPiHoleStatusCombined()
-        .then((value) => {
-          updateComponentsByData({ blocking: value })
-        })
-        .catch(() =>
-          updateComponentsByData({ blocking: PiHoleApiStatusEnum.error }),
-        )
-    }
-
-    const onSliderClickSuccessHandler = (data: PiHoleApiStatus) => {
-      updateComponentsByData(data)
-      if (data.blocking === PiHoleApiStatusEnum.disabled) {
-        const reloadAfterDisableCallback = (
-          is_enabled: boolean | undefined,
-        ) => {
-          if (typeof is_enabled !== 'undefined' && is_enabled) {
-            TabService.reloadCurrentTab(1000)
-          }
-        }
-        StorageService.getReloadAfterDisable().then(reloadAfterDisableCallback)
-      }
-    }
-
-    const throwConsoleBadgeError = (
-      error_message: unknown,
-      refresh_status: boolean = false,
+    const changeEntirePiHoleState = async (
+      blockingEnabled: boolean,
+      durationSeconds: number,
     ) => {
-      console.warn(error_message)
+      const mode = blockingEnabled
+        ? PiHoleApiStatusEnum.enabled
+        : PiHoleApiStatusEnum.disabled
+      const responses = await PiHoleApiService.changePiHoleStatus(
+        mode,
+        durationSeconds,
+      )
 
-      updateComponentsByData({ blocking: PiHoleApiStatusEnum.error })
-      if (refresh_status) {
-        setTimeout(() => {
-          PiHoleApiService.getPiHoleStatusCombined()
-            .then((data) => updateComponentsByData({ blocking: data }))
-            .catch(() =>
-              updateComponentsByData({
-                blocking: PiHoleApiStatusEnum.error,
-              }),
-            )
-        }, 1500)
+      for (const response of responses) {
+        if (response.data.blocking !== mode) {
+          throw new Error('One Pi-hole returned an unexpected blocking state')
+        }
+      }
+
+      applyGlobalStatus(responses[0].data)
+    }
+
+    const changeGroupState = async (
+      groupName: string,
+      blockingEnabled: boolean,
+      durationSeconds: number,
+    ) => {
+      if (blockingEnabled) {
+        await TemporaryActionService.cancelTemporaryGroupAction(groupName)
+        await PiHoleApiService.setGroupEnabled(groupName, true)
+        return
+      }
+
+      if (durationSeconds > 0) {
+        await TemporaryActionService.temporarilyDisableGroup(
+          groupName,
+          durationSeconds,
+        )
+        return
+      }
+
+      await TemporaryActionService.cancelTemporaryGroupAction(groupName)
+      await PiHoleApiService.setGroupEnabled(groupName, false)
+    }
+
+    const changePauseState = async (blockingEnabled: boolean | null) => {
+      const target = selectedPauseTarget.value
+      const durationSeconds = Number(defaultDisableTime.value)
+      if (
+        typeof blockingEnabled !== 'boolean' ||
+        !target ||
+        !Number.isFinite(durationSeconds) ||
+        durationSeconds < 0
+      ) {
+        pauseActionState.value = 'error'
+        return
+      }
+
+      pauseActionLoading.value = true
+      pauseActionState.value = null
+      sliderDisabled.value = true
+      try {
+        if (target === ENTIRE_PIHOLE_TARGET) {
+          await changeEntirePiHoleState(blockingEnabled, durationSeconds)
+        } else {
+          await changeGroupState(target, blockingEnabled, durationSeconds)
+          sliderChecked.value = blockingEnabled
+        }
+
+        pauseActionState.value = 'success'
+        if (!blockingEnabled) {
+          await reloadAfterPause()
+        }
+      } catch (reason) {
+        console.warn(reason)
+        pauseActionState.value = 'error'
+        await updateSelectedTargetStatus()
+      } finally {
+        pauseActionLoading.value = false
+        if (!groupLoadError.value) {
+          sliderDisabled.value = false
+        }
       }
     }
 
@@ -277,89 +327,39 @@ export default defineComponent({
       chrome.runtime.openOptionsPage()
     }
 
-    const sliderClicked = () => {
-      const currentMode = sliderChecked.value
-        ? PiHoleApiStatusEnum.enabled
-        : PiHoleApiStatusEnum.disabled
-
-      const time: number = defaultDisableTime.value
-
-      if (time >= 0) {
-        PiHoleApiService.changePiHoleStatus(currentMode, time)
-          .then((value) => {
-            for (const piHoleStatus of value) {
-              if (
-                piHoleStatus.data.blocking === PiHoleApiStatusEnum.error ||
-                piHoleStatus.data.blocking !== currentMode
-              ) {
-                throwConsoleBadgeError(
-                  'One PiHole returned Error from its request. Please check the password.',
-                  true,
-                )
-                return
-              }
-            }
-            onSliderClickSuccessHandler(value[0].data)
-          })
-          .catch((reason) => {
-            throwConsoleBadgeError(reason)
-          })
-      } else {
-        throwConsoleBadgeError(
-          'Time cannot be smaller than 0. Canceling API request.',
-          true,
-        )
-      }
-    }
-
-    const disableSelectedGroup = async () => {
-      if (!selectedGroup.value || selectedGroupDisableTime.value < 1) {
+    watch(selectedPauseTarget, async (target) => {
+      if (!target) {
         return
       }
 
-      groupActionLoading.value = true
-      groupActionState.value = null
-      try {
-        await TemporaryActionService.temporarilyDisableGroup(
-          selectedGroup.value,
-          selectedGroupDisableTime.value,
-        )
-        groupActionState.value = 'success'
-        await loadGroups()
-      } catch (reason) {
-        console.warn(reason)
-        groupActionState.value = 'error'
-      } finally {
-        groupActionLoading.value = false
-      }
-    }
+      StorageService.savePauseTarget(target)
+      pauseActionState.value = null
+      await updateSelectedTargetStatus()
+    })
 
-    onMounted(() => {
-      updateDefaultDisableTime()
-      updateGroupDisableTimes()
-      updateStatus()
-      loadGroups()
+    onMounted(async () => {
+      await Promise.all([updateDefaultDisableTime(), updateGlobalStatus()])
+      await loadPauseTargets()
     })
 
     return {
       defaultDisableTime,
-      defaultDisableTimeDisabled,
       sliderChecked,
       sliderDisabled,
       timeUnitIcon,
       mdiCog,
-      sliderClicked,
       openOptions,
-      groupItems,
-      groupDurationItems,
-      selectedGroup,
-      selectedGroupDisableTime,
+      selectedPauseTarget,
+      pauseTargetItems,
       groupsLoading,
       groupLoadError,
-      groupActionLoading,
-      groupActionState,
-      disableSelectedGroup,
-      ...useTranslation(),
+      pauseActionLoading,
+      pauseActionState,
+      isEntirePiHole,
+      changePauseState,
+      translate,
+      I18NPopupKeys,
+      I18NOptionKeys,
     }
   },
 })
