@@ -1,0 +1,31 @@
+
+> pihole-browser-extension@4.1.0 build
+> cross-env TS_NODE_PROJECT="tsconfig-for-webpack-config.json" webpack --mode=production --progress --config src/webpack/webpack.firefox.ts && cross-env TS_NODE_PROJECT="tsconfig-for-webpack-config.json" webpack --mode=production --progress --config src/webpack/webpack.chrome.ts
+
+[webpack-cli] [31m✖ Failed to load 'src/webpack/webpack.firefox.ts' config
+▶ ESM (`import`) failed:
+  Error: Cannot find module '/home/runner/work/pihole-browser-extension/pihole-browser-extension/src/webpack/WebpackConfigFactory' imported from /home/runner/work/pihole-browser-extension/pihole-browser-extension/src/webpack/webpack.firefox.ts
+      at finalizeResolution (node:internal/modules/esm/resolve:275:11)
+      at moduleResolve (node:internal/modules/esm/resolve:861:10)
+      at defaultResolve (node:internal/modules/esm/resolve:985:11)
+      at ModuleLoader.#cachedDefaultResolve (node:internal/modules/esm/loader:747:20)
+      at ModuleLoader.resolve (node:internal/modules/esm/loader:724:38)
+      at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:320:38)
+      at ModuleJob._link (node:internal/modules/esm/module_job:182:49)
+  code: ERR_MODULE_NOT_FOUND
+
+▶ CJS (`require`) failed:
+  TSError: ⨯ Unable to compile TypeScript:
+  src/webpack/WebpackConfigFactory.ts(6,29): error TS7016: Could not find a declaration file for module 'vue-loader/lib/plugin'. '/home/runner/work/pihole-browser-extension/pihole-browser-extension/node_modules/vue-loader/lib/plugin.js' implicitly has an 'any' type.
+    Try `npm i --save-dev @types/vue-loader` if it exists or add a new declaration (.d.ts) file containing `declare module 'vue-loader/lib/plugin';`
+
+      at createTSError (/home/runner/work/pihole-browser-extension/pihole-browser-extension/node_modules/ts-node/src/index.ts:859:12)
+      at reportTSError (/home/runner/work/pihole-browser-extension/pihole-browser-extension/node_modules/ts-node/src/index.ts:863:19)
+      at getOutput (/home/runner/work/pihole-browser-extension/pihole-browser-extension/node_modules/ts-node/src/index.ts:1077:36)
+      at Object.compile (/home/runner/work/pihole-browser-extension/pihole-browser-extension/node_modules/ts-node/src/index.ts:1433:41)
+      at Module.m._compile (/home/runner/work/pihole-browser-extension/pihole-browser-extension/node_modules/ts-node/src/index.ts:1617:30)
+      at node:internal/modules/cjs/loader:1913:10
+      at Object.require.extensions.<computed> [as .ts] (/home/runner/work/pihole-browser-extension/pihole-browser-extension/node_modules/ts-node/src/index.ts:1621:12)
+      at Module.load (node:internal/modules/cjs/loader:1505:32)
+      at Function._load (node:internal/modules/cjs/loader:1309:12)
+      at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)[39m
