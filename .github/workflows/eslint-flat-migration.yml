@@ -63,6 +63,10 @@ jobs:
             npm run eslint -- --fix >> .github/lint-migration-error.txt 2>&1
             status=$?
           fi
+          if [ "$status" -eq 0 ]; then
+            npm run prettier-format >> .github/lint-migration-error.txt 2>&1
+            status=$?
+          fi
 
           cat .github/lint-migration-error.txt
           if [ "$status" -ne 0 ]; then
