@@ -31,9 +31,22 @@ jobs:
           package-manager-cache: false
 
       - name: Regenerate lockfile
+        shell: bash
         run: |
-          rm -f package-lock.json
-          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          set +e
+          rm -f package-lock.json .github/eslint-10-error.txt
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund > .github/eslint-10-error.txt 2>&1
+          status=$?
+          cat .github/eslint-10-error.txt
+          if [ "$status" -ne 0 ]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add .github/eslint-10-error.txt
+            git commit -m 'Record ESLint 10 dependency failure'
+            git push origin HEAD:chore/eslint-10
+            exit "$status"
+          fi
+          rm -f .github/eslint-10-error.txt
 
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
@@ -51,7 +64,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rm -f .github/workflows/eslint-10-upgrade.yml .github/eslint-10-trigger
+          rm -f .github/workflows/eslint-10-upgrade.yml .github/eslint-10-trigger .github/eslint-10-error.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
