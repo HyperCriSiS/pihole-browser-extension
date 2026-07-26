@@ -6,8 +6,7 @@ import { PiHoleSettingsStorage } from './StorageService'
 const STORAGE_KEY = 'group_pause_actions_v1'
 const ALARM_PREFIX = 'pihole.groupPause.'
 const RESTORE_RETRY_DELAY = 60 * 1000
-const GROUP_PAUSE_COMMENT =
-  'Client-group pause by PiHole Browser Extension'
+const GROUP_PAUSE_COMMENT = 'Client-group pause by PiHole Browser Extension'
 
 type GroupPauseTarget = {
   pi_uri_base: string
@@ -335,9 +334,7 @@ export default class GroupPauseService {
   }
 
   private static getExpiry(durationSeconds: number): number | null {
-    return durationSeconds === 0
-      ? null
-      : Date.now() + durationSeconds * 1000
+    return durationSeconds === 0 ? null : Date.now() + durationSeconds * 1000
   }
 
   private static async scheduleAction(
