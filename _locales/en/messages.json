@@ -130,7 +130,7 @@
 		"message": "Pause blocking"
 	},
 	"popup_group_warning": {
-		"message": "Clients assigned to another enabled group may still be filtered."
+		"message": "Only clients assigned to the selected group are affected. The group and its configuration remain enabled."
 	},
 	"popup_group_success": {
 		"message": "Blocking state updated."
