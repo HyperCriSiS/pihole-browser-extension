@@ -1,0 +1,94 @@
+# Package versions
+vue: 3.5.40
+vuetify: 4.1.6
+vue-router: 5.2.0
+vue-debounce: 5.0.1
+vue-loader: 17.4.2
+@vue/compiler-sfc: 3.5.40
+
+# Vue files
+src/module/option/vue/about/OptionAboutExtension.vue
+src/module/option/vue/about/OptionAboutReportIssue.vue
+src/module/option/vue/layout/OptionLayout.vue
+src/module/option/vue/settings/OptionCheckboxComponent.vue
+src/module/option/vue/settings/OptionDisableTimeComponent.vue
+src/module/option/vue/settings/OptionTabComponent.vue
+src/module/option/vue/views/OptionAboutView.vue
+src/module/option/vue/views/OptionSettingsView.vue
+src/module/popup/vue/components/PopupListCardComponent.vue
+src/module/popup/vue/components/PopupStatusCardComponent.vue
+src/module/popup/vue/view/PopupComponent.vue
+
+# Vue and router bootstrap references
+src/plugins/vuetify.ts:6:Vue.use(Vuetify)
+src/plugins/vuetify.ts:46:const vuetify = new Vuetify(opts)
+src/module/popup/init/PopupInitializer.ts:14:    new Vue(vueComponent)
+src/module/option/init/OptionsInitializer.ts:11:    const router = new VueRouter({
+src/module/option/init/OptionsInitializer.ts:45:    Vue.use(VueRouter)
+src/module/option/init/OptionsInitializer.ts:46:    Vue.use(vueDebounce)
+src/module/option/init/OptionsInitializer.ts:48:    new Vue(vueComponent)
+src/webpack/WebpackConfigFactory.ts:117:        new VueLoaderPlugin(),
+
+# Vuetify tags
+     10 <v-alert
+      2 <v-app
+      9 <v-btn
+      6 <v-card
+      1 <v-card-actions
+      6 <v-card-text
+      6 <v-card-title
+      1 <v-col
+      2 <v-container
+      4 <v-divider
+      9 <v-icon
+      1 <v-img
+      1 <v-list
+      5 <v-list-item
+      1 <v-list-item-avatar
+      5 <v-list-item-content
+      4 <v-list-item-icon
+      5 <v-list-item-title
+      1 <v-main
+      1 <v-navigation-drawer
+      1 <v-progress-circular
+      1 <v-row
+      3 <v-select
+      2 <v-switch
+      1 <v-tab
+      1 <v-tab-item
+      1 <v-tabs
+      1 <v-tabs-items
+      5 <v-text-field
+
+# Vuetify directives and removed props
+src/module/popup/vue/components/PopupStatusCardComponent.vue:18:        outlined
+src/module/popup/vue/components/PopupStatusCardComponent.vue:48:        outlined
+src/module/popup/vue/components/PopupStatusCardComponent.vue:49:        dense
+src/module/popup/vue/components/PopupStatusCardComponent.vue:55:        outlined
+src/module/popup/vue/components/PopupStatusCardComponent.vue:56:        dense
+src/module/popup/vue/components/PopupStatusCardComponent.vue:82:        dense
+src/module/popup/vue/components/PopupStatusCardComponent.vue:83:        outlined
+src/module/popup/vue/components/PopupStatusCardComponent.vue:91:        dense
+src/module/popup/vue/components/PopupStatusCardComponent.vue:92:        outlined
+src/module/popup/vue/components/PopupStatusCardComponent.vue:155:        text: group.name,
+src/module/popup/vue/components/PopupStatusCardComponent.vue:161:        text: `${time} s`,
+src/module/popup/vue/components/PopupStatusCardComponent.vue:309:          'Time cannot be smaller than 0. Canceling API request.',
+src/module/popup/vue/components/PopupListCardComponent.vue:7:      <v-alert color="primary" outlined>
+src/module/popup/vue/components/PopupListCardComponent.vue:14:        outlined
+src/module/popup/vue/components/PopupListCardComponent.vue:15:        dense
+src/module/popup/vue/components/PopupListCardComponent.vue:16:        hide-details
+src/module/popup/vue/components/PopupListCardComponent.vue:96:        text: `${time} s`,
+src/module/option/vue/settings/OptionTabComponent.vue:21:          outlined
+src/module/option/vue/settings/OptionTabComponent.vue:35:          outlined
+src/module/option/vue/settings/OptionTabComponent.vue:58:        <v-alert v-if="tabs.length > 1" type="info" outlined>
+src/module/option/vue/settings/OptionTabComponent.vue:61:        <v-alert v-if="connectionCheckStatus === 'IDLE'" outlined type="info">
+src/module/option/vue/settings/OptionTabComponent.vue:70:        <v-alert v-if="connectionCheckStatus === 'OK'" type="success" outlined>
+src/module/option/vue/settings/OptionTabComponent.vue:74:        <v-alert v-if="connectionCheckStatus === 'ERROR'" outlined type="error">
+src/module/option/vue/settings/OptionTabComponent.vue:85:          outlined
+src/module/option/vue/settings/OptionTabComponent.vue:117:  text = 'text',
+src/module/option/vue/settings/OptionDisableTimeComponent.vue:8:      outlined
+src/module/option/vue/settings/OptionDisableTimeComponent.vue:16:    <v-row dense>
+src/module/option/vue/settings/OptionDisableTimeComponent.vue:30:          outlined
+src/module/option/vue/layout/OptionLayout.vue:18:      <v-list dense nav>
+src/module/option/vue/layout/OptionLayout.vue:71:        <v-alert color="primary" outlined class="mx-5">
+src/module/option/vue/views/OptionSettingsView.vue:11:        <v-alert outlined type="info">
