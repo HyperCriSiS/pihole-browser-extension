@@ -1,0 +1,62 @@
+name: Build flat lint migration
+
+on:
+  push:
+    branches:
+      - chore/eslint-flat-config
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out migration branch
+        uses: actions/checkout@v6
+        with:
+          ref: chore/eslint-flat-config
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Regenerate lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Apply formatting and safe lint fixes
+        run: |
+          npm run prettier-format
+          npm run eslint -- --fix
+
+      - name: Run ESLint
+        run: npm run eslint
+
+      - name: Run Prettier check
+        run: npm run prettier-check
+
+      - name: Build Chrome and Firefox packages
+        run: npm run build
+
+      - name: Commit migration result
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/eslint-flat-migration.yml .github/eslint-flat-trigger
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Migrate linting to ESLint flat config'
+          git push origin HEAD:chore/eslint-flat-config
