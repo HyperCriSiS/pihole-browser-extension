@@ -50,6 +50,8 @@ export enum I18NOptionKeys {
 export enum I18NPopupKeys {
   popup_status_card_title = 'popup_status_card_title',
   popup_status_card_info_text = 'popup_status_card_info_text',
+  popup_blocking_active = 'popup_blocking_active',
+  popup_entire_pihole = 'popup_entire_pihole',
   popup_second_card_current_url = 'popup_second_card_current_url',
   popup_second_card_whitelist = 'popup_second_card_whitelist',
   popup_second_card_blacklist = 'popup_second_card_blacklist',
