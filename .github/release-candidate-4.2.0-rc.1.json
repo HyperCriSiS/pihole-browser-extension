@@ -1,0 +1,9 @@
+{
+  "tag": "v4.2.0-rc.1",
+  "release_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/tag/v4.2.0-rc.1",
+  "xpi_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.1/pihole-browser-extension-4.2.0-rc.1-unsigned.xpi",
+  "xpi_sha256": "3687433312a7312bca1ba1b3c9a79c569f69dfe15c22485779a5d1f331e8a5e4",
+  "chrome_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.1/pihole-browser-extension-4.2.0-rc.1-chrome.zip",
+  "chrome_sha256": "341e46dfbabb3353a4a9d0c57fdf9dbb7d0b00b49d07fe44a6c2af9ff75a22ab",
+  "source_commit": "f9c2e71fdfb0c0bc47ce26f6e5bb92c3438396e5"
+}
