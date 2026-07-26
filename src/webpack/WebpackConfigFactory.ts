@@ -13,6 +13,7 @@ export class WebpackConfigFactory {
   ): Configuration {
     const mainEntryName =
       browser === Browsers.Chrome ? 'service-worker' : 'background'
+    const repositoryRoot = path.join(__dirname, '../..')
 
     let config: Configuration = {
       mode: isProduction ? 'production' : 'development',
@@ -115,6 +116,8 @@ export class WebpackConfigFactory {
           }),
         new VueLoaderPlugin(),
         new ESLintWebpackPlugin({
+          cwd: repositoryRoot,
+          overrideConfigFile: path.join(repositoryRoot, 'eslint.config.mjs'),
           extensions: ['ts', 'vue']
         })
       ].filter(Boolean)
