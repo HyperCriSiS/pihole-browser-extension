@@ -1,22 +1,38 @@
 <template>
   <div>
-    <v-text-field
-      v-model.number="disableTime"
-      :label="translate(I18NOptionKeys.options_default_time_label)"
-      type="number"
-      min="10"
-      variant="outlined"
-      :rules="[(v) => Number(v) >= 10 || '≥ 10']"
-      :suffix="translate(I18NOptionKeys.options_default_time_unit)"
-    ></v-text-field>
-
     <div class="text-subtitle-1 mb-2">
+      {{ translate(I18NOptionKeys.options_group_pause_times_title) }}
+    </div>
+    <v-row>
+      <v-col
+        v-for="(_, index) in groupPauseTimes"
+        :key="`group-${index}`"
+        cols="12"
+        sm="4"
+      >
+        <v-text-field
+          v-model.number="groupPauseTimes[index]"
+          :label="`${translate(
+            I18NOptionKeys.options_group_pause_time_label,
+          )} ${index + 1}`"
+          type="number"
+          min="10"
+          variant="outlined"
+          :rules="[(v) => Number(v) >= 10 || '≥ 10']"
+          :suffix="translate(I18NOptionKeys.options_default_time_unit)"
+          :hint="translate(I18NOptionKeys.options_group_pause_time_hint)"
+          persistent-hint
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
+    <div class="text-subtitle-1 mt-4 mb-2">
       {{ translate(I18NOptionKeys.options_temporary_allow_times_title) }}
     </div>
     <v-row>
       <v-col
         v-for="(_, index) in temporaryAllowTimes"
-        :key="index"
+        :key="`domain-${index}`"
         cols="12"
         sm="4"
       >
@@ -41,52 +57,57 @@
 <script lang="ts">
 import { defineComponent, onMounted, ref, watch } from 'vue'
 import {
-  PiHoleSettingsDefaults,
+  GroupPauseTimeDefaults,
   StorageService,
   TemporaryAllowTimeDefaults,
 } from '../../../../service/StorageService'
 import useTranslation from '../../../../hooks/translation'
 
+const areValidPresetTimes = (times: number[]): boolean => {
+  const normalizedTimes = times.map(Number)
+  return (
+    normalizedTimes.length === 3 &&
+    normalizedTimes.every((time) => Number.isInteger(time) && time >= 10)
+  )
+}
+
 export default defineComponent({
-  name: 'OptionDisableTimeComponent',
+  name: 'OptionActionTimesComponent',
   setup: () => {
     const { translate, I18NOptionKeys } = useTranslation()
-    const disableTime = ref(PiHoleSettingsDefaults.default_disable_time)
+    const groupPauseTimes = ref<number[]>([...GroupPauseTimeDefaults])
     const temporaryAllowTimes = ref<number[]>([...TemporaryAllowTimeDefaults])
 
     const updateTimes = async () => {
-      const [storedDisableTime, storedTemporaryAllowTimes] = await Promise.all([
-        StorageService.getDefaultDisableTime(),
-        StorageService.getTemporaryAllowTimes(),
-      ])
+      const [storedGroupPauseTimes, storedTemporaryAllowTimes] =
+        await Promise.all([
+          StorageService.getGroupPauseTimes(),
+          StorageService.getTemporaryAllowTimes(),
+        ])
 
-      if (typeof storedDisableTime !== 'undefined') {
-        disableTime.value = storedDisableTime
+      if (storedGroupPauseTimes?.length === 3) {
+        groupPauseTimes.value = [...storedGroupPauseTimes]
       }
       if (storedTemporaryAllowTimes?.length === 3) {
         temporaryAllowTimes.value = [...storedTemporaryAllowTimes]
       }
     }
 
-    watch(disableTime, () => {
-      const normalizedDisableTime = Number(disableTime.value)
-      if (
-        Number.isInteger(normalizedDisableTime) &&
-        normalizedDisableTime >= 10
-      ) {
-        StorageService.saveDefaultDisableTime(normalizedDisableTime)
-      }
-    })
+    watch(
+      groupPauseTimes,
+      (times) => {
+        if (areValidPresetTimes(times)) {
+          StorageService.saveGroupPauseTimes(times.map(Number))
+        }
+      },
+      { deep: true },
+    )
 
     watch(
       temporaryAllowTimes,
       (times) => {
-        const normalizedTimes = times.map(Number)
-        if (
-          normalizedTimes.length === 3 &&
-          normalizedTimes.every((time) => Number.isInteger(time) && time >= 10)
-        ) {
-          StorageService.saveTemporaryAllowTimes(normalizedTimes)
+        if (areValidPresetTimes(times)) {
+          StorageService.saveTemporaryAllowTimes(times.map(Number))
         }
       },
       { deep: true },
@@ -97,7 +118,7 @@ export default defineComponent({
     return {
       translate,
       I18NOptionKeys,
-      disableTime,
+      groupPauseTimes,
       temporaryAllowTimes,
     }
   },
