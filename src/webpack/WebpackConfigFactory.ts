@@ -117,7 +117,6 @@ export class WebpackConfigFactory {
         new VueLoaderPlugin(),
         new ESLintWebpackPlugin({
           cwd: repositoryRoot,
-          overrideConfigFile: path.join(repositoryRoot, 'eslint.config.mjs'),
           extensions: ['ts', 'vue']
         })
       ].filter(Boolean)
