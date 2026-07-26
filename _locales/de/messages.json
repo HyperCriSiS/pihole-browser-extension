@@ -130,7 +130,7 @@
 		"message": "Filterung pausieren"
 	},
 	"popup_group_warning": {
-		"message": "Clients, die zusätzlich einer anderen aktiven Gruppe zugeordnet sind, können weiterhin gefiltert werden."
+		"message": "Nur Clients der ausgewählten Gruppe sind betroffen. Die Gruppe und ihre Konfiguration bleiben aktiviert."
 	},
 	"popup_group_success": {
 		"message": "Filterstatus wurde aktualisiert."
