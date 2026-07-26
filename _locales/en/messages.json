@@ -50,25 +50,25 @@
 		"message": "Enter the Pi-hole address and web interface password."
 	},
 	"options_default_time_label": {
-		"message": "Default disable time:"
+		"message": "Default Pi-hole pause duration:"
 	},
 	"options_default_time_unit": {
 		"message": "seconds"
 	},
 	"options_temporary_allow_times_title": {
-		"message": "Temporary action presets"
+		"message": "Temporary domain allow presets"
 	},
 	"options_temporary_allow_time_label": {
 		"message": "Preset"
 	},
 	"options_temporary_allow_time_hint": {
-		"message": "Minimum: 10 seconds"
+		"message": "Used by the three orange domain buttons. Minimum: 10 seconds"
 	},
 	"options_reload_after_disable": {
-		"message": "Reload current tab after Disabling"
+		"message": "Reload current tab after pausing blocking"
 	},
 	"options_reload_after_white_list": {
-		"message": "Reload current tab after Whitelisting"
+		"message": "Reload current tab after allowing a domain"
 	},
 	"options_api_key": {
 		"message": "Password"
@@ -91,46 +91,52 @@
 		"message": "The url is invalid. (Missing http(s), invalid scheme or empty)"
 	},
 	"options_disable_list_feature": {
-		"message": "Disable black/white list feature in the popup"
+		"message": "Disable domain allow/block actions in the popup"
 	},
 	"popup_status_card_title": {
-		"message": "PiHole Switch"
+		"message": "Pause Pi-hole blocking"
 	},
 	"popup_status_card_info_text": {
-		"message": "0 for permanent"
+		"message": "Pause duration (0 = until manually resumed)"
+	},
+	"popup_blocking_active": {
+		"message": "Blocking active"
+	},
+	"popup_entire_pihole": {
+		"message": "Entire Pi-hole"
 	},
 	"popup_second_card_current_url": {
-		"message": "Current Url"
+		"message": "Current domain"
 	},
 	"popup_second_card_whitelist": {
-		"message": "Whitelist"
+		"message": "Allow permanently"
 	},
 	"popup_second_card_blacklist": {
-		"message": "Blacklist"
+		"message": "Block permanently"
 	},
 	"popup_temporary_whitelist": {
-		"message": "Temporarily allow"
+		"message": "Temporarily allow this domain"
 	},
 	"popup_temporary_allow_duration": {
-		"message": "Temporary action duration"
+		"message": "Temporary domain allow duration"
 	},
 	"popup_group_title": {
-		"message": "Client group"
+		"message": "Pause target"
 	},
 	"popup_group_select": {
-		"message": "Select group"
+		"message": "Pause target"
 	},
 	"popup_group_disable": {
-		"message": "Disable group"
+		"message": "Pause blocking"
 	},
 	"popup_group_warning": {
-		"message": "This disables the selected Pi-hole group. Clients that also use another enabled group may still be filtered."
+		"message": "Clients assigned to another enabled group may still be filtered."
 	},
 	"popup_group_success": {
-		"message": "Group disabled temporarily."
+		"message": "Blocking state updated."
 	},
 	"popup_group_error": {
-		"message": "Group action failed or no common group is available."
+		"message": "Could not update blocking for the selected target."
 	},
 	"option_hotkey_settings": {
 		"message": "Hotkey Settings"
