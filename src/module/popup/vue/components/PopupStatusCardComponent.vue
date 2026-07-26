@@ -89,7 +89,7 @@ import TabService from '../../../../service/TabService'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
 import PiHoleApiStatusEnum from '../../../../api/enum/PiHoleApiStatusEnum'
 import useTranslation from '../../../../hooks/translation'
-import TemporaryActionService from '../../../../service/TemporaryActionService'
+import GroupPauseService from '../../../../service/GroupPauseService'
 import { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
 
 const ENTIRE_PIHOLE_TARGET = '__entire_pihole__'
@@ -192,8 +192,7 @@ export default defineComponent({
         if (target === ENTIRE_PIHOLE_TARGET) {
           await updateGlobalStatus()
         } else {
-          sliderChecked.value =
-            await PiHoleApiService.getGroupEnabledCombined(target)
+          sliderChecked.value = !(await GroupPauseService.isGroupPaused(target))
           sliderDisabled.value = false
         }
       } catch (reason) {
@@ -265,21 +264,11 @@ export default defineComponent({
       durationSeconds: number,
     ) => {
       if (blockingEnabled) {
-        await TemporaryActionService.cancelTemporaryGroupAction(groupName)
-        await PiHoleApiService.setGroupEnabled(groupName, true)
+        await GroupPauseService.resumeGroup(groupName)
         return
       }
 
-      if (durationSeconds > 0) {
-        await TemporaryActionService.temporarilyDisableGroup(
-          groupName,
-          durationSeconds,
-        )
-        return
-      }
-
-      await TemporaryActionService.cancelTemporaryGroupAction(groupName)
-      await PiHoleApiService.setGroupEnabled(groupName, false)
+      await GroupPauseService.pauseGroup(groupName, durationSeconds)
     }
 
     const changePauseState = async (blockingEnabled: boolean | null) => {
