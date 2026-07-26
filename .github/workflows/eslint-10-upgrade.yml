@@ -1,0 +1,57 @@
+name: Build ESLint 10 upgrade
+
+on:
+  push:
+    branches:
+      - chore/eslint-10
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  upgrade:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out upgrade branch
+        uses: actions/checkout@v6
+        with:
+          ref: chore/eslint-10
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Regenerate lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run ESLint
+        run: npm run eslint
+
+      - name: Run Prettier check
+        run: npm run prettier-check
+
+      - name: Build Chrome and Firefox packages
+        run: npm run build
+
+      - name: Commit upgrade result
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .github/workflows/eslint-10-upgrade.yml .github/eslint-10-trigger
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Upgrade the ESLint 10 toolchain'
+          git push origin HEAD:chore/eslint-10
