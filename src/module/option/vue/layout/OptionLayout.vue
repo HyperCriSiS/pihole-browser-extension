@@ -82,7 +82,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent } from '@vue/composition-api'
+import { computed, defineComponent } from 'vue'
 import { mdiCog, mdiFire, mdiGift, mdiInformationOutline } from '@mdi/js'
 import useTranslation from '../../../../hooks/translation'
 

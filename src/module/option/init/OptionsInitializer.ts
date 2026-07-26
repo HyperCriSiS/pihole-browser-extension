@@ -1,6 +1,5 @@
 import Vue from 'vue'
 import vueDebounce from 'vue-debounce'
-import VueCompositionAPI from '@vue/composition-api'
 import VueRouter from 'vue-router'
 import { Initializer } from '../../general/Initializer'
 import vuetify from '../../../plugins/vuetify'
@@ -45,7 +44,6 @@ export default class OptionsInitializer implements Initializer {
 
     Vue.use(VueRouter)
     Vue.use(vueDebounce)
-    Vue.use(VueCompositionAPI)
     // eslint-disable-next-line no-new
     new Vue(vueComponent)
   }
