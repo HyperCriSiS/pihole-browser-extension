@@ -130,23 +130,7 @@ export default class PiHoleApiService {
     list: ApiList,
     domain: string,
   ): Promise<PiHoleDomain | undefined> {
-    this.assertValidPiHole(piHole)
-
-    try {
-      const response = await this.getAxiosInstance(
-        piHole.pi_uri_base!,
-        piHole.api_key,
-      ).get<PiHoleDomains>(
-        `/domains/${list}/exact/${encodeURIComponent(domain)}`,
-      )
-
-      return response.data.domains[0]
-    } catch (reason) {
-      if (this.isNotFound(reason)) {
-        return undefined
-      }
-      throw reason
-    }
+    return this.getDomain(piHole, list, 'exact', domain)
   }
 
   public static async addExactDomain(
@@ -155,16 +139,7 @@ export default class PiHoleApiService {
     domain: string,
     payload: DomainMutationPayload,
   ): Promise<PiHoleDomain> {
-    this.assertValidPiHole(piHole)
-    const response = await this.getAxiosInstance(
-      piHole.pi_uri_base!,
-      piHole.api_key,
-    ).post<PiHoleDomains>(`/domains/${list}/exact`, {
-      domain,
-      ...payload,
-    })
-
-    return this.requireDomain(response.data, domain)
+    return this.addDomain(piHole, list, 'exact', domain, payload)
   }
 
   public static async replaceExactDomain(
@@ -173,20 +148,7 @@ export default class PiHoleApiService {
     domain: string,
     payload: DomainMutationPayload,
   ): Promise<PiHoleDomain> {
-    this.assertValidPiHole(piHole)
-    const response = await this.getAxiosInstance(
-      piHole.pi_uri_base!,
-      piHole.api_key,
-    ).put<PiHoleDomains>(
-      `/domains/${list}/exact/${encodeURIComponent(domain)}`,
-      {
-        type: list,
-        kind: 'exact',
-        ...payload,
-      },
-    )
-
-    return this.requireDomain(response.data, domain)
+    return this.replaceDomain(piHole, list, 'exact', domain, payload)
   }
 
   public static async deleteExactDomain(
@@ -194,10 +156,41 @@ export default class PiHoleApiService {
     list: ApiList,
     domain: string,
   ): Promise<void> {
-    this.assertValidPiHole(piHole)
-    await this.getAxiosInstance(piHole.pi_uri_base!, piHole.api_key).delete(
-      `/domains/${list}/exact/${encodeURIComponent(domain)}`,
-    )
+    return this.deleteDomain(piHole, list, 'exact', domain)
+  }
+
+  public static async getRegexDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    domain: string,
+  ): Promise<PiHoleDomain | undefined> {
+    return this.getDomain(piHole, list, 'regex', domain)
+  }
+
+  public static async addRegexDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    domain: string,
+    payload: DomainMutationPayload,
+  ): Promise<PiHoleDomain> {
+    return this.addDomain(piHole, list, 'regex', domain, payload)
+  }
+
+  public static async replaceRegexDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    domain: string,
+    payload: DomainMutationPayload,
+  ): Promise<PiHoleDomain> {
+    return this.replaceDomain(piHole, list, 'regex', domain, payload)
+  }
+
+  public static async deleteRegexDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    domain: string,
+  ): Promise<void> {
+    return this.deleteDomain(piHole, list, 'regex', domain)
   }
 
   public static async getCommonGroups(): Promise<PiHoleGroup[]> {
@@ -266,42 +259,82 @@ export default class PiHoleApiService {
     return updatedGroup
   }
 
-  public static async getGroupEnabledCombined(name: string): Promise<boolean> {
-    const piHoles = await this.getConfiguredPiHoles()
-    const groups = await Promise.all(
-      piHoles.map((piHole) => this.getGroup(piHole, name)),
-    )
+  private static async getDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    kind: 'exact' | 'regex',
+    domain: string,
+  ): Promise<PiHoleDomain | undefined> {
+    this.assertValidPiHole(piHole)
 
-    if (groups.some((group) => !group)) {
-      throw new Error(`Group ${name} is missing on one Pi-hole`)
+    try {
+      const response = await this.getAxiosInstance(
+        piHole.pi_uri_base!,
+        piHole.api_key,
+      ).get<PiHoleDomains>(
+        `/domains/${list}/${kind}/${encodeURIComponent(domain)}`,
+      )
+
+      return response.data.domains[0]
+    } catch (reason) {
+      if (this.isNotFound(reason)) {
+        return undefined
+      }
+      throw reason
     }
-
-    return groups.every((group) => group!.enabled)
   }
 
-  public static async setGroupEnabled(
-    name: string,
-    enabled: boolean,
-  ): Promise<PiHoleGroup[]> {
-    const piHoles = await this.getConfiguredPiHoles()
+  private static async addDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    kind: 'exact' | 'regex',
+    domain: string,
+    payload: DomainMutationPayload,
+  ): Promise<PiHoleDomain> {
+    this.assertValidPiHole(piHole)
+    const response = await this.getAxiosInstance(
+      piHole.pi_uri_base!,
+      piHole.api_key,
+    ).post<PiHoleDomains>(`/domains/${list}/${kind}`, {
+      domain,
+      ...payload,
+    })
 
-    return Promise.all(
-      piHoles.map(async (piHole) => {
-        const current = await this.getGroup(piHole, name)
-        if (!current) {
-          throw new Error(`Group ${name} is missing on one Pi-hole`)
-        }
+    return this.requireDomain(response.data, domain)
+  }
 
-        if (current.enabled === enabled) {
-          return current
-        }
+  private static async replaceDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    kind: 'exact' | 'regex',
+    domain: string,
+    payload: DomainMutationPayload,
+  ): Promise<PiHoleDomain> {
+    this.assertValidPiHole(piHole)
+    const response = await this.getAxiosInstance(
+      piHole.pi_uri_base!,
+      piHole.api_key,
+    ).put<PiHoleDomains>(
+      `/domains/${list}/${kind}/${encodeURIComponent(domain)}`,
+      {
+        type: list,
+        kind,
+        ...payload,
+      },
+    )
 
-        return this.replaceGroup(piHole, name, {
-          name: current.name,
-          comment: current.comment,
-          enabled,
-        })
-      }),
+    return this.requireDomain(response.data, domain)
+  }
+
+  private static async deleteDomain(
+    piHole: PiHoleSettingsStorage,
+    list: ApiList,
+    kind: 'exact' | 'regex',
+    domain: string,
+  ): Promise<void> {
+    this.assertValidPiHole(piHole)
+    await this.getAxiosInstance(piHole.pi_uri_base!, piHole.api_key).delete(
+      `/domains/${list}/${kind}/${encodeURIComponent(domain)}`,
     )
   }
 
