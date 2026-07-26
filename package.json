@@ -9,7 +9,7 @@
 		"vuetify": "^2.7.2"
 	},
 	"devDependencies": {
-		"@eslint/js": "^10.8.0",
+		"@eslint/js": "^10.0.1",
 		"@mdi/js": "^6.9.96",
 		"@types/chrome": "^0.0.270",
 		"@types/copy-webpack-plugin": "8.0.1",
