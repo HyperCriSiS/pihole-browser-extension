@@ -153,7 +153,6 @@ export default class TemporaryActionService {
         storage.domains[key] = action
         // Persist after each successful Pi-hole mutation so a service-worker
         // shutdown cannot leave an untracked temporary allow entry behind.
-
         await this.saveStorage(storage)
       }
 
@@ -246,7 +245,6 @@ export default class TemporaryActionService {
         })
 
         storage.groups[key] = action
-
         await this.saveStorage(storage)
       }
 
@@ -275,6 +273,21 @@ export default class TemporaryActionService {
 
       throw reason
     }
+  }
+
+  public static async cancelTemporaryGroupAction(
+    groupName: string,
+  ): Promise<void> {
+    const key = encodeURIComponent(groupName)
+    const storage = await this.getStorage()
+
+    if (!storage.groups[key]) {
+      return
+    }
+
+    delete storage.groups[key]
+    await this.saveStorage(storage)
+    await this.clearAlarm(`${GROUP_ALARM_PREFIX}${key}`)
   }
 
   private static async restoreDomainAction(key: string): Promise<void> {
