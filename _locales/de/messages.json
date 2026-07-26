@@ -50,25 +50,25 @@
 		"message": "Gib die Pi-hole-Adresse und das Passwort der Weboberfläche ein."
 	},
 	"options_default_time_label": {
-		"message": "Standard-Deaktivierungszeit:"
+		"message": "Standarddauer der Pi-hole-Pause:"
 	},
 	"options_default_time_unit": {
 		"message": "Sekunden"
 	},
 	"options_temporary_allow_times_title": {
-		"message": "Zeitvorgaben für temporäre Aktionen"
+		"message": "Zeitvorgaben für temporäres Erlauben von Domains"
 	},
 	"options_temporary_allow_time_label": {
 		"message": "Vorgabe"
 	},
 	"options_temporary_allow_time_hint": {
-		"message": "Mindestens 10 Sekunden"
+		"message": "Wird für die drei orangefarbenen Domain-Buttons verwendet. Mindestens 10 Sekunden"
 	},
 	"options_reload_after_disable": {
-		"message": "Aktuellen Tab nach Deaktivierung neu laden"
+		"message": "Aktuellen Tab nach dem Pausieren der Filterung neu laden"
 	},
 	"options_reload_after_white_list": {
-		"message": "Aktuellen Tab nach dem Zulassen neu laden"
+		"message": "Aktuellen Tab nach dem Erlauben einer Domain neu laden"
 	},
 	"options_api_key": {
 		"message": "Passwort"
@@ -90,47 +90,53 @@
 	"options_url_invalid_warning": {
 		"message": "Die URL ist ungültig. (Fehlendes http(s), ungültiges Format oder leer)"
 	},
+	"options_disable_list_feature": {
+		"message": "Domain-Aktionen zum Erlauben und Sperren im Popup deaktivieren"
+	},
 	"popup_status_card_title": {
-		"message": "Pi-hole-Schalter"
+		"message": "Pi-hole-Filterung pausieren"
 	},
 	"popup_status_card_info_text": {
-		"message": "0 für dauerhaft"
+		"message": "Pausendauer (0 = bis zum manuellen Fortsetzen)"
+	},
+	"popup_blocking_active": {
+		"message": "Filterung aktiv"
+	},
+	"popup_entire_pihole": {
+		"message": "Gesamter Pi-hole"
 	},
 	"popup_second_card_current_url": {
-		"message": "Aktuelle URL"
+		"message": "Aktuelle Domain"
 	},
 	"popup_second_card_whitelist": {
-		"message": "Dauerhaft zulassen"
+		"message": "Dauerhaft erlauben"
 	},
 	"popup_second_card_blacklist": {
-		"message": "Sperren"
+		"message": "Dauerhaft sperren"
 	},
 	"popup_temporary_whitelist": {
-		"message": "Zeitweise zulassen"
+		"message": "Diese Domain zeitweise erlauben"
 	},
 	"popup_temporary_allow_duration": {
-		"message": "Dauer der temporären Aktion"
+		"message": "Dauer des temporären Erlaubens"
 	},
 	"popup_group_title": {
-		"message": "Client-Gruppe"
+		"message": "Pausenziel"
 	},
 	"popup_group_select": {
-		"message": "Gruppe auswählen"
+		"message": "Pausenziel"
 	},
 	"popup_group_disable": {
-		"message": "Gruppe deaktivieren"
+		"message": "Filterung pausieren"
 	},
 	"popup_group_warning": {
-		"message": "Dadurch wird die ausgewählte Pi-hole-Gruppe deaktiviert. Clients, die zusätzlich einer anderen aktiven Gruppe zugeordnet sind, können weiterhin gefiltert werden."
+		"message": "Clients, die zusätzlich einer anderen aktiven Gruppe zugeordnet sind, können weiterhin gefiltert werden."
 	},
 	"popup_group_success": {
-		"message": "Gruppe wurde zeitweise deaktiviert."
+		"message": "Filterstatus wurde aktualisiert."
 	},
 	"popup_group_error": {
-		"message": "Die Gruppenaktion ist fehlgeschlagen oder es gibt keine gemeinsame Gruppe."
-	},
-	"options_disable_list_feature": {
-		"message": "Black-/Whitelist-Funktion im Popup deaktivieren"
+		"message": "Der Filterstatus für das ausgewählte Ziel konnte nicht geändert werden."
 	},
 	"option_hotkey_settings": {
 		"message": "Hotkey-Einstellungen"
