@@ -2,23 +2,25 @@
   <div>
     <v-tabs v-model="currentTab">
       <v-tab
-        v-for="(pi_hole_setting, index) in tabs"
-        :key="'dyn-tab-' + index"
+        v-for="(_, index) in tabs"
+        :key="`dyn-tab-${index}`"
+        :value="index"
         @click="resetConnectionCheckAndCheck"
       >
         PiHole {{ index + 1 }}
       </v-tab>
     </v-tabs>
-    <v-tabs-items v-model="currentTab">
-      <v-tab-item
+    <v-window v-model="currentTab">
+      <v-window-item
         v-for="(pi_hole_setting, index) in tabs"
         :key="index"
+        :value="index"
         class="mt-5"
       >
         <v-text-field
           v-model="pi_hole_setting.pi_uri_base"
           v-debounce:500ms="connectionCheck"
-          outlined
+          variant="outlined"
           debounce-events="input"
           :placeholder="PiHoleSettingsDefaults.pi_uri_base"
           :rules="[
@@ -32,33 +34,38 @@
         <v-text-field
           v-model="pi_hole_setting.api_key"
           v-debounce:500ms="connectionCheck"
-          outlined
+          variant="outlined"
           :type="passwordInputType"
-          :append-icon="
+          :append-inner-icon="
             passwordInputType === 'password' ? mdiEyeOutline : mdiEyeOffOutline
           "
           :label="translate(I18NOptionKeys.options_api_key)"
-          @click:append="toggleApiKeyVisibility"
+          @click:append-inner="toggleApiKeyVisibility"
         ></v-text-field>
 
-        <div class="mb-5">
-          <v-btn v-if="tabs.length < 4" @click.prevent="addNewPiHole"
-            >{{ translate(I18NOptionKeys.options_add_button) }}
+        <div class="mb-5 d-flex ga-2">
+          <v-btn v-if="tabs.length < 4" @click.prevent="addNewPiHole">
+            {{ translate(I18NOptionKeys.options_add_button) }}
           </v-btn>
           <v-btn
             v-if="tabs.length > 1"
             @click.prevent="removePiHole(currentTab)"
-            >{{
+          >
+            {{
               translate(I18NOptionKeys.options_remove_button, [
                 String(currentTab + 1),
               ])
             }}
           </v-btn>
         </div>
-        <v-alert v-if="tabs.length > 1" type="info" outlined>
+        <v-alert v-if="tabs.length > 1" type="info" variant="outlined">
           {{ translate(I18NOptionKeys.option_multiple_connections) }}
         </v-alert>
-        <v-alert v-if="connectionCheckStatus === 'IDLE'" outlined type="info">
+        <v-alert
+          v-if="connectionCheckStatus === 'IDLE'"
+          variant="outlined"
+          type="info"
+        >
           {{ translate(I18NOptionKeys.option_connection_check_idle) }}
           <v-progress-circular
             color="primary"
@@ -67,11 +74,19 @@
             :width="2"
           />
         </v-alert>
-        <v-alert v-if="connectionCheckStatus === 'OK'" type="success" outlined>
+        <v-alert
+          v-if="connectionCheckStatus === 'OK'"
+          type="success"
+          variant="outlined"
+        >
           {{ translate(I18NOptionKeys.option_connection_check_ok) }}<br />
           {{ connectionCheckVersionText }}
         </v-alert>
-        <v-alert v-if="connectionCheckStatus === 'ERROR'" outlined type="error">
+        <v-alert
+          v-if="connectionCheckStatus === 'ERROR'"
+          variant="outlined"
+          type="error"
+        >
           {{ translate(I18NOptionKeys.option_connection_check_error) }}
         </v-alert>
         <v-alert
@@ -82,15 +97,15 @@
               connectionCheckData.web_update ||
               connectionCheckData.FTL_update)
           "
-          outlined
+          variant="outlined"
           type="info"
         >
           {{
             translate(I18NOptionKeys.option_connection_check_update_available)
           }}
         </v-alert>
-      </v-tab-item>
-    </v-tabs-items>
+      </v-window-item>
+    </v-window>
   </div>
 </template>
 
