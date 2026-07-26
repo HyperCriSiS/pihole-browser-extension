@@ -3,7 +3,7 @@
     <v-card-title class="justify-space-between">
       {{ translate(I18NPopupKeys.popup_status_card_title) }}
       <v-icon
-        right
+        class="ml-auto"
         :title="translate(I18NOptionKeys.options_settings)"
         @click="openOptions"
         >{{ mdiCog }}
@@ -15,10 +15,10 @@
         :disabled="defaultDisableTimeDisabled"
         type="number"
         min="0"
-        outlined
+        variant="outlined"
         :rules="[(v) => Number(v) >= 0 || '≥ 0']"
         :suffix="defaultDisableTime > 0 ? 's' : ''"
-        :append-icon="timeUnitIcon"
+        :append-inner-icon="timeUnitIcon"
       >
         <template #label>
           {{ translate(I18NPopupKeys.popup_status_card_info_text) }}
@@ -31,12 +31,12 @@
           inset
           color="green"
           :disabled="sliderDisabled"
-          @change="sliderClicked()"
+          @update:model-value="sliderClicked"
         ></v-switch>
       </div>
 
       <v-divider class="my-4"></v-divider>
-      <div class="subtitle-1 mb-2">
+      <div class="text-subtitle-1 mb-2">
         {{ translate(I18NPopupKeys.popup_group_title) }}
       </div>
       <v-select
@@ -45,15 +45,15 @@
         :label="translate(I18NPopupKeys.popup_group_select)"
         :loading="groupsLoading"
         :disabled="groupsLoading || groupItems.length === 0"
-        outlined
-        dense
+        variant="outlined"
+        density="compact"
       ></v-select>
       <v-select
         v-model="selectedGroupDisableTime"
         :items="groupDurationItems"
         :label="translate(I18NPopupKeys.popup_temporary_allow_duration)"
-        outlined
-        dense
+        variant="outlined"
+        density="compact"
       ></v-select>
       <v-btn
         block
@@ -73,14 +73,14 @@
           &nbsp;({{ selectedGroupDisableTime }} s)
         </span>
       </v-btn>
-      <div class="caption mt-2">
+      <div class="text-caption mt-2">
         {{ translate(I18NPopupKeys.popup_group_warning) }}
       </div>
       <v-alert
         v-if="groupActionState === 'success'"
         class="mt-3 mb-0"
-        dense
-        outlined
+        density="compact"
+        variant="outlined"
         type="success"
       >
         {{ translate(I18NPopupKeys.popup_group_success) }}
@@ -88,8 +88,8 @@
       <v-alert
         v-if="groupActionState === 'error' || groupLoadError"
         class="mt-3 mb-0"
-        dense
-        outlined
+        density="compact"
+        variant="outlined"
         type="error"
       >
         {{ translate(I18NPopupKeys.popup_group_error) }}
@@ -120,9 +120,8 @@ import { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
 
 export default defineComponent({
   name: 'PopupStatusCardComponent',
-  model: { prop: 'isActiveByStatus', event: 'updateStatus' },
   props: {
-    isActiveByStatus: {
+    modelValue: {
       type: Boolean,
       required: true,
     },
@@ -131,6 +130,7 @@ export default defineComponent({
       required: true,
     },
   },
+  emits: ['update:modelValue'],
   setup: (props, { emit }) => {
     const sliderChecked = ref(props.isActiveByBadge)
     const sliderDisabled = ref(!props.isActiveByBadge)
@@ -152,13 +152,13 @@ export default defineComponent({
     )
     const groupItems = computed(() =>
       groups.value.map((group) => ({
-        text: group.name,
+        title: group.name,
         value: group.name,
       })),
     )
     const groupDurationItems = computed(() =>
       groupDisableTimes.value.map((time) => ({
-        text: `${time} s`,
+        title: `${time} s`,
         value: time,
       })),
     )
@@ -204,19 +204,19 @@ export default defineComponent({
         sliderChecked.value = false
         sliderDisabled.value = false
         BadgeService.setBadgeText(ExtensionBadgeTextEnum.disabled)
-        emit('updateStatus', false)
+        emit('update:modelValue', false)
       } else if (data.blocking === PiHoleApiStatusEnum.enabled) {
         defaultDisableTimeDisabled.value = false
         sliderDisabled.value = false
         sliderChecked.value = true
         BadgeService.setBadgeText(ExtensionBadgeTextEnum.enabled)
-        emit('updateStatus', true)
+        emit('update:modelValue', true)
       } else {
         defaultDisableTimeDisabled.value = true
         sliderDisabled.value = true
         sliderChecked.value = false
         BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
-        emit('updateStatus', false)
+        emit('update:modelValue', false)
       }
     }
 
