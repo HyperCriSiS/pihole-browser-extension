@@ -332,10 +332,7 @@ export default defineComponent({
       groupActionState.value = null
       groupSwitchDisabled.value = true
       try {
-        await GroupPauseService.pauseGroup(
-          selectedGroup.value,
-          durationSeconds,
-        )
+        await GroupPauseService.pauseGroup(selectedGroup.value, durationSeconds)
         groupBlockingActive.value = false
         groupActionState.value = 'success'
         await reloadAfterPause()
