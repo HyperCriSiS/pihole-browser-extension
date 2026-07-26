@@ -47,34 +47,52 @@
 		"message": "Pi-hole-Konfiguration"
 	},
 	"options_headline_additional_info": {
-		"message": "Gib die Pi-hole-Adresse und das Passwort der Weboberfläche ein."
+		"message": "Gib die Pi-hole-Adresse und das Passwort der Weboberfläche ein und speichere die Verbindung anschließend ausdrücklich."
 	},
 	"options_default_time_label": {
-		"message": "Standarddauer der Pi-hole-Pause:"
+		"message": "Standard-Pausendauer:"
 	},
 	"options_default_time_unit": {
 		"message": "Sekunden"
 	},
+	"options_group_pause_times_title": {
+		"message": "Zeitvorgaben für Gruppenpausen"
+	},
+	"options_group_pause_time_label": {
+		"message": "Gruppenpause"
+	},
+	"options_group_pause_time_hint": {
+		"message": "Wird für die drei orangefarbenen Gruppen-Buttons verwendet. Mindestens 10 Sekunden"
+	},
 	"options_temporary_allow_times_title": {
-		"message": "Zeitvorgaben für temporäres Erlauben von Domains"
+		"message": "Zeitvorgaben für temporäres Domain-Whitelisting"
 	},
 	"options_temporary_allow_time_label": {
-		"message": "Vorgabe"
+		"message": "Domain-Whitelist"
 	},
 	"options_temporary_allow_time_hint": {
 		"message": "Wird für die drei orangefarbenen Domain-Buttons verwendet. Mindestens 10 Sekunden"
 	},
 	"options_reload_after_disable": {
-		"message": "Aktuellen Tab nach dem Pausieren der Filterung neu laden"
+		"message": "Aktuellen Tab nach dem globalen oder gruppenbezogenen Ausschalten der Filterung neu laden"
 	},
 	"options_reload_after_white_list": {
-		"message": "Aktuellen Tab nach dem Erlauben einer Domain neu laden"
+		"message": "Aktuellen Tab nach dem Whitelisting einer Domain neu laden"
 	},
 	"options_api_key": {
 		"message": "Passwort"
 	},
 	"options_pi_hole_address": {
 		"message": "Pi-hole-Adresse"
+	},
+	"options_save_button": {
+		"message": "Speichern"
+	},
+	"options_save_success": {
+		"message": "Pi-hole-Verbindungseinstellungen wurden gespeichert."
+	},
+	"options_save_error": {
+		"message": "Pi-hole-Verbindungseinstellungen konnten nicht gespeichert werden."
 	},
 	"options_add_button": {
 		"message": "Pi-hole hinzufügen"
@@ -91,13 +109,25 @@
 		"message": "Die URL ist ungültig. (Fehlendes http(s), ungültiges Format oder leer)"
 	},
 	"options_disable_list_feature": {
-		"message": "Domain-Aktionen zum Erlauben und Sperren im Popup deaktivieren"
+		"message": "Domain-Aktionen für Whitelist und Blacklist im Popup deaktivieren"
 	},
 	"popup_status_card_title": {
-		"message": "Pi-hole-Filterung pausieren"
+		"message": "Pi-hole-Steuerung"
 	},
 	"popup_status_card_info_text": {
-		"message": "Pausendauer (0 = bis zum manuellen Fortsetzen)"
+		"message": "Pausendauer"
+	},
+	"popup_global_title": {
+		"message": "Pi-hole global"
+	},
+	"popup_global_blocking_active": {
+		"message": "Pi-hole-Filterung global eingeschaltet"
+	},
+	"popup_global_success": {
+		"message": "Der globale Pi-hole-Filterstatus wurde geändert."
+	},
+	"popup_global_error": {
+		"message": "Der globale Pi-hole-Filterstatus konnte nicht geändert werden."
 	},
 	"popup_blocking_active": {
 		"message": "Filterung aktiv"
@@ -109,34 +139,40 @@
 		"message": "Aktuelle Domain"
 	},
 	"popup_second_card_whitelist": {
-		"message": "Dauerhaft erlauben"
+		"message": "Dauerhaft auf die Whitelist"
 	},
 	"popup_second_card_blacklist": {
-		"message": "Dauerhaft sperren"
+		"message": "Dauerhaft auf die Blacklist"
 	},
 	"popup_temporary_whitelist": {
-		"message": "Diese Domain zeitweise erlauben"
+		"message": "Temporär auf die Whitelist"
 	},
 	"popup_temporary_allow_duration": {
-		"message": "Dauer des temporären Erlaubens"
+		"message": "Dauer des temporären Domain-Whitelistings"
 	},
 	"popup_group_title": {
-		"message": "Pausenziel"
+		"message": "Client-Gruppe"
 	},
 	"popup_group_select": {
-		"message": "Pausenziel"
+		"message": "Client-Gruppe auswählen"
+	},
+	"popup_group_blocking_active": {
+		"message": "Filterung für diese Gruppe eingeschaltet"
+	},
+	"popup_group_pause_times_title": {
+		"message": "Filterung ausschalten für"
 	},
 	"popup_group_disable": {
-		"message": "Filterung pausieren"
+		"message": "Gruppenfilterung ausschalten"
 	},
 	"popup_group_warning": {
 		"message": "Nur Clients der ausgewählten Gruppe sind betroffen. Die Gruppe und ihre Konfiguration bleiben aktiviert."
 	},
 	"popup_group_success": {
-		"message": "Filterstatus wurde aktualisiert."
+		"message": "Der Filterstatus der Client-Gruppe wurde geändert."
 	},
 	"popup_group_error": {
-		"message": "Der Filterstatus für das ausgewählte Ziel konnte nicht geändert werden."
+		"message": "Die Filterung für die ausgewählte Client-Gruppe konnte nicht geändert werden."
 	},
 	"option_hotkey_settings": {
 		"message": "Hotkey-Einstellungen"
@@ -151,10 +187,10 @@
 		"message": "Pi-hole(s) umschalten"
 	},
 	"context_menu_blacklist_current_domain": {
-		"message": "Aktuelle Domain sperren"
+		"message": "Aktuelle Domain auf die Blacklist setzen"
 	},
 	"context_menu_whitelist_current_domain": {
-		"message": "Aktuelle Domain zulassen"
+		"message": "Aktuelle Domain auf die Whitelist setzen"
 	},
 	"context_menu_open_settings": {
 		"message": "Einstellungen öffnen"
