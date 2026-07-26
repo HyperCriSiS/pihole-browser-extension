@@ -1,16 +1,15 @@
-import Vue from 'vue'
+import { createApp, h } from 'vue'
 import { Initializer } from '../../general/Initializer'
 import PopupComponent from '../vue/view/PopupComponent.vue'
 import vuetify from '../../../plugins/vuetify'
 
 export default class PopupInitializer implements Initializer {
   init(): void {
-    const vueComponent = {
-      vuetify,
-      el: '#main',
-      render: (h: any) => h(PopupComponent),
-    }
+    const app = createApp({
+      render: () => h(PopupComponent),
+    })
 
-    new Vue(vueComponent)
+    app.use(vuetify)
+    app.mount('#main')
   }
 }
