@@ -1,0 +1,66 @@
+
+> pihole-browser-extension@4.1.0 prettier-format
+> prettier --write ./**/*.{ts,vue,css,scss,js,mjs}
+
+eslint.config.mjs 49ms
+src/api/enum/ApiList.ts 46ms
+src/api/enum/ApiListMode.ts 3ms
+src/api/enum/PiHoleApiStatusEnum.ts 2ms
+[90msrc/api/models/PiHoleApiStatus.ts[39m 5ms (unchanged)
+[90msrc/api/models/PiHoleAuth.ts[39m 3ms (unchanged)
+[90msrc/api/models/PiHoleDomains.ts[39m 5ms (unchanged)
+[90msrc/api/models/PiHoleGroups.ts[39m 4ms (unchanged)
+[90msrc/api/models/PiHoleListStatus.ts[39m 1ms (unchanged)
+[90msrc/api/models/PiHoleVersions.ts[39m 14ms (unchanged)
+src/hooks/translation.ts 6ms
+[90msrc/module/background/background.ts[39m 3ms (unchanged)
+src/module/background/init/BackgroundInitializer.ts 29ms
+src/module/background/init/ChromeRuntimeInitializer.ts 22ms
+src/module/background/init/ContextMenuInitializer.ts 19ms
+src/module/background/init/HotKeyInitializer.ts 11ms
+[90msrc/module/general/Initializer.ts[39m 2ms (unchanged)
+src/module/option/init/OptionsInitializer.ts 10ms
+src/module/option/options.ts 2ms
+src/module/option/vue/about/OptionAboutExtension.vue 44ms
+src/module/option/vue/about/OptionAboutReportIssue.vue 33ms
+src/module/option/vue/layout/OptionLayout.vue 46ms
+src/module/option/vue/settings/OptionCheckboxComponent.vue 14ms
+src/module/option/vue/settings/OptionDisableTimeComponent.vue 42ms
+src/module/option/vue/settings/OptionTabComponent.vue 77ms
+src/module/option/vue/views/OptionAboutView.vue 7ms
+src/module/option/vue/views/OptionSettingsView.vue 31ms
+src/module/popup/init/PopupInitializer.ts 4ms
+src/module/popup/popup.ts 2ms
+src/module/popup/vue/components/PopupListCardComponent.vue 44ms
+src/module/popup/vue/components/PopupStatusCardComponent.vue 66ms
+src/module/popup/vue/view/PopupComponent.vue 12ms
+src/plugins/vuetify.ts 2ms
+src/service/BackgroundService.ts 8ms
+src/service/BadgeService.ts 8ms
+src/service/i18NService.ts 6ms
+src/service/MessageBusService.ts 2ms
+src/service/PiHoleApiService.ts 45ms
+src/service/StorageService.ts 25ms
+src/service/TabService.ts 10ms
+src/service/TemporaryActionService.ts 57ms
+src/webpack/webpack.chrome.ts 1ms
+src/webpack/webpack.firefox.ts 1ms
+src/webpack/WebpackConfigFactory.ts 10ms
+
+> pihole-browser-extension@4.1.0 eslint
+> eslint . --fix
+
+(node:2339) ESLintIgnoreWarning: The ".eslintignore" file is no longer supported. Switch to using the "ignores" property in "eslint.config.js": https://eslint.org/docs/latest/use/configure/migration-guide#ignoring-files
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+/home/runner/work/pihole-browser-extension/pihole-browser-extension/src/webpack/WebpackConfigFactory.ts
+  0:0  error  Parsing error: /home/runner/work/pihole-browser-extension/pihole-browser-extension/src/webpack/WebpackConfigFactory.ts was not found by the project service. Consider either including it in the tsconfig.json or including it in allowDefaultProject
+
+/home/runner/work/pihole-browser-extension/pihole-browser-extension/src/webpack/webpack.chrome.ts
+  0:0  error  Parsing error: /home/runner/work/pihole-browser-extension/pihole-browser-extension/src/webpack/webpack.chrome.ts was not found by the project service. Consider either including it in the tsconfig.json or including it in allowDefaultProject
+
+/home/runner/work/pihole-browser-extension/pihole-browser-extension/src/webpack/webpack.firefox.ts
+  0:0  error  Parsing error: /home/runner/work/pihole-browser-extension/pihole-browser-extension/src/webpack/webpack.firefox.ts was not found by the project service. Consider either including it in the tsconfig.json or including it in allowDefaultProject
+
+✖ 3 problems (3 errors, 0 warnings)
+
