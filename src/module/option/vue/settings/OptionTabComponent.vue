@@ -25,11 +25,12 @@
           :placeholder="PiHoleSettingsDefaults.pi_uri_base"
           :rules="[
             (v) =>
-              isInvalidUrlSchema(v) ||
+              isValidUrlSchema(v) ||
               translate(I18NOptionKeys.options_url_invalid_warning),
           ]"
           :label="translate(I18NOptionKeys.options_pi_hole_address)"
           required
+          @update:model-value="markDirty"
         ></v-text-field>
         <v-text-field
           v-model="pi_hole_setting.api_key"
@@ -41,9 +42,18 @@
           "
           :label="translate(I18NOptionKeys.options_api_key)"
           @click:append-inner="toggleApiKeyVisibility"
+          @update:model-value="markDirty"
         ></v-text-field>
 
-        <div class="mb-5 d-flex ga-2">
+        <div class="mb-5 d-flex flex-wrap ga-2">
+          <v-btn
+            color="primary"
+            :loading="saving"
+            :disabled="!canSave || saving"
+            @click.prevent="saveSettings"
+          >
+            {{ translate(I18NOptionKeys.options_save_button) }}
+          </v-btn>
           <v-btn v-if="tabs.length < 4" @click.prevent="addNewPiHole">
             {{ translate(I18NOptionKeys.options_add_button) }}
           </v-btn>
@@ -58,6 +68,24 @@
             }}
           </v-btn>
         </div>
+
+        <v-alert
+          v-if="saveState === 'success'"
+          class="mb-4"
+          type="success"
+          variant="outlined"
+        >
+          {{ translate(I18NOptionKeys.options_save_success) }}
+        </v-alert>
+        <v-alert
+          v-if="saveState === 'error'"
+          class="mb-4"
+          type="error"
+          variant="outlined"
+        >
+          {{ translate(I18NOptionKeys.options_save_error) }}
+        </v-alert>
+
         <v-alert v-if="tabs.length > 1" type="info" variant="outlined">
           {{ translate(I18NOptionKeys.option_multiple_connections) }}
         </v-alert>
@@ -114,6 +142,7 @@ import { debounce } from 'vue-debounce'
 import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import { mdiEyeOffOutline, mdiEyeOutline } from '@mdi/js'
 import {
+  PiHoleSettingsDefaults,
   PiHoleSettingsStorage,
   StorageService,
 } from '../../../../service/StorageService'
@@ -132,6 +161,8 @@ enum PasswordInputType {
   text = 'text',
 }
 
+type SaveState = 'success' | 'error' | null
+
 export default defineComponent({
   name: 'OptionTabComponent',
   setup: () => {
@@ -141,18 +172,36 @@ export default defineComponent({
         api_key: '',
       },
     ])
-
     const currentTab = ref(0)
-
     const passwordInputType = ref<PasswordInputType>(PasswordInputType.password)
-
     const connectionCheckStatus = ref<ConnectionCheckStatus>(
       ConnectionCheckStatus.IDLE,
     )
-
     const connectionCheckData = ref<PiHoleVersionsV6 | null>(null)
+    const saving = ref(false)
+    const saveState = ref<SaveState>(null)
+    const settingsDirty = ref(false)
 
     const currentSelectedSettings = computed(() => tabs.value[currentTab.value])
+
+    const normalizeSettings = (): PiHoleSettingsStorage[] =>
+      tabs.value.map((setting) => ({
+        pi_uri_base: String(setting.pi_uri_base ?? '').replace(/\s+/g, ''),
+        api_key: String(setting.api_key ?? '').replace(/\s+/g, ''),
+      }))
+
+    const isValidUrlSchema = (piHoleUrl: string) =>
+      /^(http|https):\/\/[^ "]+$/.test(String(piHoleUrl ?? ''))
+
+    const canSave = computed(() => {
+      const normalizedSettings = normalizeSettings()
+      return (
+        normalizedSettings.length > 0 &&
+        normalizedSettings.every((setting) =>
+          isValidUrlSchema(setting.pi_uri_base ?? ''),
+        )
+      )
+    })
 
     const connectionCheck = () => {
       connectionCheckStatus.value = ConnectionCheckStatus.IDLE
@@ -169,6 +218,7 @@ export default defineComponent({
           connectionCheckStatus.value = ConnectionCheckStatus.ERROR
         })
     }
+
     const resetConnectionCheckAndCheck = () => {
       connectionCheckStatus.value = ConnectionCheckStatus.IDLE
       connectionCheckData.value = null
@@ -180,7 +230,36 @@ export default defineComponent({
     const updateTabsSettings = async () => {
       const results = await StorageService.getPiHoleSettingsArray()
       if (typeof results !== 'undefined' && results.length > 0) {
-        tabs.value = results
+        tabs.value = results.map((setting) => ({ ...setting }))
+      }
+      settingsDirty.value = false
+    }
+
+    const markDirty = () => {
+      settingsDirty.value = true
+      saveState.value = null
+    }
+
+    const saveSettings = async () => {
+      if (!canSave.value) {
+        saveState.value = 'error'
+        return
+      }
+
+      saving.value = true
+      saveState.value = null
+      try {
+        const normalizedSettings = normalizeSettings()
+        await StorageService.savePiHoleSettingsArray(normalizedSettings)
+        tabs.value = normalizedSettings
+        settingsDirty.value = false
+        saveState.value = 'success'
+        resetConnectionCheckAndCheck()
+      } catch (reason) {
+        console.warn(reason)
+        saveState.value = 'error'
+      } finally {
+        saving.value = false
       }
     }
 
@@ -190,30 +269,8 @@ export default defineComponent({
 
     watch(currentTab, () => {
       passwordInputType.value = PasswordInputType.password
+      saveState.value = null
     })
-
-    watch(
-      tabs,
-      () => {
-        for (const piHoleSetting of tabs.value) {
-          if (typeof piHoleSetting.pi_uri_base !== 'undefined') {
-            piHoleSetting.pi_uri_base = piHoleSetting.pi_uri_base.replace(
-              /\s+/g,
-              '',
-            )
-          } else {
-            piHoleSetting.pi_uri_base = ''
-          }
-          if (typeof piHoleSetting.api_key !== 'undefined') {
-            piHoleSetting.api_key = piHoleSetting.api_key.replace(/\s+/g, '')
-          } else {
-            piHoleSetting.api_key = ''
-          }
-        }
-        StorageService.savePiHoleSettingsArray(tabs.value)
-      },
-      { deep: true },
-    )
 
     const connectionCheckVersionText = computed(() => {
       const data = connectionCheckData.value
@@ -229,20 +286,19 @@ export default defineComponent({
     }
 
     const addNewPiHole = () => {
-      resetConnectionCheckAndCheck()
       tabs.value.push({ pi_uri_base: '', api_key: '' })
-      setTimeout(() => {
-        currentTab.value = tabs.value.length - 1
-      }, 0)
+      currentTab.value = tabs.value.length - 1
+      connectionCheckStatus.value = ConnectionCheckStatus.IDLE
+      connectionCheckData.value = null
+      markDirty()
     }
 
     const removePiHole = (index: number) => {
-      resetConnectionCheckAndCheck()
       tabs.value.splice(index, 1)
+      currentTab.value = Math.min(index, tabs.value.length - 1)
+      markDirty()
+      resetConnectionCheckAndCheck()
     }
-
-    const isInvalidUrlSchema = (piHoleUrl: string) =>
-      !(!piHoleUrl.match('^(http|https):\\/\\/[^ "]+$') || piHoleUrl.length < 1)
 
     return {
       mdiEyeOutline,
@@ -252,13 +308,19 @@ export default defineComponent({
       passwordInputType,
       connectionCheck,
       resetConnectionCheckAndCheck,
-      isInvalidUrlSchema,
+      isValidUrlSchema,
       removePiHole,
       addNewPiHole,
       toggleApiKeyVisibility,
       connectionCheckVersionText,
       connectionCheckStatus,
       connectionCheckData,
+      canSave,
+      saving,
+      saveState,
+      settingsDirty,
+      saveSettings,
+      markDirty,
       ...useTranslation(),
     }
   },
