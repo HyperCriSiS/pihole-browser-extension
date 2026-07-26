@@ -5,15 +5,15 @@
       :label="translate(I18NOptionKeys.options_default_time_label)"
       type="number"
       min="10"
-      outlined
+      variant="outlined"
       :rules="[(v) => Number(v) >= 10 || '≥ 10']"
       :suffix="translate(I18NOptionKeys.options_default_time_unit)"
     ></v-text-field>
 
-    <div class="subtitle-1 mb-2">
+    <div class="text-subtitle-1 mb-2">
       {{ translate(I18NOptionKeys.options_temporary_allow_times_title) }}
     </div>
-    <v-row dense>
+    <v-row>
       <v-col
         v-for="(_, index) in temporaryAllowTimes"
         :key="index"
@@ -27,7 +27,7 @@
           )} ${index + 1}`"
           type="number"
           min="10"
-          outlined
+          variant="outlined"
           :rules="[(v) => Number(v) >= 10 || '≥ 10']"
           :suffix="translate(I18NOptionKeys.options_default_time_unit)"
           :hint="translate(I18NOptionKeys.options_temporary_allow_time_hint)"
