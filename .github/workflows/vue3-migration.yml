@@ -1,0 +1,86 @@
+name: Validate Vue 3 migration
+
+on:
+  push:
+    branches:
+      - feat/vue3-vuetify-migration
+    paths:
+      - .github/vue3-migration-trigger
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out migration branch
+        uses: actions/checkout@v6
+        with:
+          ref: feat/vue3-vuetify-migration
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Validate and commit migration
+        shell: bash
+        run: |
+          set +e
+          ERROR_FILE=.github/vue3-migration-error.txt
+          rm -f package-lock.json "$ERROR_FILE"
+
+          run_step() {
+            local label="$1"
+            shift
+            printf '\n## %s\n' "$label" >> "$ERROR_FILE"
+            "$@" >> "$ERROR_FILE" 2>&1
+            return $?
+          }
+
+          run_step 'Generate lockfile' npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          status=$?
+          if [ "$status" -eq 0 ]; then
+            run_step 'Install dependencies' npm ci --no-audit --no-fund
+            status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_step 'Format source' npm run prettier-format
+            status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_step 'Run ESLint' npm run eslint
+            status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_step 'Run Prettier check' npm run prettier-check
+            status=$?
+          fi
+          if [ "$status" -eq 0 ]; then
+            run_step 'Build Firefox and Chrome packages' npm run build
+            status=$?
+          fi
+
+          cat "$ERROR_FILE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          if [ "$status" -ne 0 ]; then
+            git add -A package-lock.json "$ERROR_FILE"
+            git commit -m 'Record Vue 3 migration failure'
+            git push origin HEAD:feat/vue3-vuetify-migration
+            exit "$status"
+          fi
+
+          rm -f \
+            .github/workflows/vue3-migration.yml \
+            .github/vue3-migration-trigger \
+            "$ERROR_FILE"
+          git add -A
+          git commit -m 'Migrate to Vue 3 and current Vuetify'
+          git push origin HEAD:feat/vue3-vuetify-migration
