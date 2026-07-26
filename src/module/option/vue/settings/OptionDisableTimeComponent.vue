@@ -69,8 +69,12 @@ export default defineComponent({
     }
 
     watch(disableTime, () => {
-      if (Number.isInteger(disableTime.value) && disableTime.value >= 10) {
-        StorageService.saveDefaultDisableTime(Number(disableTime.value))
+      const normalizedDisableTime = Number(disableTime.value)
+      if (
+        Number.isInteger(normalizedDisableTime) &&
+        normalizedDisableTime >= 10
+      ) {
+        StorageService.saveDefaultDisableTime(normalizedDisableTime)
       }
     })
 
