@@ -47,25 +47,34 @@
 		"message": "PiHole Configuration"
 	},
 	"options_headline_additional_info": {
-		"message": "Enter the Pi-hole address and web interface password."
+		"message": "Enter the Pi-hole address and web interface password, then save the connection explicitly."
 	},
 	"options_default_time_label": {
-		"message": "Default Pi-hole pause duration:"
+		"message": "Default pause duration:"
 	},
 	"options_default_time_unit": {
 		"message": "seconds"
+	},
+	"options_group_pause_times_title": {
+		"message": "Client-group pause presets"
+	},
+	"options_group_pause_time_label": {
+		"message": "Group pause"
+	},
+	"options_group_pause_time_hint": {
+		"message": "Used by the three orange client-group buttons. Minimum: 10 seconds"
 	},
 	"options_temporary_allow_times_title": {
 		"message": "Temporary domain allow presets"
 	},
 	"options_temporary_allow_time_label": {
-		"message": "Preset"
+		"message": "Domain allow"
 	},
 	"options_temporary_allow_time_hint": {
 		"message": "Used by the three orange domain buttons. Minimum: 10 seconds"
 	},
 	"options_reload_after_disable": {
-		"message": "Reload current tab after pausing blocking"
+		"message": "Reload current tab after disabling global or group blocking"
 	},
 	"options_reload_after_white_list": {
 		"message": "Reload current tab after allowing a domain"
@@ -75,6 +84,15 @@
 	},
 	"options_pi_hole_address": {
 		"message": "PiHole Address"
+	},
+	"options_save_button": {
+		"message": "Save"
+	},
+	"options_save_success": {
+		"message": "Pi-hole connection settings saved."
+	},
+	"options_save_error": {
+		"message": "Pi-hole connection settings could not be saved."
 	},
 	"options_add_button": {
 		"message": "Add PiHole"
@@ -88,16 +106,28 @@
 		}
 	},
 	"options_url_invalid_warning": {
-		"message": "The url is invalid. (Missing http(s), invalid scheme or empty)"
+		"message": "The URL is invalid. (Missing http(s), invalid scheme or empty)"
 	},
 	"options_disable_list_feature": {
 		"message": "Disable domain allow/block actions in the popup"
 	},
 	"popup_status_card_title": {
-		"message": "Pause Pi-hole blocking"
+		"message": "Pi-hole control"
 	},
 	"popup_status_card_info_text": {
-		"message": "Pause duration (0 = until manually resumed)"
+		"message": "Pause duration"
+	},
+	"popup_global_title": {
+		"message": "Global Pi-hole"
+	},
+	"popup_global_blocking_active": {
+		"message": "Pi-hole blocking enabled globally"
+	},
+	"popup_global_success": {
+		"message": "Global Pi-hole blocking state updated."
+	},
+	"popup_global_error": {
+		"message": "Global Pi-hole blocking state could not be changed."
 	},
 	"popup_blocking_active": {
 		"message": "Blocking active"
@@ -109,34 +139,40 @@
 		"message": "Current domain"
 	},
 	"popup_second_card_whitelist": {
-		"message": "Allow permanently"
+		"message": "Whitelist permanently"
 	},
 	"popup_second_card_blacklist": {
-		"message": "Block permanently"
+		"message": "Blacklist permanently"
 	},
 	"popup_temporary_whitelist": {
-		"message": "Temporarily allow this domain"
+		"message": "Whitelist temporarily"
 	},
 	"popup_temporary_allow_duration": {
-		"message": "Temporary domain allow duration"
+		"message": "Temporary domain whitelist duration"
 	},
 	"popup_group_title": {
-		"message": "Pause target"
+		"message": "Client group"
 	},
 	"popup_group_select": {
-		"message": "Pause target"
+		"message": "Select client group"
+	},
+	"popup_group_blocking_active": {
+		"message": "Blocking enabled for this group"
+	},
+	"popup_group_pause_times_title": {
+		"message": "Disable blocking for"
 	},
 	"popup_group_disable": {
-		"message": "Pause blocking"
+		"message": "Disable group blocking"
 	},
 	"popup_group_warning": {
 		"message": "Only clients assigned to the selected group are affected. The group and its configuration remain enabled."
 	},
 	"popup_group_success": {
-		"message": "Blocking state updated."
+		"message": "Client-group blocking state updated."
 	},
 	"popup_group_error": {
-		"message": "Could not update blocking for the selected target."
+		"message": "Blocking for the selected client group could not be changed."
 	},
 	"option_hotkey_settings": {
 		"message": "Hotkey Settings"
