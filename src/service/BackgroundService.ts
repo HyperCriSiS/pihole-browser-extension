@@ -1,6 +1,6 @@
 import PiHoleApiStatusEnum from '../api/enum/PiHoleApiStatusEnum'
 import { BadgeService, ExtensionBadgeTextEnum } from './BadgeService'
-import { PiHoleSettingsDefaults, StorageService } from './StorageService'
+import { StorageService } from './StorageService'
 import PiHoleApiService from './PiHoleApiService'
 import TabService from './TabService'
 import ApiList from '../api/enum/ApiList'
@@ -17,43 +17,36 @@ export default class BackgroundService {
         return
       }
 
-      StorageService.getDefaultDisableTime().then((value) => {
-        let disableTime = value
-        if (typeof disableTime === 'undefined') {
-          disableTime = PiHoleSettingsDefaults.default_disable_time
-        }
-
-        PiHoleApiService.changePiHoleStatus(newStatus, disableTime)
-          .then((data) => {
-            for (const piHoleStatus of data) {
-              if (
-                piHoleStatus.data.blocking === PiHoleApiStatusEnum.error ||
-                piHoleStatus.data.blocking !== newStatus
-              ) {
-                console.warn(
-                  'One PiHole returned Error from its request. Please check the API Key.',
-                )
-                BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
-                return
-              }
+      PiHoleApiService.changePiHoleStatus(newStatus, 0)
+        .then((data) => {
+          for (const piHoleStatus of data) {
+            if (
+              piHoleStatus.data.blocking === PiHoleApiStatusEnum.error ||
+              piHoleStatus.data.blocking !== newStatus
+            ) {
+              console.warn(
+                'One PiHole returned Error from its request. Please check the password.',
+              )
+              BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
+              return
             }
-            BadgeService.setBadgeText(
-              newStatus === PiHoleApiStatusEnum.disabled
-                ? ExtensionBadgeTextEnum.disabled
-                : ExtensionBadgeTextEnum.enabled,
-            )
+          }
+          BadgeService.setBadgeText(
+            newStatus === PiHoleApiStatusEnum.disabled
+              ? ExtensionBadgeTextEnum.disabled
+              : ExtensionBadgeTextEnum.enabled,
+          )
 
-            StorageService.getReloadAfterDisable().then((state) => {
-              if (typeof state !== 'undefined' && state) {
-                TabService.reloadCurrentTab(1500)
-              }
-            })
+          StorageService.getReloadAfterDisable().then((state) => {
+            if (typeof state !== 'undefined' && state) {
+              TabService.reloadCurrentTab(1500)
+            }
           })
-          .catch((reason) => {
-            console.warn(reason)
-            BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
-          })
-      })
+        })
+        .catch((reason) => {
+          console.warn(reason)
+          BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
+        })
     })
   }
 
