@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/runner/work/_temp/88ec3cbb-4c6c-47aa-a318-3c3888bc2612.py", line 17, in <module>
+    exec(compile(script, 'apply-rc6-domain-scope.py', 'exec'))
+  File "apply-rc6-domain-scope.py", line 121, in <module>
+RuntimeError: Could not find permanent domain add block
