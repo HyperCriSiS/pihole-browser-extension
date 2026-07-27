@@ -1,7 +1,4 @@
 export class I18NService {
-  /**
-   * Wrapper Function for the chrome.i18n.getMessage Function
-   */
   public static translate(
     key: string,
     substitutions?: string | string[],
@@ -66,11 +63,17 @@ export enum I18NPopupKeys {
   popup_domain_general_actions = 'popup_domain_general_actions',
   popup_second_card_whitelist = 'popup_second_card_whitelist',
   popup_second_card_blacklist = 'popup_second_card_blacklist',
+  popup_domain_status_checking = 'popup_domain_status_checking',
+  popup_domain_status_blocked = 'popup_domain_status_blocked',
+  popup_domain_status_allowed = 'popup_domain_status_allowed',
+  popup_domain_status_unknown = 'popup_domain_status_unknown',
+  popup_domain_action_error = 'popup_domain_action_error',
   popup_temporary_whitelist = 'popup_temporary_whitelist',
   popup_temporary_whitelist_group = 'popup_temporary_whitelist_group',
   popup_temporary_allow_duration = 'popup_temporary_allow_duration',
   popup_group_title = 'popup_group_title',
   popup_group_select = 'popup_group_select',
+  popup_group_manual = 'popup_group_manual',
   popup_group_blocking_active = 'popup_group_blocking_active',
   popup_group_pause_times_title = 'popup_group_pause_times_title',
   popup_group_disable = 'popup_group_disable',
