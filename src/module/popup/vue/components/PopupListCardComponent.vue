@@ -8,6 +8,9 @@
         {{ currentUrl }}
       </v-alert>
 
+      <div class="text-subtitle-2 mb-2">
+        {{ translate(I18NPopupKeys.popup_domain_general_actions) }}
+      </div>
       <v-btn
         id="list_action_white"
         block
@@ -20,28 +23,10 @@
         {{ translate(I18NPopupKeys.popup_second_card_whitelist) }}
       </v-btn>
 
-      <div class="text-subtitle-2 mt-4 mb-2">
-        {{ translate(I18NPopupKeys.popup_temporary_whitelist) }}
-      </div>
-      <div class="d-flex ga-2">
-        <v-btn
-          v-for="time in temporaryAllowTimes"
-          :key="time"
-          class="flex-grow-1"
-          color="orange"
-          :disabled="buttonsDisabled"
-          :loading="temporaryWhitelistingActive === time"
-          @click="temporarilyWhitelistUrl(time)"
-        >
-          <v-icon class="mr-1" color="white">{{ mdiTimerOutline }}</v-icon>
-          {{ time }} s
-        </v-btn>
-      </div>
-
       <v-btn
         id="list_action_black"
         block
-        class="mt-4"
+        class="mt-2"
         color="red"
         :disabled="buttonsDisabled"
         :loading="blacklistingActive"
@@ -50,6 +35,30 @@
         <v-icon class="mr-2" color="white">{{ mdiAlphaXCircleOutline }}</v-icon>
         {{ translate(I18NPopupKeys.popup_second_card_blacklist) }}
       </v-btn>
+
+      <v-divider class="my-4"></v-divider>
+
+      <div class="text-subtitle-2 mb-1">
+        {{ translate(I18NPopupKeys.popup_temporary_whitelist) }}
+      </div>
+      <div class="text-caption mb-2">
+        {{ translate(I18NPopupKeys.popup_temporary_whitelist_group) }}:
+        <strong>{{ selectedGroup || '—' }}</strong>
+      </div>
+      <div class="d-flex ga-2">
+        <v-btn
+          v-for="time in temporaryAllowTimes"
+          :key="time"
+          class="flex-grow-1"
+          color="orange"
+          :disabled="buttonsDisabled || !selectedGroup"
+          :loading="temporaryWhitelistingActive === time"
+          @click="temporarilyWhitelistUrl(time)"
+        >
+          <v-icon class="mr-1" color="white">{{ mdiTimerOutline }}</v-icon>
+          {{ time }} s
+        </v-btn>
+      </div>
     </v-card-text>
   </v-card>
 </template>
@@ -82,8 +91,12 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    selectedGroup: {
+      type: String,
+      default: null,
+    },
   },
-  setup: ({ currentUrl }) => {
+  setup: (props) => {
     const buttonsDisabled = ref(false)
     const whitelistingActive = ref(false)
     const temporaryWhitelistingActive = ref<number | null>(null)
@@ -106,7 +119,7 @@ export default defineComponent({
     }
 
     const listDomain = async (mode: ApiList) => {
-      if (!currentUrl) {
+      if (!props.currentUrl) {
         return
       }
 
@@ -118,13 +131,11 @@ export default defineComponent({
       }
 
       try {
-        // Permanent list changes keep the existing behavior: remove the
-        // opposite exact entry before adding the requested one.
         await PiHoleApiService.subDomainFromList(
           mode === ApiList.whitelist ? ApiList.blacklist : ApiList.whitelist,
-          currentUrl,
+          props.currentUrl,
         )
-        await PiHoleApiService.addDomainToList(mode, currentUrl)
+        await PiHoleApiService.addDomainToList(mode, props.currentUrl)
         BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
 
         if (mode === ApiList.whitelist) {
@@ -139,7 +150,7 @@ export default defineComponent({
     }
 
     const temporarilyWhitelistUrl = async (durationSeconds: number) => {
-      if (!currentUrl || durationSeconds < 1) {
+      if (!props.currentUrl || !props.selectedGroup || durationSeconds < 1) {
         return
       }
 
@@ -147,11 +158,9 @@ export default defineComponent({
       temporaryWhitelistingActive.value = durationSeconds
 
       try {
-        // Do not remove an existing deny entry. Exact allow entries have
-        // higher priority in Pi-hole and removing only the temporary allow
-        // entry later restores the previous blocking behavior automatically.
-        await TemporaryActionService.temporarilyAllowDomain(
-          currentUrl,
+        await TemporaryActionService.temporarilyAllowDomainForGroup(
+          props.currentUrl,
+          props.selectedGroup,
           durationSeconds,
         )
         BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
