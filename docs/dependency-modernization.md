@@ -27,9 +27,11 @@ The popup now contains three independent control areas:
 2. A client-group control with a remembered group selector, a manual blocking switch and three independently configurable timed pause buttons. A group pause does not disable or alter the group itself. It creates a dedicated allow-all regex rule assigned only to that group, records the previous rule state per configured Pi-hole and removes or restores the rule when blocking resumes or the timer expires. The three durations use `group_pause_times`.
 3. A domain card with permanent whitelist and blacklist actions that assign the rule to every client group on each configured Pi-hole. Its three temporary whitelist buttons use the same client group selected in the client-group control above. Each temporary action creates a dedicated regex whitelist rule assigned only to that selected group and removes it when the timer expires. The three durations use `temporary_allow_times` and remain independent from the group-pause presets.
 
+The popup document allows vertical scrolling so the complete domain card, including both permanent buttons and all three timed whitelist buttons, remains reachable below the group controls.
+
 Pi-hole connection fields are saved only through the explicit Save action. Add PiHole creates another unsaved connection tab and no longer acts as an implicit save operation.
 
-Release candidate `v4.2.0-rc.6` validates the final action scope: permanent domain rules apply to all client groups, while temporary domain whitelist timers apply only to the currently selected client group.
+Release candidate `v4.2.0-rc.7` includes the final action scope and the popup scrolling fix. RC6 clipped the lower domain card because the popup document still used `overflow: hidden`.
 
 ## Remaining release work
 
