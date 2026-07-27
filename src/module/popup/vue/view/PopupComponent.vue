@@ -1,95 +1,135 @@
 <template>
   <v-app id="popup">
-    <v-container fluid>
-      <PopupStatusCardComponent
-        v-if="isActiveByBadgeLoaded"
-        v-model="isActiveByRealStatus"
-        :is-active-by-badge="isActiveByBadge"
-        class="mb-5"
-        @selected-group-change="selectedGroup = $event"
-      />
-      <PopupListCardComponent
-        v-if="isListFeatureActive"
-        :current-url="currentUrl"
-        :selected-group="selectedGroup"
-        class="mb-5"
-      />
-    </v-container>
+    <main class="popup-shell">
+      <header class="popup-header">
+        <span>{{ translate(I18NPopupKeys.popup_status_card_title) }}</span>
+        <v-btn
+          class="settings-button"
+          :title="translate(I18NOptionKeys.options_settings)"
+          icon
+          size="x-small"
+          variant="text"
+          @click="openOptions"
+        >
+          <v-icon size="21">{{ mdiCog }}</v-icon>
+        </v-btn>
+      </header>
+
+      <div class="popup-content">
+        <PopupGlobalControlComponent />
+        <v-divider></v-divider>
+
+        <PopupListCardComponent
+          v-if="isListFeatureActive"
+          :current-url="currentUrl"
+          :selected-group="selectedGroup"
+        />
+        <v-divider v-if="isListFeatureActive"></v-divider>
+
+        <PopupStatusCardComponent
+          @selected-group-change="selectedGroup = $event"
+        />
+      </div>
+    </main>
   </v-app>
 </template>
 
 <script lang="ts">
+import { mdiCog } from '@mdi/js'
 import { computed, defineComponent, onMounted, ref } from 'vue'
 import PopupStatusCardComponent from '../components/PopupStatusCardComponent.vue'
 import PopupListCardComponent from '../components/PopupListCardComponent.vue'
-import {
-  BadgeService,
-  ExtensionBadgeTextEnum,
-} from '../../../../service/BadgeService'
+import PopupGlobalControlComponent from '../components/PopupGlobalControlComponent.vue'
 import { StorageService } from '../../../../service/StorageService'
 import TabService from '../../../../service/TabService'
+import useTranslation from '../../../../hooks/translation'
+import DomainStatusService from '../../../../service/DomainStatusService'
 
 export default defineComponent({
   name: 'PopupComponent',
   components: {
+    PopupGlobalControlComponent,
     PopupListCardComponent,
     PopupStatusCardComponent,
   },
   setup: () => {
-    const isActiveByBadge = ref(false)
-    const isActiveByBadgeLoaded = ref(false)
-    const isActiveByRealStatus = ref(false)
+    const { translate, I18NPopupKeys, I18NOptionKeys } = useTranslation()
     const currentUrl = ref('')
     const selectedGroup = ref<string | null>(null)
     const listFeatureDisabled = ref(false)
 
-    const updateIsActiveByBadge = async () => {
-      const badgeText = await BadgeService.getBadgeText()
-
-      isActiveByBadge.value = badgeText === ExtensionBadgeTextEnum.enabled
-      isActiveByBadgeLoaded.value = true
-    }
-
     const updateCurrentUrl = async () => {
-      const currentUrlLoaded = await TabService.getCurrentTabUrlCleaned()
-      if (currentUrlLoaded.length > 0) {
-        currentUrl.value = currentUrlLoaded
+      currentUrl.value = await TabService.getCurrentTabUrlCleaned()
+      if (!currentUrl.value) {
+        await DomainStatusService.refreshCurrentTabBadge()
       }
     }
 
     const updateListFeatureDisabled = async () => {
-      const listFeatureDisabledByStorage =
-        await StorageService.getDisableListFeature()
-
-      if (listFeatureDisabledByStorage !== undefined) {
-        listFeatureDisabled.value = listFeatureDisabledByStorage
-      }
+      listFeatureDisabled.value =
+        (await StorageService.getDisableListFeature()) ?? false
     }
 
     const isListFeatureActive = computed(
       () => !listFeatureDisabled.value && currentUrl.value.length > 0,
     )
 
-    onMounted(() => {
-      updateIsActiveByBadge()
-      updateCurrentUrl()
-      updateListFeatureDisabled()
+    const openOptions = () => chrome.runtime.openOptionsPage()
+
+    onMounted(async () => {
+      await Promise.all([updateCurrentUrl(), updateListFeatureDisabled()])
     })
 
     return {
+      mdiCog,
       currentUrl,
       selectedGroup,
-      isActiveByBadge,
-      isActiveByBadgeLoaded,
-      isActiveByRealStatus,
       isListFeatureActive,
+      openOptions,
+      translate,
+      I18NPopupKeys,
+      I18NOptionKeys,
     }
   },
 })
 </script>
 
 <style lang="scss">
+html,
+body {
+  min-width: 320px;
+  background: rgb(var(--v-theme-surface));
+}
+
 #popup {
-  width: 340px;
+  width: 320px;
+  min-height: 0;
+  background: rgb(var(--v-theme-surface));
+}
+
+.popup-shell {
+  width: 100%;
+}
+
+.popup-header {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px 5px 12px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.settings-button {
+  flex: 0 0 auto;
+}
+
+.popup-content {
+  padding: 0 12px 9px;
+}
+
+.v-switch .v-selection-control {
+  min-height: 32px;
 }
 </style>
