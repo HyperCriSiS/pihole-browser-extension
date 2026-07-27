@@ -8,60 +8,91 @@ export enum ExtensionBadgeTextEnum {
   ok = 'Ok',
 }
 
+type BadgeDetails = {
+  text: string
+  tabId?: number
+}
+
+type BadgeColorDetails = {
+  color: string
+  tabId?: number
+}
+
 /**
- * Service Module for the extension icon badge.
+ * Cross-browser wrapper for the Chromium action and Firefox browserAction APIs.
  */
 export class BadgeService {
-  private static readonly chromeAction = chrome.action || chrome.browserAction
+  private static readonly actionApi = chrome.action || chrome.browserAction
 
-  /**
-   * Sets the badge text.
-   */
-  public static setBadgeText(text: ExtensionBadgeTextEnum | string): void {
-    // Firefox needs white text color.
-    if (typeof browser !== 'undefined') {
-      browser.browserAction.setBadgeTextColor({ color: 'white' }).then()
+  public static setBadgeText(
+    text: ExtensionBadgeTextEnum | string,
+    tabId?: number,
+  ): void {
+    const badgeDetails: BadgeDetails = { text }
+    const colorDetails: BadgeColorDetails = {
+      color: this.getColorForBadgeTextEnum(text),
     }
 
-    BadgeService.chromeAction.setBadgeBackgroundColor({
-      color: this.getColorForBadgeTextEnum(text),
-    })
+    if (typeof tabId !== 'undefined') {
+      badgeDetails.tabId = tabId
+      colorDetails.tabId = tabId
+    }
 
-    BadgeService.chromeAction.setBadgeText({ text })
+    if (typeof browser !== 'undefined') {
+      const firefoxDetails =
+        typeof tabId === 'undefined' ? { color: 'white' } : { color: 'white', tabId }
+      browser.browserAction.setBadgeTextColor(firefoxDetails).catch(() => undefined)
+    }
+
+    this.actionApi.setBadgeBackgroundColor(colorDetails)
+    this.actionApi.setBadgeText(badgeDetails)
   }
 
-  /**
-   * Returns the badge text as enum value.
-   */
-  public static getBadgeText(): Promise<ExtensionBadgeTextEnum> {
+  public static clearBadge(tabId?: number): void {
+    this.setBadgeText('', tabId)
+  }
+
+  public static setDomainBlockedBadge(tabId: number, blocked: boolean): void {
+    if (!blocked) {
+      this.clearBadge(tabId)
+      return
+    }
+
+    const details: BadgeColorDetails = { color: '#d32f2f', tabId }
+    this.actionApi.setBadgeBackgroundColor(details)
+
+    if (typeof browser !== 'undefined') {
+      browser.browserAction
+        .setBadgeTextColor({ color: 'white', tabId })
+        .catch(() => undefined)
+    }
+
+    this.actionApi.setBadgeText({ text: '!', tabId })
+  }
+
+  public static getBadgeText(tabId?: number): Promise<ExtensionBadgeTextEnum> {
     return new Promise((resolve) => {
-      BadgeService.chromeAction.getBadgeText({}, (result: string) => {
+      const details = typeof tabId === 'undefined' ? {} : { tabId }
+      this.actionApi.getBadgeText(details, (result: string) => {
         resolve(this.convertStringToBadgeTextEnum(result))
       })
     })
   }
 
-  /**
-   * Compares the badge text with the PiHoleApiStatus
-   * Returns false if they are not equal
-   */
   public static compareBadgeTextToApiStatusEnum(
-    badge_text: ExtensionBadgeTextEnum,
-    api_status: PiHoleApiStatusEnum,
+    badgeText: ExtensionBadgeTextEnum,
+    apiStatus: PiHoleApiStatusEnum,
   ): boolean {
-    switch (badge_text) {
+    switch (badgeText) {
       case ExtensionBadgeTextEnum.disabled:
-        return api_status === PiHoleApiStatusEnum.disabled
+        return apiStatus === PiHoleApiStatusEnum.disabled
       case ExtensionBadgeTextEnum.enabled:
-        return api_status === PiHoleApiStatusEnum.enabled
+        return apiStatus === PiHoleApiStatusEnum.enabled
       default:
         return false
     }
   }
 
-  /**
-   * Converts an input string to the correct ExtensionBadgeText Enum
-   */
   private static convertStringToBadgeTextEnum(
     input: string,
   ): ExtensionBadgeTextEnum {
