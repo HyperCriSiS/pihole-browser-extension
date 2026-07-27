@@ -64,6 +64,33 @@ jobs:
               if old_fragment not in script:
                   raise RuntimeError('Could not patch the prepared domain migration')
               script = script.replace(old_fragment, new_fragment, 1)
+
+              old_restore_fragment = '\n'.join([
+                  "if temp_text.count(old_restore) != 1:",
+                  "    raise RuntimeError('Could not find temporary domain restore block')",
+                  "temp_text = temp_text.replace(old_restore, new_restore, 1)",
+              ])
+              new_restore_fragment = '\n'.join([
+                  "restore_pattern = re.compile(",
+                  "    r\"        const current = await PiHoleApiService\\.getExactDomain\\(.*?        \\}\\n(?=      \\} catch \\(reason\\) \\{)\",",
+                  "    re.S,",
+                  ")",
+                  "temp_text, restore_count = restore_pattern.subn(",
+                  "    new_restore,",
+                  "    temp_text,",
+                  "    count=1,",
+                  ")",
+                  "if restore_count != 1:",
+                  "    raise RuntimeError('Could not find temporary domain restore block')",
+              ])
+              if old_restore_fragment not in script:
+                  raise RuntimeError('Could not patch the prepared restore migration')
+              script = script.replace(
+                  old_restore_fragment,
+                  new_restore_fragment,
+                  1,
+              )
+
               exec(compile(script, 'apply-rc6-domain-scope.py', 'exec'))
           except Exception:
               Path('.github/rc6-migration-error.txt').write_text(
