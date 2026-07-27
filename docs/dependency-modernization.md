@@ -29,8 +29,6 @@ The popup now contains three independent control areas:
 
 Pi-hole connection fields are saved only through the explicit Save action. Add PiHole creates another unsaved connection tab and no longer acts as an implicit save operation.
 
-## Release candidate validation
-
 Release candidate `v4.2.0-rc.6` validates the final action scope: permanent domain rules apply to all client groups, while temporary domain whitelist timers apply only to the currently selected client group.
 
 ## Remaining release work
