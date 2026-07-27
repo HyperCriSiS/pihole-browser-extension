@@ -8,6 +8,7 @@ import PiHoleApiStatusEnum from '../api/enum/PiHoleApiStatusEnum'
 import { PiHoleAuth } from '../api/models/PiHoleAuth'
 import { PiHoleDomain, PiHoleDomains } from '../api/models/PiHoleDomains'
 import { PiHoleGroup, PiHoleGroups } from '../api/models/PiHoleGroups'
+import { PiHoleSearchResponse } from '../api/models/PiHoleSearch'
 
 export type DomainMutationPayload = {
   comment: string | null
