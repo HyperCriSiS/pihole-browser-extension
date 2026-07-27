@@ -6,10 +6,12 @@
         v-model="isActiveByRealStatus"
         :is-active-by-badge="isActiveByBadge"
         class="mb-5"
+        @selected-group-change="selectedGroup = $event"
       />
       <PopupListCardComponent
         v-if="isListFeatureActive"
         :current-url="currentUrl"
+        :selected-group="selectedGroup"
         class="mb-5"
       />
     </v-container>
@@ -38,6 +40,7 @@ export default defineComponent({
     const isActiveByBadgeLoaded = ref(false)
     const isActiveByRealStatus = ref(false)
     const currentUrl = ref('')
+    const selectedGroup = ref<string | null>(null)
     const listFeatureDisabled = ref(false)
 
     const updateIsActiveByBadge = async () => {
@@ -63,14 +66,8 @@ export default defineComponent({
       }
     }
 
-    /**
-     * Determines if the list feature should be shown or not
-     */
     const isListFeatureActive = computed(
-      () =>
-        !listFeatureDisabled.value &&
-        isActiveByRealStatus.value &&
-        currentUrl.value.length > 0,
+      () => !listFeatureDisabled.value && currentUrl.value.length > 0,
     )
 
     onMounted(() => {
@@ -81,6 +78,7 @@ export default defineComponent({
 
     return {
       currentUrl,
+      selectedGroup,
       isActiveByBadge,
       isActiveByBadgeLoaded,
       isActiveByRealStatus,
