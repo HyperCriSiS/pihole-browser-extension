@@ -71,7 +71,7 @@
 		"message": "Domain-Whitelist"
 	},
 	"options_temporary_allow_time_hint": {
-		"message": "Wird für die drei orangefarbenen Domain-Buttons verwendet. Mindestens 10 Sekunden"
+		"message": "Wird für die drei orangefarbenen Domain-Buttons der ausgewählten Client-Gruppe verwendet. Mindestens 10 Sekunden"
 	},
 	"options_reload_after_disable": {
 		"message": "Aktuellen Tab nach dem globalen oder gruppenbezogenen Ausschalten der Filterung neu laden"
@@ -139,13 +139,13 @@
 		"message": "Aktuelle Domain"
 	},
 	"popup_second_card_whitelist": {
-		"message": "Dauerhaft auf die Whitelist"
+		"message": "Dauerhaft für alle Gruppen whitelisten"
 	},
 	"popup_second_card_blacklist": {
-		"message": "Dauerhaft auf die Blacklist"
+		"message": "Dauerhaft für alle Gruppen blacklisten"
 	},
 	"popup_temporary_whitelist": {
-		"message": "Temporär auf die Whitelist"
+		"message": "Temporäres Whitelisting"
 	},
 	"popup_temporary_allow_duration": {
 		"message": "Dauer des temporären Domain-Whitelistings"
@@ -209,5 +209,11 @@
 	},
 	"option_multiple_connections": {
 		"message": "Die Nutzung mehrerer Pi-hole-Instanzen kann je nach Einrichtung instabil sein."
+	},
+	"popup_domain_general_actions": {
+		"message": "Dauerhafte Regel für alle Client-Gruppen"
+	},
+	"popup_temporary_whitelist_group": {
+		"message": "Ausgewählte Client-Gruppe"
 	}
 }

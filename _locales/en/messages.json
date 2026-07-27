@@ -71,7 +71,7 @@
 		"message": "Domain allow"
 	},
 	"options_temporary_allow_time_hint": {
-		"message": "Used by the three orange domain buttons. Minimum: 10 seconds"
+		"message": "Used by the three orange domain buttons for the selected client group. Minimum: 10 seconds"
 	},
 	"options_reload_after_disable": {
 		"message": "Reload current tab after disabling global or group blocking"
@@ -139,13 +139,13 @@
 		"message": "Current domain"
 	},
 	"popup_second_card_whitelist": {
-		"message": "Whitelist permanently"
+		"message": "Whitelist permanently for all groups"
 	},
 	"popup_second_card_blacklist": {
-		"message": "Blacklist permanently"
+		"message": "Blacklist permanently for all groups"
 	},
 	"popup_temporary_whitelist": {
-		"message": "Whitelist temporarily"
+		"message": "Temporary whitelist"
 	},
 	"popup_temporary_allow_duration": {
 		"message": "Temporary domain whitelist duration"
@@ -209,5 +209,11 @@
 	},
 	"option_multiple_connections": {
 		"message": "The usage of multiple PiHole instances can be unstable. Please use with caution."
+	},
+	"popup_domain_general_actions": {
+		"message": "Permanent rule for all client groups"
+	},
+	"popup_temporary_whitelist_group": {
+		"message": "Selected client group"
 	}
 }

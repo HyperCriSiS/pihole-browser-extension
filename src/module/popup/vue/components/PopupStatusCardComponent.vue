@@ -145,7 +145,7 @@ export default defineComponent({
       required: true,
     },
   },
-  emits: ['update:modelValue'],
+  emits: ['update:modelValue', 'selected-group-change'],
   setup: (props, { emit }) => {
     const { translate, I18NPopupKeys, I18NOptionKeys } = useTranslation()
 
@@ -352,6 +352,7 @@ export default defineComponent({
     }
 
     watch(selectedGroup, async (groupName) => {
+      emit('selected-group-change', groupName)
       if (!groupName) {
         groupSwitchDisabled.value = true
         return

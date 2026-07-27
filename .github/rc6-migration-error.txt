@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/home/runner/work/_temp/e4ee686e-4711-447b-b2e3-484e6f58ca2f.py", line 39, in <module>
-    exec(compile(script, 'apply-rc6-domain-scope.py', 'exec'))
-  File "apply-rc6-domain-scope.py", line 356, in <module>
-RuntimeError: Could not find temporary domain restore block

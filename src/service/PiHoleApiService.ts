@@ -193,27 +193,31 @@ export default class PiHoleApiService {
     return this.deleteDomain(piHole, list, 'regex', domain)
   }
 
+  public static async getGroups(
+    piHole: PiHoleSettingsStorage,
+  ): Promise<PiHoleGroup[]> {
+    this.assertValidPiHole(piHole)
+    const response = await this.getAxiosInstance(
+      piHole.pi_uri_base!,
+      piHole.api_key,
+    ).get<PiHoleGroups>('/groups')
+    return response.data.groups
+  }
+
   public static async getCommonGroups(): Promise<PiHoleGroup[]> {
     const piHoles = await this.getConfiguredPiHoles()
-    const responses = await Promise.all(
-      piHoles.map((piHole) =>
-        this.getAxiosInstance(
-          piHole.pi_uri_base!,
-          piHole.api_key,
-        ).get<PiHoleGroups>('/groups'),
-      ),
+    const groupSets = await Promise.all(
+      piHoles.map((piHole) => this.getGroups(piHole)),
     )
 
-    const firstGroups = responses[0].data.groups
-    if (responses.length === 1) {
+    const firstGroups = groupSets[0]
+    if (groupSets.length === 1) {
       return firstGroups
     }
 
-    const remainingGroupNames = responses
+    const remainingGroupNames = groupSets
       .slice(1)
-      .map(
-        (response) => new Set(response.data.groups.map((group) => group.name)),
-      )
+      .map((groups) => new Set(groups.map((group) => group.name)))
 
     return firstGroups.filter((group) =>
       remainingGroupNames.every((names) => names.has(group.name)),
@@ -353,19 +357,29 @@ export default class PiHoleApiService {
       piHoleSettingsArray.map(async (piHole) => {
         if (mode === ApiListMode.add) {
           const current = await this.getExactDomain(piHole, list, domain)
+          const groupIds = (await this.getGroups(piHole)).map(
+            (group) => group.id,
+          )
+          if (groupIds.length < 1) {
+            throw new Error('Pi-hole did not return any client groups')
+          }
+
           if (!current) {
             await this.addExactDomain(piHole, list, domain, {
               comment: 'From PiHole Extension',
-              groups: [0],
+              groups: groupIds,
               enabled: true,
             })
             return
           }
 
-          if (!current.enabled || !current.groups.includes(0)) {
+          const hasExactlyAllGroups =
+            current.groups.length === groupIds.length &&
+            groupIds.every((groupId) => current.groups.includes(groupId))
+          if (!current.enabled || !hasExactlyAllGroups) {
             await this.replaceExactDomain(piHole, list, domain, {
               comment: current.comment,
-              groups: Array.from(new Set([...current.groups, 0])),
+              groups: groupIds,
               enabled: true,
             })
           }
