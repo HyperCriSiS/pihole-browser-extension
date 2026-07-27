@@ -1,24 +1,22 @@
 import { Initializer } from '../../general/Initializer'
 import { LinkConfig } from '../../../service/i18NService'
 import {
+  GroupPauseTimeDefaults,
   PiHoleSettingsDefaults,
   StorageService,
   TemporaryAllowTimeDefaults,
 } from '../../../service/StorageService'
-import {
-  BadgeService,
-  ExtensionBadgeTextEnum,
-} from '../../../service/BadgeService'
 
 export default class ChromeRuntimeInitializer implements Initializer {
   public init(): void {
-    this.initializeTemporaryAllowTimes()
+    this.initializePresetTimes()
 
     chrome.runtime.onInstalled.addListener((details) => {
       if (details.reason === 'install') {
         StorageService.saveDefaultDisableTime(
           Number(PiHoleSettingsDefaults.default_disable_time),
         )
+        StorageService.saveGroupPauseTimes([...GroupPauseTimeDefaults])
         StorageService.saveTemporaryAllowTimes([...TemporaryAllowTimeDefaults])
         StorageService.saveReloadAfterDisable(true)
         StorageService.saveReloadAfterWhitelist(true)
@@ -31,29 +29,32 @@ export default class ChromeRuntimeInitializer implements Initializer {
         )
         console.log(`Updated from ${previousVersion} to ${thisVersion}!`)
 
-        // Clear all settings if update from any version to 4.0.0
         if (previousVersion < 400 && thisVersion >= 400) {
           StorageService.clearStorage().then(() => {
             StorageService.saveDefaultDisableTime(
               Number(PiHoleSettingsDefaults.default_disable_time),
             )
+            StorageService.saveGroupPauseTimes([...GroupPauseTimeDefaults])
             StorageService.saveTemporaryAllowTimes([
               ...TemporaryAllowTimeDefaults,
             ])
             StorageService.saveReloadAfterDisable(true)
             StorageService.saveReloadAfterWhitelist(true)
-            // Set badge to INFO
-            BadgeService.setBadgeText(ExtensionBadgeTextEnum.info)
           })
         }
       }
     })
 
-    // Hook to show a survey after uninstalling the extension
     chrome.runtime.setUninstallURL(LinkConfig.uninstall_survey)
   }
 
-  private initializeTemporaryAllowTimes(): void {
+  private initializePresetTimes(): void {
+    StorageService.getGroupPauseTimes().then((times) => {
+      if (typeof times === 'undefined') {
+        StorageService.saveGroupPauseTimes([...GroupPauseTimeDefaults])
+      }
+    })
+
     StorageService.getTemporaryAllowTimes().then((times) => {
       if (typeof times === 'undefined') {
         StorageService.saveTemporaryAllowTimes([...TemporaryAllowTimeDefaults])
