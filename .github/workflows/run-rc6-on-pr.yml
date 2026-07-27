@@ -72,11 +72,11 @@ jobs:
               ])
               new_restore_fragment = '\n'.join([
                   "restore_pattern = re.compile(",
-                  "    r\"        const current = await PiHoleApiService\\.getExactDomain\\(.*?        \\}\\n(?=      \\} catch \\(reason\\) \\{)\",",
+                  "    r\"(  private static async restoreDomainTargets\\(.*?      try \\{\\n)        const current = await PiHoleApiService\\.getExactDomain\\(.*?        \\}\\n(?=      \\} catch \\(reason\\) \\{)\",",
                   "    re.S,",
                   ")",
                   "temp_text, restore_count = restore_pattern.subn(",
-                  "    new_restore,",
+                  "    lambda match: match.group(1) + new_restore,",
                   "    temp_text,",
                   "    count=1,",
                   ")",
