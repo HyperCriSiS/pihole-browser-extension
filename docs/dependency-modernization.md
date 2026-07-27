@@ -25,7 +25,7 @@ The popup now contains three independent control areas:
 
 1. A global Pi-hole switch that enables or disables blocking for every configured Pi-hole until it is changed manually.
 2. A client-group control with a remembered group selector, a manual blocking switch and three independently configurable timed pause buttons. A group pause does not disable or alter the group itself. It creates a dedicated allow-all regex rule assigned only to that group, records the previous rule state per configured Pi-hole and removes or restores the rule when blocking resumes or the timer expires. The three durations use `group_pause_times`.
-3. A domain card with permanent whitelist, three temporary whitelist buttons and permanent blacklist actions. The three domain durations use `temporary_allow_times` and are independent from group pause presets.
+3. A domain card with permanent whitelist and blacklist actions that assign the rule to every client group on each configured Pi-hole. Its three temporary whitelist buttons use the same client group selected in the client-group control above. Each temporary action creates a dedicated regex whitelist rule assigned only to that selected group and removes it when the timer expires. The three durations use `temporary_allow_times` and remain independent from the group-pause presets.
 
 Pi-hole connection fields are saved only through the explicit Save action. Add PiHole creates another unsaved connection tab and no longer acts as an implicit save operation.
 
