@@ -1,1 +1,1 @@
-Retry the group-scoped domain whitelist migration with anchored restoration.
+Retry the group-scoped domain whitelist migration with callback regex escaping.
