@@ -1,0 +1,73 @@
+name: Run RC6 domain scope on PR
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/rc6-pr-trigger
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out migration branch
+        uses: actions/checkout@v6
+        with:
+          ref: feat/vue3-vuetify-migration
+
+      - name: Execute prepared migration script
+        shell: python
+        run: |
+          from pathlib import Path
+
+          workflow = Path('.github/workflows/apply-rc6-domain-scope.yml').read_text(
+              encoding='utf-8'
+          )
+          start_marker = '      - name: Apply group-scoped domain changes\n        shell: python\n        run: |\n'
+          end_marker = '\n      - name: Set up Node.js\n'
+          start = workflow.index(start_marker) + len(start_marker)
+          end = workflow.index(end_marker, start)
+          script_lines = workflow[start:end].splitlines()
+          script = '\n'.join(
+              line[10:] if line.startswith('          ') else line
+              for line in script_lines
+          )
+          exec(compile(script, 'apply-rc6-domain-scope.py', 'exec'))
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Format and validate
+        run: |
+          npm run prettier-format
+          npm run eslint
+          npm run prettier-check
+          npm run build
+
+      - name: Commit validated changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f \
+            .github/workflows/apply-rc6-domain-scope.yml \
+            .github/apply-rc6-domain-scope-trigger \
+            .github/workflows/run-rc6-on-pr.yml \
+            .github/rc6-pr-trigger
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Scope temporary domain whitelisting to the selected group'
+          git push origin HEAD:feat/vue3-vuetify-migration
