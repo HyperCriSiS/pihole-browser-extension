@@ -92,6 +92,29 @@ jobs:
               )
 
               exec(compile(script, 'apply-rc6-domain-scope.py', 'exec'))
+
+              service_path = Path('src/service/TemporaryActionService.ts')
+              service_lines = service_path.read_text(encoding='utf-8').splitlines()
+              escape_line_index = next(
+                  (
+                      index
+                      for index, line in enumerate(service_lines)
+                      if 'const escapedDomain = domain.replace(' in line
+                  ),
+                  None,
+              )
+              if escape_line_index is None:
+                  raise RuntimeError('Could not find generated domain escaping line')
+              service_lines[escape_line_index : escape_line_index + 1] = [
+                  '    const escapedDomain = domain.replace(',
+                  r'      /[.*+?^${}()|[\]\\]/g,',
+                  r'      (match) => `\\${match}`,',
+                  '    )',
+              ]
+              service_path.write_text(
+                  '\n'.join(service_lines) + '\n',
+                  encoding='utf-8',
+              )
           except Exception:
               Path('.github/rc6-migration-error.txt').write_text(
                   traceback.format_exc(),
