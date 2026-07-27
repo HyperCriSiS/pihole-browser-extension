@@ -124,15 +124,38 @@ jobs:
         run: npm ci --no-audit --no-fund
 
       - name: Format and validate
+        id: validation
         if: steps.migration.outcome == 'success'
+        continue-on-error: true
+        shell: bash
         run: |
-          npm run prettier-format
-          npm run eslint
-          npm run prettier-check
-          npm run build
+          set +e
+          {
+            npm run prettier-format
+            npm run eslint
+            npm run prettier-check
+            npm run build
+          } > /tmp/rc6-validation-output.txt 2>&1
+          status=$?
+          cat /tmp/rc6-validation-output.txt
+          exit "$status"
+
+      - name: Commit validation diagnostics
+        if: steps.migration.outcome == 'success' && steps.validation.outcome == 'failure'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git reset --hard HEAD
+          cp /tmp/rc6-validation-output.txt .github/rc6-validation-error.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .github/rc6-validation-error.txt
+          git commit -m 'Record RC6 validation diagnostics'
+          git push origin HEAD:feat/vue3-vuetify-migration
+          exit 1
 
       - name: Commit validated changes
-        if: steps.migration.outcome == 'success'
+        if: steps.migration.outcome == 'success' && steps.validation.outcome == 'success'
         shell: bash
         run: |
           set -euo pipefail
@@ -141,7 +164,8 @@ jobs:
             .github/apply-rc6-domain-scope-trigger \
             .github/workflows/run-rc6-on-pr.yml \
             .github/rc6-pr-trigger \
-            .github/rc6-migration-error.txt
+            .github/rc6-migration-error.txt \
+            .github/rc6-validation-error.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -A
