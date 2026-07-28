@@ -2,9 +2,9 @@
   "tag": "v4.2.0-rc.9",
   "release_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/tag/v4.2.0-rc.9",
   "xpi_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.9/pihole-browser-extension-4.2.0-rc.9-unsigned.xpi",
-  "xpi_sha256": "a89a26426cc3ce6007cc3bb824df4827485e2e679f542faaed01bbd7c361e14b",
+  "xpi_sha256": "483c04a1c2028e55fba19ace2343c0a7a1ceb4c597edb094d002921ba288a8b1",
   "chrome_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.9/pihole-browser-extension-4.2.0-rc.9-chrome.zip",
-  "chrome_sha256": "45ea80c329953bc202dcc231820dc9d1091f4f2feb9133193743400d53918a39",
-  "source_commit": "4297488f5180e8dcced830b06fa0f18c0f5b9041",
-  "release_commit": "ae1332de1e719ea1bd5a79f0851767186c0e0dc0"
+  "chrome_sha256": "5debe70cb672feb9555fc596fdcd079eeb0891fb23d6b8b693629ca667ef4edc",
+  "source_commit": "c8a6543fc92f364070405f09003af0d066454cf3",
+  "release_commit": "0a75879e6f22f3697a1bc8df968ed6b2235d62cb"
 }
