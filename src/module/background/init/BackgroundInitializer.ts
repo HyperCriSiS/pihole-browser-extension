@@ -7,9 +7,10 @@ import TemporaryActionService from '../../../service/TemporaryActionService'
 import GroupPauseService from '../../../service/GroupPauseService'
 import DomainStatusService from '../../../service/DomainStatusService'
 import { ExtensionStorageEnum } from '../../../service/StorageService'
+import PiHoleApiService from '../../../service/PiHoleApiService'
 
 export default class BackgroundInitializer implements Initializer {
-  private readonly ALARM_NAME = 'pihole.refreshDomainBadge'
+  private readonly ALARM_NAME = 'pihole.refreshBadges'
 
   private readonly INTERVAL_TIMEOUT = 30000
 
@@ -23,11 +24,11 @@ export default class BackgroundInitializer implements Initializer {
     this.addAlarmListener()
     this.addTabListeners()
     this.addStorageListener()
-    DomainStatusService.refreshActiveTabBadges().catch((reason) => {
-      console.error('Failed to initialize domain badges', reason)
+    this.refreshAllBadges().catch((reason) => {
+      console.error('Failed to initialize extension badges', reason)
     })
     this.createAlarm().catch(() => {
-      console.error('Failed to create domain badge alarm')
+      console.error('Failed to create badge refresh alarm')
     })
     TemporaryActionService.initialize().catch((reason) => {
       console.error('Failed to initialize temporary actions', reason)
@@ -53,8 +54,8 @@ export default class BackgroundInitializer implements Initializer {
   private addAlarmListener(): void {
     const alarmHandler = (alarm: { name: string }) => {
       if (alarm.name === this.ALARM_NAME) {
-        DomainStatusService.refreshActiveTabBadges().catch((reason) => {
-          console.error('Failed to refresh domain badges', reason)
+        this.refreshAllBadges().catch((reason) => {
+          console.error('Failed to refresh extension badges', reason)
         })
         return
       }
@@ -63,7 +64,7 @@ export default class BackgroundInitializer implements Initializer {
         GroupPauseService.handleAlarm(alarm.name),
         TemporaryActionService.handleAlarm(alarm.name),
       ])
-        .then(() => DomainStatusService.refreshActiveTabBadges())
+        .then(() => this.refreshAllBadges())
         .catch((reason) => {
           console.error('Failed to handle extension alarm', reason)
         })
@@ -112,12 +113,18 @@ export default class BackgroundInitializer implements Initializer {
         return
       }
 
-      DomainStatusService.refreshActiveTabBadges().catch((reason) => {
+      this.refreshAllBadges().catch((reason) => {
         console.error(
           'Failed to refresh badges after a settings change',
           reason,
         )
       })
     })
+  }
+
+  private async refreshAllBadges(): Promise<void> {
+    const status = await PiHoleApiService.getPiHoleStatusCombined()
+    BadgeService.setGlobalStatus(status)
+    await DomainStatusService.refreshActiveTabBadges()
   }
 }
