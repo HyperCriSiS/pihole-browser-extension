@@ -55,6 +55,18 @@
 	"options_default_time_unit": {
 		"message": "seconds"
 	},
+	"options_client_group_title": {
+		"message": "Client group"
+	},
+	"options_default_client_group": {
+		"message": "Default client group"
+	},
+	"options_client_group_load_error": {
+		"message": "Client groups could not be loaded. Save a working Pi-hole connection first."
+	},
+	"options_hide_group_selector_in_popup": {
+		"message": "Hide the client-group selector in the popup"
+	},
 	"options_group_pause_times_title": {
 		"message": "Client-group pause presets"
 	},
