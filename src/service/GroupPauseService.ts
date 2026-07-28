@@ -1,22 +1,23 @@
 import ApiList from '../api/enum/ApiList'
-import { PiHoleDomain } from '../api/models/PiHoleDomains'
+import type { PiHoleGroup } from '../api/models/PiHoleGroups'
 import PiHoleApiService from './PiHoleApiService'
-import { PiHoleSettingsStorage } from './StorageService'
+import type { PiHoleSettingsStorage } from './StorageService'
 
-const STORAGE_KEY = 'group_pause_actions_v1'
-const ALARM_PREFIX = 'pihole.groupPause.'
+const STORAGE_KEY = 'group_pause_actions_v2'
+const LEGACY_STORAGE_KEY = 'group_pause_actions_v1'
+const ALARM_PREFIX = 'pihole.groupPause.v2.'
+const LEGACY_ALARM_PREFIX = 'pihole.groupPause.'
 const RESTORE_RETRY_DELAY = 60 * 1000
-const GROUP_PAUSE_COMMENT = 'Client-group pause by PiHole Browser Extension'
+const LEGACY_PAUSE_COMMENT = 'Client-group pause by PiHole Browser Extension'
 
 type GroupPauseTarget = {
   pi_uri_base: string
-  original: PiHoleDomain | null
-  expected: PiHoleDomain
+  original: PiHoleGroup
+  expected: PiHoleGroup
 }
 
 type GroupPauseAction = {
   groupName: string
-  pattern: string
   expiresAt: number | null
   targets: GroupPauseTarget[]
 }
@@ -25,11 +26,21 @@ type GroupPauseStorage = {
   actions: Record<string, GroupPauseAction>
 }
 
+type LegacyPauseAction = {
+  pattern: string
+  targets: Array<{ pi_uri_base: string }>
+}
+
+type LegacyPauseStorage = {
+  actions?: Record<string, LegacyPauseAction>
+}
+
 export default class GroupPauseService {
   public static async initialize(): Promise<void> {
+    await this.cleanupLegacyPauseActions()
+
     const storage = await this.getStorage()
     const now = Date.now()
-
     for (const [key, action] of Object.entries(storage.actions)) {
       if (action.expiresAt === null) {
         continue
@@ -44,12 +55,16 @@ export default class GroupPauseService {
   }
 
   public static async handleAlarm(alarmName: string): Promise<boolean> {
-    if (!alarmName.startsWith(ALARM_PREFIX)) {
-      return false
+    if (alarmName.startsWith(ALARM_PREFIX)) {
+      await this.restoreAction(alarmName.slice(ALARM_PREFIX.length))
+      return true
+    }
+    if (alarmName.startsWith(LEGACY_ALARM_PREFIX)) {
+      await this.cleanupLegacyPauseActions()
+      return true
     }
 
-    await this.restoreAction(alarmName.slice(ALARM_PREFIX.length))
-    return true
+    return false
   }
 
   public static async isGroupPaused(groupName: string): Promise<boolean> {
@@ -57,7 +72,6 @@ export default class GroupPauseService {
       return false
     }
 
-    const pattern = this.createPausePattern(groupName)
     const piHoles = await PiHoleApiService.getConfiguredPiHoles()
     const states = await Promise.all(
       piHoles.map(async (piHole) => {
@@ -65,13 +79,7 @@ export default class GroupPauseService {
         if (!group) {
           throw new Error(`Group ${groupName} is missing on one Pi-hole`)
         }
-
-        const domain = await PiHoleApiService.getRegexDomain(
-          piHole,
-          ApiList.whitelist,
-          pattern,
-        )
-        return Boolean(domain?.enabled && domain.groups.includes(group.id))
+        return !group.enabled
       }),
     )
 
@@ -91,7 +99,7 @@ export default class GroupPauseService {
     let storage = await this.getStorage()
     const existingAction = storage.actions[key]
 
-    if (existingAction && (await this.isGroupPaused(groupName))) {
+    if (existingAction && (await this.actionStillApplied(existingAction))) {
       existingAction.expiresAt = this.getExpiry(durationSeconds)
       await this.saveStorage(storage)
       await this.scheduleAction(key, existingAction.expiresAt)
@@ -105,10 +113,8 @@ export default class GroupPauseService {
       storage = await this.getStorage()
     }
 
-    const pattern = this.createPausePattern(groupName)
     const action: GroupPauseAction = {
       groupName,
-      pattern,
       expiresAt: this.getExpiry(durationSeconds),
       targets: [],
     }
@@ -116,60 +122,35 @@ export default class GroupPauseService {
     try {
       const piHoles = await PiHoleApiService.getConfiguredPiHoles()
       for (const piHole of piHoles) {
-        const group = await PiHoleApiService.getGroup(piHole, groupName)
-        if (!group) {
+        const current = await PiHoleApiService.getGroup(piHole, groupName)
+        if (!current) {
           throw new Error(`Group ${groupName} is missing on one Pi-hole`)
         }
+        if (!current.enabled) {
+          continue
+        }
 
-        const current = await PiHoleApiService.getRegexDomain(
+        const expected = await PiHoleApiService.replaceGroup(
           piHole,
-          ApiList.whitelist,
-          pattern,
+          groupName,
+          {
+            name: current.name,
+            comment: current.comment,
+            enabled: false,
+          },
         )
-        if (current && current.comment !== GROUP_PAUSE_COMMENT) {
-          throw new Error(
-            `The reserved pause rule for group ${groupName} already exists`,
-          )
-        }
-
-        const original =
-          current?.comment === GROUP_PAUSE_COMMENT
-            ? null
-            : current
-              ? this.cloneDomain(current)
-              : null
-        const payload = {
-          comment: GROUP_PAUSE_COMMENT,
-          groups: current
-            ? Array.from(new Set([...current.groups, group.id]))
-            : [group.id],
-          enabled: true,
-        }
-        const expected = current
-          ? await PiHoleApiService.replaceRegexDomain(
-              piHole,
-              ApiList.whitelist,
-              pattern,
-              payload,
-            )
-          : await PiHoleApiService.addRegexDomain(
-              piHole,
-              ApiList.whitelist,
-              pattern,
-              payload,
-            )
 
         action.targets.push({
           pi_uri_base: piHole.pi_uri_base!,
-          original,
-          expected: this.cloneDomain(expected),
+          original: this.cloneGroup(current),
+          expected: this.cloneGroup(expected),
         })
         storage.actions[key] = action
         await this.saveStorage(storage)
       }
 
-      if (action.targets.length < 1) {
-        return false
+      if (action.targets.length === 0) {
+        return true
       }
 
       storage.actions[key] = action
@@ -212,16 +193,48 @@ export default class GroupPauseService {
         storage.actions[key] = action
         await this.saveStorage(storage)
         await this.createAlarm(`${ALARM_PREFIX}${key}`, action.expiresAt)
-        throw new Error(`Failed to resume blocking for group ${groupName}`)
+        throw new Error(`Failed to resume group ${groupName}`)
       }
 
       delete storage.actions[key]
       await this.saveStorage(storage)
       await this.clearAlarm(`${ALARM_PREFIX}${key}`)
-      return
     }
 
-    await this.removeOrphanedPauseRule(groupName)
+    const piHoles = await PiHoleApiService.getConfiguredPiHoles()
+    for (const piHole of piHoles) {
+      const current = await PiHoleApiService.getGroup(piHole, groupName)
+      if (!current) {
+        throw new Error(`Group ${groupName} is missing on one Pi-hole`)
+      }
+      if (current.enabled) {
+        continue
+      }
+
+      await PiHoleApiService.replaceGroup(piHole, groupName, {
+        name: current.name,
+        comment: current.comment,
+        enabled: true,
+      })
+    }
+  }
+
+  private static async actionStillApplied(
+    action: GroupPauseAction,
+  ): Promise<boolean> {
+    const piHoles = await PiHoleApiService.getConfiguredPiHoles()
+    for (const target of action.targets) {
+      const piHole = this.findPiHole(piHoles, target.pi_uri_base)
+      if (!piHole) {
+        return false
+      }
+
+      const current = await PiHoleApiService.getGroup(piHole, action.groupName)
+      if (!current || !this.groupsEqual(current, target.expected)) {
+        return false
+      }
+    }
+    return true
   }
 
   private static async restoreAction(key: string): Promise<void> {
@@ -262,37 +275,21 @@ export default class GroupPauseService {
       }
 
       try {
-        const current = await PiHoleApiService.getRegexDomain(
+        const current = await PiHoleApiService.getGroup(
           piHole,
-          ApiList.whitelist,
-          action.pattern,
+          action.groupName,
         )
-
-        // A newer manual change wins over the recorded temporary state.
-        if (!current || !this.domainsEqual(current, target.expected)) {
+        if (!current || !this.groupsEqual(current, target.expected)) {
           continue
         }
 
-        if (target.original) {
-          await PiHoleApiService.replaceRegexDomain(
-            piHole,
-            ApiList.whitelist,
-            action.pattern,
-            {
-              comment: target.original.comment,
-              groups: target.original.groups,
-              enabled: target.original.enabled,
-            },
-          )
-        } else {
-          await PiHoleApiService.deleteRegexDomain(
-            piHole,
-            ApiList.whitelist,
-            action.pattern,
-          )
-        }
+        await PiHoleApiService.replaceGroup(piHole, action.groupName, {
+          name: target.original.name,
+          comment: target.original.comment,
+          enabled: target.original.enabled,
+        })
       } catch (reason) {
-        console.warn('Failed to restore client-group blocking', reason)
+        console.warn('Failed to restore client group', reason)
         failedTargets.push(target)
       }
     }
@@ -300,37 +297,48 @@ export default class GroupPauseService {
     return failedTargets
   }
 
-  private static async removeOrphanedPauseRule(
-    groupName: string,
-  ): Promise<void> {
-    const pattern = this.createPausePattern(groupName)
-    const piHoles = await PiHoleApiService.getConfiguredPiHoles()
+  private static async cleanupLegacyPauseActions(): Promise<void> {
+    const legacyStorage = await new Promise<LegacyPauseStorage>((resolve) => {
+      chrome.storage.local.get(LEGACY_STORAGE_KEY, (values) => {
+        resolve((values[LEGACY_STORAGE_KEY] as LegacyPauseStorage) || {})
+      })
+    })
+    const actions = legacyStorage.actions || {}
+    if (Object.keys(actions).length === 0) {
+      return
+    }
 
-    await Promise.all(
-      piHoles.map(async (piHole) => {
-        const current = await PiHoleApiService.getRegexDomain(
-          piHole,
-          ApiList.whitelist,
-          pattern,
-        )
-        if (current?.comment !== GROUP_PAUSE_COMMENT) {
-          return
+    const piHoles = await PiHoleApiService.getConfiguredPiHoles().catch(
+      () => [],
+    )
+    for (const [key, action] of Object.entries(actions)) {
+      for (const target of action.targets || []) {
+        const piHole = this.findPiHole(piHoles, target.pi_uri_base)
+        if (!piHole) {
+          continue
         }
 
-        await PiHoleApiService.deleteRegexDomain(
-          piHole,
-          ApiList.whitelist,
-          pattern,
-        )
-      }),
-    )
-  }
+        try {
+          const current = await PiHoleApiService.getRegexDomain(
+            piHole,
+            ApiList.whitelist,
+            action.pattern,
+          )
+          if (current?.comment === LEGACY_PAUSE_COMMENT) {
+            await PiHoleApiService.deleteRegexDomain(
+              piHole,
+              ApiList.whitelist,
+              action.pattern,
+            )
+          }
+        } catch (reason) {
+          console.warn('Failed to remove a legacy group pause rule', reason)
+        }
+      }
+      await this.clearAlarm(`${LEGACY_ALARM_PREFIX}${key}`)
+    }
 
-  private static createPausePattern(groupName: string): string {
-    const suffix = Array.from(groupName)
-      .map((character) => character.codePointAt(0)!.toString(16))
-      .join('_')
-    return `^.*$|^__pihole_browser_extension_pause_${suffix}__$`
+    await chrome.storage.local.remove(LEGACY_STORAGE_KEY)
   }
 
   private static getExpiry(durationSeconds: number): number | null {
@@ -354,32 +362,16 @@ export default class GroupPauseService {
     return piHoles.find((piHole) => piHole.pi_uri_base === baseUrl)
   }
 
-  private static domainsEqual(
-    left: PiHoleDomain,
-    right: PiHoleDomain,
-  ): boolean {
+  private static groupsEqual(left: PiHoleGroup, right: PiHoleGroup): boolean {
     return (
-      left.domain === right.domain &&
-      left.type === right.type &&
-      left.kind === right.kind &&
+      left.name === right.name &&
       left.comment === right.comment &&
-      left.enabled === right.enabled &&
-      this.numberArraysEqual(left.groups, right.groups)
+      left.enabled === right.enabled
     )
   }
 
-  private static numberArraysEqual(left: number[], right: number[]): boolean {
-    if (left.length !== right.length) {
-      return false
-    }
-
-    const leftSorted = [...left].sort((a, b) => a - b)
-    const rightSorted = [...right].sort((a, b) => a - b)
-    return leftSorted.every((value, index) => value === rightSorted[index])
-  }
-
-  private static cloneDomain(domain: PiHoleDomain): PiHoleDomain {
-    return { ...domain, groups: [...domain.groups] }
+  private static cloneGroup(group: PiHoleGroup): PiHoleGroup {
+    return { ...group }
   }
 
   private static assertDuration(durationSeconds: number): void {
