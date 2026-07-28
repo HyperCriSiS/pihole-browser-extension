@@ -19,8 +19,19 @@
     ></v-select>
     <v-checkbox
       v-model="hideGroupSelectorInPopup"
-      class="mt-n3 mb-2"
+      class="mt-n3"
       :label="translate(I18NOptionKeys.options_hide_group_selector_in_popup)"
+      hide-details
+    ></v-checkbox>
+    <v-checkbox
+      v-model="hideGroupListActionsInPopup"
+      :label="translate(I18NOptionKeys.options_hide_group_list_actions_in_popup)"
+      hide-details
+    ></v-checkbox>
+    <v-checkbox
+      v-model="badgeUsesSelectedGroup"
+      class="mb-2"
+      :label="translate(I18NOptionKeys.options_badge_uses_selected_group)"
       hide-details
     ></v-checkbox>
 
@@ -108,6 +119,8 @@ export default defineComponent({
     const groupLoadError = ref(false)
     const selectedGroup = ref<string | null>(null)
     const hideGroupSelectorInPopup = ref(false)
+    const hideGroupListActionsInPopup = ref(false)
+    const badgeUsesSelectedGroup = ref(false)
     const groupPauseTimes = ref<number[]>([...GroupPauseTimeDefaults])
     const temporaryAllowTimes = ref<number[]>([...TemporaryAllowTimeDefaults])
 
@@ -124,11 +137,15 @@ export default defineComponent({
         storedTemporaryAllowTimes,
         storedGroup,
         hideSelector,
+        hideGroupActions,
+        useSelectedGroupForBadge,
       ] = await Promise.all([
         StorageService.getGroupPauseTimes(),
         StorageService.getTemporaryAllowTimes(),
         StorageService.getPauseTarget(),
         StorageService.getHideGroupSelectorInPopup(),
+        StorageService.getHideGroupListActionsInPopup(),
+        StorageService.getBadgeUsesSelectedGroup(),
       ])
 
       if (storedGroupPauseTimes?.length === 3) {
@@ -138,11 +155,11 @@ export default defineComponent({
         temporaryAllowTimes.value = [...storedTemporaryAllowTimes]
       }
       hideGroupSelectorInPopup.value = hideSelector
+      hideGroupListActionsInPopup.value = hideGroupActions
+      badgeUsesSelectedGroup.value = useSelectedGroupForBadge
 
       try {
-        groups.value = (await PiHoleApiService.getCommonGroups()).filter(
-          (group) => group.enabled,
-        )
+        groups.value = await PiHoleApiService.getCommonGroups()
         const validStoredGroup = groups.value.some(
           (group) => group.name === storedGroup,
         )
@@ -170,6 +187,14 @@ export default defineComponent({
 
     watch(hideGroupSelectorInPopup, (state) => {
       StorageService.saveHideGroupSelectorInPopup(state)
+    })
+
+    watch(hideGroupListActionsInPopup, (state) => {
+      StorageService.saveHideGroupListActionsInPopup(state)
+    })
+
+    watch(badgeUsesSelectedGroup, (state) => {
+      StorageService.saveBadgeUsesSelectedGroup(state)
     })
 
     watch(
@@ -202,6 +227,8 @@ export default defineComponent({
       groupLoadError,
       selectedGroup,
       hideGroupSelectorInPopup,
+      hideGroupListActionsInPopup,
+      badgeUsesSelectedGroup,
       groupPauseTimes,
       temporaryAllowTimes,
     }
