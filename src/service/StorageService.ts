@@ -17,6 +17,7 @@ export interface ExtensionStorage {
   group_pause_times?: number[]
   temporary_allow_times?: number[]
   pause_target?: string
+  hide_group_selector_in_popup?: boolean
   reload_after_disable?: boolean
   reload_after_white_list?: boolean
   disable_list_feature?: boolean
@@ -31,6 +32,7 @@ export enum ExtensionStorageEnum {
   group_pause_times = 'group_pause_times',
   temporary_allow_times = 'temporary_allow_times',
   pause_target = 'pause_target',
+  hide_group_selector_in_popup = 'hide_group_selector_in_popup',
   reload_after_disable = 'reload_after_disable',
   reload_after_white_list = 'reload_after_white_list',
   disable_list_feature = 'disable_list_feature',
@@ -135,6 +137,19 @@ export class StorageService {
 
   public static getPauseTarget(): Promise<string | undefined> {
     return this.getStorageValue<string>(ExtensionStorageEnum.pause_target)
+  }
+
+  public static saveHideGroupSelectorInPopup(state: boolean): void {
+    chrome.storage.local.set({
+      hide_group_selector_in_popup: state,
+    } satisfies ExtensionStorage)
+  }
+
+  public static getHideGroupSelectorInPopup(): Promise<boolean> {
+    return this.getStorageValue<boolean>(
+      ExtensionStorageEnum.hide_group_selector_in_popup,
+      false,
+    )
   }
 
   public static saveReloadAfterDisable(state: boolean): void {
