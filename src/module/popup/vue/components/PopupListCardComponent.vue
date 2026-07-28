@@ -52,12 +52,23 @@
       </v-btn>
     </div>
 
+    <v-divider class="section-divider"></v-divider>
+
+    <v-select
+      v-if="!hideGroupSelector"
+      v-model="selectedGroupModel"
+      class="group-select"
+      :items="groupItems"
+      :label="translate(I18NPopupKeys.popup_group_select)"
+      :loading="groupsLoading"
+      :disabled="groupsLoading || groupItems.length === 0 || buttonsDisabled"
+      variant="outlined"
+      density="compact"
+      hide-details
+    ></v-select>
+
     <div class="temporary-heading">
       {{ translate(I18NPopupKeys.popup_temporary_whitelist) }}
-    </div>
-    <div class="selected-group">
-      {{ translate(I18NPopupKeys.popup_temporary_whitelist_group) }}:
-      <strong>{{ selectedGroup || '—' }}</strong>
     </div>
     <div class="timer-row">
       <v-btn
@@ -84,7 +95,14 @@
 
 <script lang="ts">
 import { mdiCheck, mdiClose, mdiTimerOutline } from '@mdi/js'
-import { computed, defineComponent, onMounted, ref, watch } from 'vue'
+import {
+  computed,
+  defineComponent,
+  onMounted,
+  ref,
+  watch,
+  type PropType,
+} from 'vue'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
 import ApiList from '../../../../api/enum/ApiList'
 import useTranslation from '../../../../hooks/translation'
@@ -96,6 +114,7 @@ import {
 import TabService from '../../../../service/TabService'
 import DomainStatusService from '../../../../service/DomainStatusService'
 import type { DomainBlockingState } from '../../../../service/DomainStatusEvaluator'
+import type { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
 
 export default defineComponent({
   name: 'PopupListCardComponent',
@@ -108,8 +127,21 @@ export default defineComponent({
       type: String,
       default: null,
     },
+    groups: {
+      type: Array as PropType<PiHoleGroup[]>,
+      default: () => [],
+    },
+    groupsLoading: {
+      type: Boolean,
+      default: false,
+    },
+    hideGroupSelector: {
+      type: Boolean,
+      default: false,
+    },
   },
-  setup: (props) => {
+  emits: ['selected-group-change'],
+  setup: (props, { emit }) => {
     const { translate, I18NPopupKeys } = useTranslation()
     const buttonsDisabled = ref(false)
     const whitelistingActive = ref(false)
@@ -119,6 +151,16 @@ export default defineComponent({
     const domainStatus = ref<DomainBlockingState>('unknown')
     const statusLoading = ref(false)
     const actionError = ref(false)
+
+    const groupItems = computed(() =>
+      props.groups.map((group) => ({ title: group.name, value: group.name })),
+    )
+
+    const selectedGroupModel = computed({
+      get: () => props.selectedGroup,
+      set: (groupName: string | null) =>
+        emit('selected-group-change', groupName),
+    })
 
     const domainStatusText = computed(() => {
       if (statusLoading.value) {
@@ -244,6 +286,8 @@ export default defineComponent({
       blacklistingActive,
       buttonsDisabled,
       temporaryAllowTimes,
+      groupItems,
+      selectedGroupModel,
       domainStatusText,
       domainStatusColor,
       statusLoading,
@@ -308,18 +352,18 @@ export default defineComponent({
   text-transform: none;
 }
 
-.temporary-heading {
-  margin-top: 10px;
-  font-size: 12px;
-  font-weight: 600;
+.section-divider {
+  margin: 10px 0;
 }
 
-.selected-group {
-  overflow: hidden;
-  margin: 1px 0 6px;
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.group-select {
+  margin-bottom: 8px;
+}
+
+.temporary-heading {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .timer-row {
