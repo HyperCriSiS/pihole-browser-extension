@@ -5,6 +5,7 @@ import { Initializer } from '../../general/Initializer'
 import HotKeyInitializer from './HotKeyInitializer'
 import TemporaryActionService from '../../../service/TemporaryActionService'
 import GroupPauseService from '../../../service/GroupPauseService'
+import GroupDomainService from '../../../service/GroupDomainService'
 import DomainStatusService from '../../../service/DomainStatusService'
 import { ExtensionStorageEnum } from '../../../service/StorageService'
 import PiHoleApiService from '../../../service/PiHoleApiService'
@@ -32,6 +33,9 @@ export default class BackgroundInitializer implements Initializer {
     })
     TemporaryActionService.initialize().catch((reason) => {
       console.error('Failed to initialize temporary actions', reason)
+    })
+    GroupDomainService.initialize().catch((reason) => {
+      console.error('Failed to initialize group domain actions', reason)
     })
     GroupPauseService.initialize().catch((reason) => {
       console.error('Failed to initialize client-group pauses', reason)
@@ -62,6 +66,7 @@ export default class BackgroundInitializer implements Initializer {
 
       Promise.all([
         GroupPauseService.handleAlarm(alarm.name),
+        GroupDomainService.handleAlarm(alarm.name),
         TemporaryActionService.handleAlarm(alarm.name),
       ])
         .then(() => this.refreshAllBadges())
@@ -108,7 +113,8 @@ export default class BackgroundInitializer implements Initializer {
       if (
         areaName !== 'local' ||
         (!changes[ExtensionStorageEnum.pause_target] &&
-          !changes[ExtensionStorageEnum.pi_hole_settings])
+          !changes[ExtensionStorageEnum.pi_hole_settings] &&
+          !changes[ExtensionStorageEnum.badge_uses_selected_group])
       ) {
         return
       }
