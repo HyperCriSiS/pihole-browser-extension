@@ -1,4 +1,5 @@
 import PiHoleApiStatusEnum from '../api/enum/PiHoleApiStatusEnum'
+import { composeTabBadgeText } from './BadgeState'
 
 export enum ExtensionBadgeTextEnum {
   enabled = 'On',
@@ -74,11 +75,7 @@ export class BadgeService {
     blocked: boolean,
   ): Promise<void> {
     const globalText = await this.getRawBadgeText()
-    const tabText =
-      blocked && globalText === ExtensionBadgeTextEnum.enabled
-        ? ExtensionBadgeTextEnum.enabledBlocked
-        : globalText
-    this.setBadgeText(tabText, tabId)
+    this.setBadgeText(composeTabBadgeText(globalText, blocked), tabId)
   }
 
   public static getBadgeText(tabId?: number): Promise<ExtensionBadgeTextEnum> {
