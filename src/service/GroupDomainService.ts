@@ -89,10 +89,7 @@ export default class GroupDomainService {
     if (existingAction && existingAction.expiresAt > Date.now()) {
       existingAction.expiresAt = Date.now() + durationSeconds * 1000
       await this.saveStorage(storage)
-      await this.createAlarm(
-        `${ALARM_PREFIX}${key}`,
-        existingAction.expiresAt,
-      )
+      await this.createAlarm(`${ALARM_PREFIX}${key}`, existingAction.expiresAt)
       return true
     }
 
@@ -336,8 +333,9 @@ export default class GroupDomainService {
           continue
         }
 
-        const groupWasAddedTemporarily =
-          !target.original?.groups.includes(target.groupId)
+        const groupWasAddedTemporarily = !target.original?.groups.includes(
+          target.groupId,
+        )
         const looksLikeManagedOverlap =
           groupWasAddedTemporarily &&
           current.enabled === target.expected.enabled &&

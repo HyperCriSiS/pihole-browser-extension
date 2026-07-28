@@ -25,7 +25,9 @@
     ></v-checkbox>
     <v-checkbox
       v-model="hideGroupListActionsInPopup"
-      :label="translate(I18NOptionKeys.options_hide_group_list_actions_in_popup)"
+      :label="
+        translate(I18NOptionKeys.options_hide_group_list_actions_in_popup)
+      "
       hide-details
     ></v-checkbox>
     <v-checkbox

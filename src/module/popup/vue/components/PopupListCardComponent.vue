@@ -266,7 +266,9 @@ export default defineComponent({
       globalActionLoading.value = mode
 
       try {
-        await GroupDomainService.cancelTemporaryAllowsForDomain(props.currentUrl)
+        await GroupDomainService.cancelTemporaryAllowsForDomain(
+          props.currentUrl,
+        )
         await PiHoleApiService.subDomainFromList(
           mode === ApiList.whitelist ? ApiList.blacklist : ApiList.whitelist,
           props.currentUrl,
