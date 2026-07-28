@@ -93,13 +93,13 @@ export default class DomainStatusService {
 
     if (typeof tabId === 'undefined' || !domain) {
       if (typeof tabId !== 'undefined') {
-        BadgeService.setDomainBlockedBadge(tabId, false)
+        await BadgeService.setDomainBlockedBadge(tabId, false)
       }
       return { domain: '', state: 'unknown', groupName }
     }
 
     const state = await this.getDomainStatus(domain, groupName)
-    BadgeService.setDomainBlockedBadge(tabId, state === 'blocked')
+    await BadgeService.setDomainBlockedBadge(tabId, state === 'blocked')
     return { domain, state, groupName }
   }
 
