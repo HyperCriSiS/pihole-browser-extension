@@ -2,6 +2,7 @@ import PiHoleApiStatusEnum from '../api/enum/PiHoleApiStatusEnum'
 
 export enum ExtensionBadgeTextEnum {
   enabled = 'On',
+  enabledBlocked = 'On!',
   disabled = 'Off',
   error = 'Err',
   info = 'Info',
@@ -52,35 +53,38 @@ export class BadgeService {
     this.actionApi.setBadgeText(badgeDetails)
   }
 
+  public static setGlobalStatus(status: PiHoleApiStatusEnum): void {
+    if (status === PiHoleApiStatusEnum.enabled) {
+      this.setBadgeText(ExtensionBadgeTextEnum.enabled)
+      return
+    }
+    if (status === PiHoleApiStatusEnum.disabled) {
+      this.setBadgeText(ExtensionBadgeTextEnum.disabled)
+      return
+    }
+    this.setBadgeText(ExtensionBadgeTextEnum.error)
+  }
+
   public static clearBadge(tabId?: number): void {
     this.setBadgeText('', tabId)
   }
 
-  public static setDomainBlockedBadge(tabId: number, blocked: boolean): void {
-    if (!blocked) {
-      this.clearBadge(tabId)
-      return
-    }
-
-    const details: BadgeColorDetails = { color: '#d32f2f', tabId }
-    this.actionApi.setBadgeBackgroundColor(details)
-
-    if (typeof browser !== 'undefined') {
-      browser.browserAction
-        .setBadgeTextColor({ color: 'white', tabId })
-        .catch(() => undefined)
-    }
-
-    this.actionApi.setBadgeText({ text: '!', tabId })
+  public static async setDomainBlockedBadge(
+    tabId: number,
+    blocked: boolean,
+  ): Promise<void> {
+    const globalText = await this.getRawBadgeText()
+    const tabText =
+      blocked && globalText === ExtensionBadgeTextEnum.enabled
+        ? ExtensionBadgeTextEnum.enabledBlocked
+        : globalText
+    this.setBadgeText(tabText, tabId)
   }
 
   public static getBadgeText(tabId?: number): Promise<ExtensionBadgeTextEnum> {
-    return new Promise((resolve) => {
-      const details = typeof tabId === 'undefined' ? {} : { tabId }
-      this.actionApi.getBadgeText(details, (result: string) => {
-        resolve(this.convertStringToBadgeTextEnum(result))
-      })
-    })
+    return this.getRawBadgeText(tabId).then((result) =>
+      this.convertStringToBadgeTextEnum(result),
+    )
   }
 
   public static compareBadgeTextToApiStatusEnum(
@@ -88,13 +92,21 @@ export class BadgeService {
     apiStatus: PiHoleApiStatusEnum,
   ): boolean {
     switch (badgeText) {
+      case ExtensionBadgeTextEnum.enabled:
+      case ExtensionBadgeTextEnum.enabledBlocked:
+        return apiStatus === PiHoleApiStatusEnum.enabled
       case ExtensionBadgeTextEnum.disabled:
         return apiStatus === PiHoleApiStatusEnum.disabled
-      case ExtensionBadgeTextEnum.enabled:
-        return apiStatus === PiHoleApiStatusEnum.enabled
       default:
         return false
     }
+  }
+
+  private static getRawBadgeText(tabId?: number): Promise<string> {
+    return new Promise((resolve) => {
+      const details = typeof tabId === 'undefined' ? {} : { tabId }
+      this.actionApi.getBadgeText(details, (result: string) => resolve(result))
+    })
   }
 
   private static convertStringToBadgeTextEnum(
@@ -103,6 +115,8 @@ export class BadgeService {
     switch (input) {
       case ExtensionBadgeTextEnum.disabled:
         return ExtensionBadgeTextEnum.disabled
+      case ExtensionBadgeTextEnum.enabledBlocked:
+        return ExtensionBadgeTextEnum.enabledBlocked
       case ExtensionBadgeTextEnum.enabled:
         return ExtensionBadgeTextEnum.enabled
       default:
@@ -121,6 +135,8 @@ export class BadgeService {
       case ExtensionBadgeTextEnum.ok:
       case ExtensionBadgeTextEnum.info:
         return '#4577d7'
+      case ExtensionBadgeTextEnum.enabledBlocked:
+      case ExtensionBadgeTextEnum.error:
       default:
         return 'red'
     }
