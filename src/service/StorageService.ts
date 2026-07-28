@@ -18,6 +18,8 @@ export interface ExtensionStorage {
   temporary_allow_times?: number[]
   pause_target?: string
   hide_group_selector_in_popup?: boolean
+  hide_group_list_actions_in_popup?: boolean
+  badge_uses_selected_group?: boolean
   reload_after_disable?: boolean
   reload_after_white_list?: boolean
   disable_list_feature?: boolean
@@ -33,6 +35,8 @@ export enum ExtensionStorageEnum {
   temporary_allow_times = 'temporary_allow_times',
   pause_target = 'pause_target',
   hide_group_selector_in_popup = 'hide_group_selector_in_popup',
+  hide_group_list_actions_in_popup = 'hide_group_list_actions_in_popup',
+  badge_uses_selected_group = 'badge_uses_selected_group',
   reload_after_disable = 'reload_after_disable',
   reload_after_white_list = 'reload_after_white_list',
   disable_list_feature = 'disable_list_feature',
@@ -124,7 +128,7 @@ export class StorageService {
     )
   }
 
-  public static savePauseTarget(target: string): void {
+  public static async savePauseTarget(target: string): Promise<void> {
     if (!target) {
       return
     }
@@ -132,7 +136,7 @@ export class StorageService {
     const storage: ExtensionStorage = {
       pause_target: target,
     }
-    chrome.storage.local.set(storage)
+    await chrome.storage.local.set(storage)
   }
 
   public static getPauseTarget(): Promise<string | undefined> {
@@ -148,6 +152,32 @@ export class StorageService {
   public static getHideGroupSelectorInPopup(): Promise<boolean> {
     return this.getStorageValue<boolean>(
       ExtensionStorageEnum.hide_group_selector_in_popup,
+      false,
+    )
+  }
+
+  public static saveHideGroupListActionsInPopup(state: boolean): void {
+    chrome.storage.local.set({
+      hide_group_list_actions_in_popup: state,
+    } satisfies ExtensionStorage)
+  }
+
+  public static getHideGroupListActionsInPopup(): Promise<boolean> {
+    return this.getStorageValue<boolean>(
+      ExtensionStorageEnum.hide_group_list_actions_in_popup,
+      false,
+    )
+  }
+
+  public static saveBadgeUsesSelectedGroup(state: boolean): void {
+    chrome.storage.local.set({
+      badge_uses_selected_group: state,
+    } satisfies ExtensionStorage)
+  }
+
+  public static getBadgeUsesSelectedGroup(): Promise<boolean> {
+    return this.getStorageValue<boolean>(
+      ExtensionStorageEnum.badge_uses_selected_group,
       false,
     )
   }
