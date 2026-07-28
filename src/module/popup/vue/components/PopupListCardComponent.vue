@@ -1,8 +1,45 @@
 <template>
   <section class="popup-section domain-control">
+    <div class="section-title">
+      {{ translate(I18NPopupKeys.popup_second_card_current_url) }}
+    </div>
+
+    <div class="domain-display" :title="currentUrl">{{ currentUrl }}</div>
+
+    <div v-if="!hideGlobalListActions" class="permanent-actions">
+      <v-btn
+        id="list_action_white"
+        class="domain-action"
+        color="green"
+        size="small"
+        variant="flat"
+        :disabled="buttonsDisabled"
+        :loading="globalActionLoading === ApiList.whitelist"
+        @click="listDomain(ApiList.whitelist)"
+      >
+        <v-icon size="17" start>{{ mdiCheck }}</v-icon>
+        {{ translate(I18NPopupKeys.popup_second_card_whitelist) }}
+      </v-btn>
+      <v-btn
+        id="list_action_black"
+        class="domain-action"
+        color="red"
+        size="small"
+        variant="flat"
+        :disabled="buttonsDisabled"
+        :loading="globalActionLoading === ApiList.blacklist"
+        @click="listDomain(ApiList.blacklist)"
+      >
+        <v-icon size="17" start>{{ mdiClose }}</v-icon>
+        {{ translate(I18NPopupKeys.popup_second_card_blacklist) }}
+      </v-btn>
+    </div>
+
+    <v-divider class="section-divider"></v-divider>
+
     <div class="section-heading-row">
       <div class="section-title">
-        {{ translate(I18NPopupKeys.popup_second_card_current_url) }}
+        {{ translate(I18NPopupKeys.popup_group_title) }}
       </div>
       <v-chip
         class="domain-status"
@@ -21,39 +58,6 @@
       </v-chip>
     </div>
 
-    <div class="domain-display" :title="currentUrl">{{ currentUrl }}</div>
-
-    <div class="permanent-actions">
-      <v-btn
-        id="list_action_white"
-        class="domain-action"
-        color="green"
-        size="small"
-        variant="flat"
-        :disabled="buttonsDisabled"
-        :loading="whitelistingActive"
-        @click="whitelistUrl"
-      >
-        <v-icon size="17" start>{{ mdiCheck }}</v-icon>
-        {{ translate(I18NPopupKeys.popup_second_card_whitelist) }}
-      </v-btn>
-      <v-btn
-        id="list_action_black"
-        class="domain-action"
-        color="red"
-        size="small"
-        variant="flat"
-        :disabled="buttonsDisabled"
-        :loading="blacklistingActive"
-        @click="blackListUrl"
-      >
-        <v-icon size="17" start>{{ mdiClose }}</v-icon>
-        {{ translate(I18NPopupKeys.popup_second_card_blacklist) }}
-      </v-btn>
-    </div>
-
-    <v-divider class="section-divider"></v-divider>
-
     <v-select
       v-if="!hideGroupSelector"
       v-model="selectedGroupModel"
@@ -66,6 +70,35 @@
       density="compact"
       hide-details
     ></v-select>
+
+    <div v-if="!hideGroupListActions" class="permanent-actions group-actions">
+      <v-btn
+        id="group_list_action_white"
+        class="domain-action"
+        color="green"
+        size="small"
+        variant="flat"
+        :disabled="buttonsDisabled || !selectedGroup"
+        :loading="groupActionLoading === ApiList.whitelist"
+        @click="listDomainForGroup(ApiList.whitelist)"
+      >
+        <v-icon size="17" start>{{ mdiCheck }}</v-icon>
+        {{ translate(I18NPopupKeys.popup_second_card_whitelist) }}
+      </v-btn>
+      <v-btn
+        id="group_list_action_black"
+        class="domain-action"
+        color="red"
+        size="small"
+        variant="flat"
+        :disabled="buttonsDisabled || !selectedGroup"
+        :loading="groupActionLoading === ApiList.blacklist"
+        @click="listDomainForGroup(ApiList.blacklist)"
+      >
+        <v-icon size="17" start>{{ mdiClose }}</v-icon>
+        {{ translate(I18NPopupKeys.popup_second_card_blacklist) }}
+      </v-btn>
+    </div>
 
     <div class="temporary-heading">
       {{ translate(I18NPopupKeys.popup_temporary_whitelist) }}
@@ -106,7 +139,6 @@ import {
 import PiHoleApiService from '../../../../service/PiHoleApiService'
 import ApiList from '../../../../api/enum/ApiList'
 import useTranslation from '../../../../hooks/translation'
-import TemporaryActionService from '../../../../service/TemporaryActionService'
 import {
   StorageService,
   TemporaryAllowTimeDefaults,
@@ -115,6 +147,7 @@ import TabService from '../../../../service/TabService'
 import DomainStatusService from '../../../../service/DomainStatusService'
 import type { DomainBlockingState } from '../../../../service/DomainStatusEvaluator'
 import type { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
+import GroupDomainService from '../../../../service/GroupDomainService'
 
 export default defineComponent({
   name: 'PopupListCardComponent',
@@ -139,14 +172,26 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    hideGlobalListActions: {
+      type: Boolean,
+      default: false,
+    },
+    hideGroupListActions: {
+      type: Boolean,
+      default: false,
+    },
+    statusRefreshKey: {
+      type: Number,
+      default: 0,
+    },
   },
   emits: ['selected-group-change'],
   setup: (props, { emit }) => {
     const { translate, I18NPopupKeys } = useTranslation()
     const buttonsDisabled = ref(false)
-    const whitelistingActive = ref(false)
+    const globalActionLoading = ref<ApiList | null>(null)
+    const groupActionLoading = ref<ApiList | null>(null)
     const temporaryWhitelistingActive = ref<number | null>(null)
-    const blacklistingActive = ref(false)
     const temporaryAllowTimes = ref<number[]>([...TemporaryAllowTimeDefaults])
     const domainStatus = ref<DomainBlockingState>('unknown')
     const statusLoading = ref(false)
@@ -185,10 +230,11 @@ export default defineComponent({
     const refreshDomainStatus = async () => {
       statusLoading.value = true
       try {
-        const result = await DomainStatusService.refreshCurrentTabBadge(
+        domainStatus.value = await DomainStatusService.getDomainStatus(
+          props.currentUrl,
           props.selectedGroup,
         )
-        domainStatus.value = result.state
+        await DomainStatusService.refreshCurrentTabBadge()
       } catch (reason) {
         console.warn(reason)
         domainStatus.value = 'unknown'
@@ -198,9 +244,9 @@ export default defineComponent({
     }
 
     const finishAction = () => {
-      whitelistingActive.value = false
+      globalActionLoading.value = null
+      groupActionLoading.value = null
       temporaryWhitelistingActive.value = null
-      blacklistingActive.value = false
       buttonsDisabled.value = false
     }
 
@@ -217,18 +263,43 @@ export default defineComponent({
 
       buttonsDisabled.value = true
       actionError.value = false
-      if (mode === ApiList.whitelist) {
-        whitelistingActive.value = true
-      } else {
-        blacklistingActive.value = true
-      }
+      globalActionLoading.value = mode
 
       try {
+        await GroupDomainService.cancelTemporaryAllowsForDomain(props.currentUrl)
         await PiHoleApiService.subDomainFromList(
           mode === ApiList.whitelist ? ApiList.blacklist : ApiList.whitelist,
           props.currentUrl,
         )
         await PiHoleApiService.addDomainToList(mode, props.currentUrl)
+        await refreshDomainStatus()
+
+        if (mode === ApiList.whitelist) {
+          await reloadAfterWhitelist()
+        }
+      } catch (reason) {
+        console.warn(reason)
+        actionError.value = true
+      } finally {
+        finishAction()
+      }
+    }
+
+    const listDomainForGroup = async (mode: ApiList) => {
+      if (!props.currentUrl || !props.selectedGroup) {
+        return
+      }
+
+      buttonsDisabled.value = true
+      actionError.value = false
+      groupActionLoading.value = mode
+
+      try {
+        await GroupDomainService.setDomainListForGroup(
+          mode,
+          props.currentUrl,
+          props.selectedGroup,
+        )
         await refreshDomainStatus()
 
         if (mode === ApiList.whitelist) {
@@ -252,7 +323,7 @@ export default defineComponent({
       temporaryWhitelistingActive.value = durationSeconds
 
       try {
-        await TemporaryActionService.temporarilyAllowDomainForGroup(
+        await GroupDomainService.temporarilyAllowDomainForGroup(
           props.currentUrl,
           props.selectedGroup,
           durationSeconds,
@@ -267,10 +338,10 @@ export default defineComponent({
       }
     }
 
-    const whitelistUrl = () => listDomain(ApiList.whitelist)
-    const blackListUrl = () => listDomain(ApiList.blacklist)
-
-    watch(() => [props.currentUrl, props.selectedGroup], refreshDomainStatus)
+    watch(
+      () => [props.currentUrl, props.selectedGroup, props.statusRefreshKey],
+      refreshDomainStatus,
+    )
 
     onMounted(async () => {
       const storedTimes = await StorageService.getTemporaryAllowTimes()
@@ -281,9 +352,10 @@ export default defineComponent({
     })
 
     return {
-      whitelistingActive,
+      ApiList,
+      globalActionLoading,
+      groupActionLoading,
       temporaryWhitelistingActive,
-      blacklistingActive,
       buttonsDisabled,
       temporaryAllowTimes,
       groupItems,
@@ -295,9 +367,9 @@ export default defineComponent({
       mdiCheck,
       mdiClose,
       mdiTimerOutline,
-      whitelistUrl,
+      listDomain,
+      listDomainForGroup,
       temporarilyWhitelistUrl,
-      blackListUrl,
       translate,
       I18NPopupKeys,
     }
@@ -307,7 +379,7 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .popup-section {
-  padding: 10px 0;
+  padding: 10px 0 4px;
 }
 
 .section-heading-row {
@@ -319,8 +391,13 @@ export default defineComponent({
 }
 
 .section-title {
+  margin-bottom: 7px;
   font-size: 14px;
   font-weight: 600;
+}
+
+.section-heading-row .section-title {
+  margin-bottom: 0;
 }
 
 .domain-status {
@@ -358,6 +435,10 @@ export default defineComponent({
 
 .group-select {
   margin-bottom: 8px;
+}
+
+.group-actions {
+  margin-bottom: 9px;
 }
 
 .temporary-heading {
