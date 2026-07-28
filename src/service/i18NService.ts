@@ -28,6 +28,8 @@ export enum I18NOptionKeys {
   options_default_client_group = 'options_default_client_group',
   options_client_group_load_error = 'options_client_group_load_error',
   options_hide_group_selector_in_popup = 'options_hide_group_selector_in_popup',
+  options_hide_group_list_actions_in_popup = 'options_hide_group_list_actions_in_popup',
+  options_badge_uses_selected_group = 'options_badge_uses_selected_group',
   options_group_pause_times_title = 'options_group_pause_times_title',
   options_group_pause_time_label = 'options_group_pause_time_label',
   options_group_pause_time_hint = 'options_group_pause_time_hint',
