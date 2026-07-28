@@ -45,10 +45,16 @@ export default class DomainStatusService {
           }
 
           const groups = await PiHoleApiService.getGroups(piHole)
+          const preferredGroup = preferredGroupName
+            ? groups.find((item) => item.name === preferredGroupName)
+            : undefined
+
+          if (preferredGroup && !preferredGroup.enabled) {
+            return 'allowed'
+          }
+
           const group =
-            groups.find(
-              (item) => item.enabled && item.name === preferredGroupName,
-            ) ||
+            preferredGroup ||
             groups.find((item) => item.enabled && item.name === 'Default') ||
             groups.find((item) => item.enabled)
 
@@ -89,7 +95,9 @@ export default class DomainStatusService {
     const tabId = tab.id
     const domain = await TabService.getTabUrlCleaned(tab)
     const groupName =
-      preferredGroupName || (await StorageService.getPauseTarget()) || null
+      typeof preferredGroupName === 'undefined'
+        ? await this.getBadgeGroupName()
+        : preferredGroupName
 
     if (typeof tabId === 'undefined' || !domain) {
       if (typeof tabId !== 'undefined') {
@@ -109,5 +117,13 @@ export default class DomainStatusService {
     })
 
     await Promise.all(tabs.map((tab) => this.refreshTabBadge(tab)))
+  }
+
+  private static async getBadgeGroupName(): Promise<string | null> {
+    if (!(await StorageService.getBadgeUsesSelectedGroup())) {
+      return null
+    }
+
+    return (await StorageService.getPauseTarget()) || null
   }
 }
