@@ -25,6 +25,7 @@
 import { defineComponent, onMounted, ref } from 'vue'
 import PiHoleApiStatusEnum from '../../../../api/enum/PiHoleApiStatusEnum'
 import useTranslation from '../../../../hooks/translation'
+import { BadgeService } from '../../../../service/BadgeService'
 import DomainStatusService from '../../../../service/DomainStatusService'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
 import { StorageService } from '../../../../service/StorageService'
@@ -41,9 +42,11 @@ export default defineComponent({
 
     const refreshStatus = async () => {
       const status = await PiHoleApiService.getPiHoleStatusCombined()
+      BadgeService.setGlobalStatus(status)
       error.value = status === PiHoleApiStatusEnum.error
       disabled.value = error.value
       blockingActive.value = status === PiHoleApiStatusEnum.enabled
+      await DomainStatusService.refreshActiveTabBadges()
     }
 
     const changeGlobalState = async (enabled: boolean | null) => {
@@ -64,6 +67,7 @@ export default defineComponent({
         }
 
         blockingActive.value = enabled
+        BadgeService.setGlobalStatus(mode)
         await DomainStatusService.refreshActiveTabBadges()
         if (!enabled && (await StorageService.getReloadAfterDisable())) {
           TabService.reloadCurrentTab(1000)
