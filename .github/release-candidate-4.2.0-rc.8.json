@@ -6,5 +6,6 @@
   "chrome_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.8/pihole-browser-extension-4.2.0-rc.8-chrome.zip",
   "chrome_sha256": "c3c15fadbb88725a66ac6c409612ffdc9a3b1dbf957b1963cbcfc902adac962b",
   "source_commit": "008b7eba30d9b82b77a20b2731c260648daac4da",
-  "release_commit": "7aecd8c45ba9550713c2aa21830c67081112a125"
+  "release_commit": "7aecd8c45ba9550713c2aa21830c67081112a125",
+  "scope": "Compact popup redesign, selected-group domain status evaluation, and tab-specific blocked-domain badges for Firefox and Chromium."
 }
