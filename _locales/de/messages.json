@@ -55,6 +55,18 @@
 	"options_default_time_unit": {
 		"message": "Sekunden"
 	},
+	"options_client_group_title": {
+		"message": "Client-Gruppe"
+	},
+	"options_default_client_group": {
+		"message": "Standard-Client-Gruppe"
+	},
+	"options_client_group_load_error": {
+		"message": "Client-Gruppen konnten nicht geladen werden. Speichere zuerst eine funktionierende Pi-hole-Verbindung."
+	},
+	"options_hide_group_selector_in_popup": {
+		"message": "Client-Gruppen-Auswahl im Popup ausblenden"
+	},
 	"options_group_pause_times_title": {
 		"message": "Zeitvorgaben für Gruppenpausen"
 	},
