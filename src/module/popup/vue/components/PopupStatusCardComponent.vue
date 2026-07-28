@@ -1,9 +1,5 @@
 <template>
   <section class="popup-section group-control">
-    <div class="section-title">
-      {{ translate(I18NPopupKeys.popup_group_title) }}
-    </div>
-
     <div class="control-row">
       <span class="control-label">{{
         translate(I18NPopupKeys.popup_group_manual)
@@ -68,6 +64,7 @@ import DomainStatusService from '../../../../service/DomainStatusService'
 
 export default defineComponent({
   name: 'PopupStatusCardComponent',
+  emits: ['group-state-change'],
   props: {
     selectedGroup: {
       type: String,
@@ -82,7 +79,7 @@ export default defineComponent({
       default: false,
     },
   },
-  setup: (props) => {
+  setup: (props, { emit }) => {
     const { translate, I18NPopupKeys } = useTranslation()
     const groupPauseTimes = ref<number[]>([...GroupPauseTimeDefaults])
     const groupBlockingActive = ref(true)
@@ -140,7 +137,8 @@ export default defineComponent({
         }
 
         groupBlockingActive.value = blockingEnabled
-        await DomainStatusService.refreshCurrentTabBadge(props.selectedGroup)
+        await DomainStatusService.refreshCurrentTabBadge()
+        emit('group-state-change')
         if (!blockingEnabled) {
           await reloadAfterPause()
         }
@@ -166,7 +164,8 @@ export default defineComponent({
       try {
         await GroupPauseService.pauseGroup(props.selectedGroup, durationSeconds)
         groupBlockingActive.value = false
-        await DomainStatusService.refreshCurrentTabBadge(props.selectedGroup)
+        await DomainStatusService.refreshCurrentTabBadge()
+        emit('group-state-change')
         await reloadAfterPause()
       } catch (reason) {
         console.warn(reason)
@@ -211,13 +210,7 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .popup-section {
-  padding: 10px 0 4px;
-}
-
-.section-title {
-  margin-bottom: 5px;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 2px 0 4px;
 }
 
 .control-row {
