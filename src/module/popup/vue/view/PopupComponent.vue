@@ -20,20 +20,23 @@
         <v-divider></v-divider>
 
         <PopupListCardComponent
-          v-if="isListFeatureActive"
+          v-if="currentUrl"
           :current-url="currentUrl"
           :selected-group="selectedGroup"
           :groups="groups"
           :groups-loading="groupsLoading"
           :hide-group-selector="hideGroupSelector"
+          :hide-global-list-actions="hideGlobalListActions"
+          :hide-group-list-actions="hideGroupListActions"
+          :status-refresh-key="groupStatusRefreshKey"
           @selected-group-change="setSelectedGroup"
         />
-        <v-divider v-if="isListFeatureActive"></v-divider>
 
         <PopupStatusCardComponent
           :selected-group="selectedGroup"
           :groups-loading="groupsLoading"
           :group-load-error="groupLoadError"
+          @group-state-change="refreshGroupStatus"
         />
       </div>
     </main>
@@ -42,7 +45,7 @@
 
 <script lang="ts">
 import { mdiCog } from '@mdi/js'
-import { computed, defineComponent, onMounted, ref } from 'vue'
+import { defineComponent, onMounted, ref } from 'vue'
 import PopupStatusCardComponent from '../components/PopupStatusCardComponent.vue'
 import PopupListCardComponent from '../components/PopupListCardComponent.vue'
 import PopupGlobalControlComponent from '../components/PopupGlobalControlComponent.vue'
@@ -68,7 +71,9 @@ export default defineComponent({
     const groupsLoading = ref(false)
     const groupLoadError = ref(false)
     const hideGroupSelector = ref(false)
-    const listFeatureDisabled = ref(false)
+    const hideGlobalListActions = ref(false)
+    const hideGroupListActions = ref(false)
+    const groupStatusRefreshKey = ref(0)
 
     const updateCurrentUrl = async () => {
       currentUrl.value = await TabService.getCurrentTabUrlCleaned()
@@ -77,24 +82,26 @@ export default defineComponent({
       }
     }
 
-    const updateListFeatureDisabled = async () => {
-      listFeatureDisabled.value =
-        (await StorageService.getDisableListFeature()) ?? false
+    const loadPopupSettings = async () => {
+      const [hideSelector, hideGlobalActions, hideGroupActions] =
+        await Promise.all([
+          StorageService.getHideGroupSelectorInPopup(),
+          StorageService.getDisableListFeature(),
+          StorageService.getHideGroupListActionsInPopup(),
+        ])
+
+      hideGroupSelector.value = hideSelector
+      hideGlobalListActions.value = hideGlobalActions ?? false
+      hideGroupListActions.value = hideGroupActions
     }
 
     const loadGroupSettings = async () => {
       groupsLoading.value = true
       groupLoadError.value = false
-      const [storedGroup, hideSelector] = await Promise.all([
-        StorageService.getPauseTarget(),
-        StorageService.getHideGroupSelectorInPopup(),
-      ])
-      hideGroupSelector.value = hideSelector
+      const storedGroup = await StorageService.getPauseTarget()
 
       try {
-        groups.value = (await PiHoleApiService.getCommonGroups()).filter(
-          (group) => group.enabled,
-        )
+        groups.value = await PiHoleApiService.getCommonGroups()
         const storedGroupExists = groups.value.some(
           (group) => group.name === storedGroup,
         )
@@ -120,20 +127,20 @@ export default defineComponent({
         return
       }
 
-      StorageService.savePauseTarget(groupName)
-      await DomainStatusService.refreshCurrentTabBadge(groupName)
+      await StorageService.savePauseTarget(groupName)
+      await DomainStatusService.refreshCurrentTabBadge()
     }
 
-    const isListFeatureActive = computed(
-      () => !listFeatureDisabled.value && currentUrl.value.length > 0,
-    )
+    const refreshGroupStatus = () => {
+      groupStatusRefreshKey.value += 1
+    }
 
     const openOptions = () => chrome.runtime.openOptionsPage()
 
     onMounted(async () => {
       await Promise.all([
         updateCurrentUrl(),
-        updateListFeatureDisabled(),
+        loadPopupSettings(),
         loadGroupSettings(),
       ])
     })
@@ -146,7 +153,10 @@ export default defineComponent({
       groupsLoading,
       groupLoadError,
       hideGroupSelector,
-      isListFeatureActive,
+      hideGlobalListActions,
+      hideGroupListActions,
+      groupStatusRefreshKey,
+      refreshGroupStatus,
       setSelectedGroup,
       openOptions,
       translate,
