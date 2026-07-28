@@ -49,7 +49,9 @@
 		"eslint": "eslint .",
 		"prettier-check": "prettier --check ./**/*.{ts,vue,css,scss,js,mjs}",
 		"prettier-format": "prettier --write ./**/*.{ts,vue,css,scss,js,mjs}",
-		"test:domain-status": "node --experimental-strip-types --experimental-default-type=module --test tests/domain-status.test.ts"
+		"test:domain-status": "node --experimental-strip-types --experimental-default-type=module --test tests/domain-status.test.ts",
+		"test:badge-state": "node --experimental-strip-types --experimental-default-type=module --test tests/badge-state.test.ts",
+		"test:status": "npm run test:domain-status && npm run test:badge-state"
 	},
 	"repository": {
 		"type": "git",
