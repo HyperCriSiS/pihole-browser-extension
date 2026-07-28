@@ -1,7 +1,9 @@
 <template>
   <section class="popup-section global-control">
     <div class="control-row">
-      <span class="control-label">{{ translate(I18NPopupKeys.popup_global_title) }}</span>
+      <span class="control-label">{{
+        translate(I18NPopupKeys.popup_global_title)
+      }}</span>
       <v-switch
         :model-value="blockingActive"
         color="green"

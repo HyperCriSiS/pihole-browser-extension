@@ -139,10 +139,10 @@
 		"message": "Current domain"
 	},
 	"popup_second_card_whitelist": {
-		"message": "Whitelist permanently for all groups"
+		"message": "Whitelist"
 	},
 	"popup_second_card_blacklist": {
-		"message": "Blacklist permanently for all groups"
+		"message": "Blacklist"
 	},
 	"popup_temporary_whitelist": {
 		"message": "Temporary whitelist"
@@ -215,5 +215,23 @@
 	},
 	"popup_temporary_whitelist_group": {
 		"message": "Selected client group"
+	},
+	"popup_group_manual": {
+		"message": "Manual"
+	},
+	"popup_domain_status_checking": {
+		"message": "Checking…"
+	},
+	"popup_domain_status_blocked": {
+		"message": "Blocked"
+	},
+	"popup_domain_status_allowed": {
+		"message": "Not blocked"
+	},
+	"popup_domain_status_unknown": {
+		"message": "Status unknown"
+	},
+	"popup_domain_action_error": {
+		"message": "The domain action failed."
 	}
 }

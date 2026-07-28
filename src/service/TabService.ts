@@ -47,7 +47,9 @@ export default class TabService {
         return ''
       }
 
-      return excludedDomains.includes(parsedUrl.hostname) ? '' : parsedUrl.hostname
+      return excludedDomains.includes(parsedUrl.hostname)
+        ? ''
+        : parsedUrl.hostname
     } catch {
       return ''
     }

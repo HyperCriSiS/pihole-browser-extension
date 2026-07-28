@@ -113,7 +113,10 @@ export default class BackgroundInitializer implements Initializer {
       }
 
       DomainStatusService.refreshActiveTabBadges().catch((reason) => {
-        console.error('Failed to refresh badges after a settings change', reason)
+        console.error(
+          'Failed to refresh badges after a settings change',
+          reason,
+        )
       })
     })
   }

@@ -1,6 +1,8 @@
 <template>
   <section class="popup-section group-control">
-    <div class="section-title">{{ translate(I18NPopupKeys.popup_group_title) }}</div>
+    <div class="section-title">
+      {{ translate(I18NPopupKeys.popup_group_title) }}
+    </div>
 
     <v-select
       v-model="selectedGroup"
@@ -15,7 +17,9 @@
     ></v-select>
 
     <div class="control-row">
-      <span class="control-label">{{ translate(I18NPopupKeys.popup_group_manual) }}</span>
+      <span class="control-label">{{
+        translate(I18NPopupKeys.popup_group_manual)
+      }}</span>
       <v-switch
         :model-value="groupBlockingActive"
         color="green"
@@ -24,7 +28,10 @@
         inset
         :loading="groupActionLoading && groupTimedActionLoading === null"
         :disabled="
-          groupSwitchDisabled || groupActionLoading || groupsLoading || !selectedGroup
+          groupSwitchDisabled ||
+          groupActionLoading ||
+          groupsLoading ||
+          !selectedGroup
         "
         @update:model-value="changeGroupState"
       ></v-switch>
@@ -50,7 +57,10 @@
       </v-btn>
     </div>
 
-    <div v-if="groupActionState === 'error' || groupLoadError" class="inline-error">
+    <div
+      v-if="groupActionState === 'error' || groupLoadError"
+      class="inline-error"
+    >
       {{ translate(I18NPopupKeys.popup_group_error) }}
     </div>
   </section>

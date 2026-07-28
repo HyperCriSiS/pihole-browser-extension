@@ -35,7 +35,8 @@ export default class DomainStatusService {
     const states = await Promise.all(
       piHoles.map(async (piHole): Promise<DomainBlockingState> => {
         try {
-          const blockingStatus = await PiHoleApiService.getPiHoleStatusFor(piHole)
+          const blockingStatus =
+            await PiHoleApiService.getPiHoleStatusFor(piHole)
           if (blockingStatus.blocking === PiHoleApiStatusEnum.disabled) {
             return 'allowed'
           }

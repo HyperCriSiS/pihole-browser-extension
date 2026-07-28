@@ -69,6 +69,17 @@ export default class PiHoleApiService {
     )
   }
 
+  public static async getPiHoleStatusFor(
+    piHole: PiHoleSettingsStorage,
+  ): Promise<PiHoleApiStatus> {
+    this.assertValidPiHole(piHole)
+    const response = await this.getAxiosInstance(
+      piHole.pi_uri_base!,
+      piHole.api_key,
+    ).get<PiHoleApiStatus>('/dns/blocking')
+    return response.data
+  }
+
   public static async getPiHoleVersion(
     piHole: PiHoleSettingsStorage,
   ): Promise<AxiosResponse<PiHoleVersionsV6>> {
@@ -192,6 +203,20 @@ export default class PiHoleApiService {
     domain: string,
   ): Promise<void> {
     return this.deleteDomain(piHole, list, 'regex', domain)
+  }
+
+  public static async searchDomain(
+    piHole: PiHoleSettingsStorage,
+    domain: string,
+  ): Promise<PiHoleSearchResponse> {
+    this.assertValidPiHole(piHole)
+    const response = await this.getAxiosInstance(
+      piHole.pi_uri_base!,
+      piHole.api_key,
+    ).get<PiHoleSearchResponse>(
+      `/search/${encodeURIComponent(domain)}?partial=false&N=100`,
+    )
+    return response.data
   }
 
   public static async getGroups(

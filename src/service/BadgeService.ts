@@ -40,8 +40,12 @@ export class BadgeService {
 
     if (typeof browser !== 'undefined') {
       const firefoxDetails =
-        typeof tabId === 'undefined' ? { color: 'white' } : { color: 'white', tabId }
-      browser.browserAction.setBadgeTextColor(firefoxDetails).catch(() => undefined)
+        typeof tabId === 'undefined'
+          ? { color: 'white' }
+          : { color: 'white', tabId }
+      browser.browserAction
+        .setBadgeTextColor(firefoxDetails)
+        .catch(() => undefined)
     }
 
     this.actionApi.setBadgeBackgroundColor(colorDetails)

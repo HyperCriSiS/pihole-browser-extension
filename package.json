@@ -48,7 +48,8 @@
 		"rebuild-package-lock": "npm install --package-lock",
 		"eslint": "eslint .",
 		"prettier-check": "prettier --check ./**/*.{ts,vue,css,scss,js,mjs}",
-		"prettier-format": "prettier --write ./**/*.{ts,vue,css,scss,js,mjs}"
+		"prettier-format": "prettier --write ./**/*.{ts,vue,css,scss,js,mjs}",
+		"test:domain-status": "node --experimental-strip-types --experimental-default-type=module --test tests/domain-status.test.ts"
 	},
 	"repository": {
 		"type": "git",

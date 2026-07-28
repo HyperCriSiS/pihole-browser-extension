@@ -228,10 +228,7 @@ export default defineComponent({
     const whitelistUrl = () => listDomain(ApiList.whitelist)
     const blackListUrl = () => listDomain(ApiList.blacklist)
 
-    watch(
-      () => [props.currentUrl, props.selectedGroup],
-      refreshDomainStatus,
-    )
+    watch(() => [props.currentUrl, props.selectedGroup], refreshDomainStatus)
 
     onMounted(async () => {
       const storedTimes = await StorageService.getTemporaryAllowTimes()
