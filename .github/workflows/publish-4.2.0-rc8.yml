@@ -1,0 +1,129 @@
+name: Publish v4.2.0-rc.8
+
+on:
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    if: github.event.pull_request.number == 8
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out release candidate branch
+        uses: actions/checkout@v6
+        with:
+          ref: feat/vue3-vuetify-migration
+          fetch-depth: 0
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          package-manager-cache: false
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Validate release candidate
+        run: |
+          npm run test:domain-status
+          npm run eslint
+          npm run prettier-check
+          npm run build
+      - name: Prepare release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp package.firefox.zip pihole-browser-extension-4.2.0-rc.8-unsigned.xpi
+          cp package.chrome.zip pihole-browser-extension-4.2.0-rc.8-chrome.zip
+          unzip -t pihole-browser-extension-4.2.0-rc.8-unsigned.xpi
+          sha256sum \
+            pihole-browser-extension-4.2.0-rc.8-unsigned.xpi \
+            pihole-browser-extension-4.2.0-rc.8-chrome.zip \
+            > SHA256SUMS-4.2.0-rc.8.txt
+          cat > RELEASE_NOTES_RC8.md <<'EOF'
+          ## PiHole Browser Extension 4.2.0 RC8
+
+          This prerelease replaces RC1 through RC7 and is intended for real-browser testing.
+
+          ### Compact popup redesign
+
+          - Single compact panel without nested cards or excessive spacing.
+          - Header with Pi-hole control title and settings shortcut.
+          - Compact global Pi-hole switch.
+          - Current domain display with visible Blocked, Not blocked, or Unknown status.
+          - Equal-width green Whitelist and red Blacklist buttons with short labels.
+          - Three temporary Whitelist buttons for the selected client group.
+          - Compact client-group selector, manual switch, and three timed pause buttons.
+
+          ### Blocked-domain badge
+
+          - Uses Pi-hole's domain search API and rule precedence for the selected client group.
+          - Shows a red tab-specific `!` badge while the active domain is blocked.
+          - Clears the badge when the domain is allowed, global blocking is disabled, or the tab has no valid HTTP/HTTPS domain.
+          - Uses Chromium Manifest V3 `action` and Firefox Manifest V2 `browserAction` APIs.
+
+          ### Validation
+
+          - Domain rule precedence tests passed.
+          - ESLint and Prettier passed.
+          - Firefox and Chromium production builds passed.
+          - CodeQL passed on the source branch.
+
+          The Firefox XPI is unsigned and must be loaded temporarily through `about:debugging`.
+          EOF
+      - name: Remove temporary publisher
+        shell: bash
+        run: |
+          set -euo pipefail
+          SOURCE_SHA=$(git rev-parse HEAD)
+          echo "SOURCE_SHA=$SOURCE_SHA" >> "$GITHUB_ENV"
+          rm -f .github/workflows/publish-4.2.0-rc8.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Prepare 4.2.0 release candidate 8'
+          git push origin HEAD:feat/vue3-vuetify-migration
+          echo "TARGET_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+      - name: Create prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='v4.2.0-rc.8'
+          ASSETS=(
+            pihole-browser-extension-4.2.0-rc.8-unsigned.xpi
+            pihole-browser-extension-4.2.0-rc.8-chrome.zip
+            SHA256SUMS-4.2.0-rc.8.txt
+          )
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${ASSETS[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+            gh release edit "$TAG" --target "$TARGET_SHA" --title 'PiHole Browser Extension 4.2.0 RC8' --notes-file RELEASE_NOTES_RC8.md --prerelease --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" "${ASSETS[@]}" --target "$TARGET_SHA" --title 'PiHole Browser Extension 4.2.0 RC8' --notes-file RELEASE_NOTES_RC8.md --prerelease --repo "$GITHUB_REPOSITORY"
+          fi
+      - name: Record published build
+        shell: bash
+        run: |
+          set -euo pipefail
+          XPI_SHA=$(sha256sum pihole-browser-extension-4.2.0-rc.8-unsigned.xpi | cut -d' ' -f1)
+          CHROME_SHA=$(sha256sum pihole-browser-extension-4.2.0-rc.8-chrome.zip | cut -d' ' -f1)
+          cat > .github/release-candidate-4.2.0-rc.8.json <<EOF
+          {
+            "tag": "v4.2.0-rc.8",
+            "release_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/tag/v4.2.0-rc.8",
+            "xpi_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.8/pihole-browser-extension-4.2.0-rc.8-unsigned.xpi",
+            "xpi_sha256": "$XPI_SHA",
+            "chrome_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.8/pihole-browser-extension-4.2.0-rc.8-chrome.zip",
+            "chrome_sha256": "$CHROME_SHA",
+            "source_commit": "$SOURCE_SHA",
+            "release_commit": "$TARGET_SHA"
+          }
+          EOF
+          git add .github/release-candidate-4.2.0-rc.8.json
+          git commit -m 'Record 4.2.0 release candidate 8'
+          git push origin HEAD:feat/vue3-vuetify-migration
