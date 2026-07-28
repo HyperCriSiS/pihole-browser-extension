@@ -4,18 +4,6 @@
       {{ translate(I18NPopupKeys.popup_group_title) }}
     </div>
 
-    <v-select
-      v-model="selectedGroup"
-      class="group-select"
-      :items="groupItems"
-      :label="translate(I18NPopupKeys.popup_group_select)"
-      :loading="groupsLoading"
-      :disabled="groupsLoading || groupActionLoading"
-      variant="outlined"
-      density="compact"
-      hide-details
-    ></v-select>
-
     <div class="control-row">
       <span class="control-label">{{
         translate(I18NPopupKeys.popup_group_manual)
@@ -68,77 +56,57 @@
 
 <script lang="ts">
 import { mdiTimerOutline } from '@mdi/js'
-import { computed, defineComponent, onMounted, ref, watch } from 'vue'
+import { defineComponent, onMounted, ref, watch } from 'vue'
 import {
   GroupPauseTimeDefaults,
   StorageService,
 } from '../../../../service/StorageService'
 import TabService from '../../../../service/TabService'
-import PiHoleApiService from '../../../../service/PiHoleApiService'
 import useTranslation from '../../../../hooks/translation'
 import GroupPauseService from '../../../../service/GroupPauseService'
-import { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
 import DomainStatusService from '../../../../service/DomainStatusService'
 
 export default defineComponent({
   name: 'PopupStatusCardComponent',
-  emits: ['selected-group-change'],
-  setup: (_props, { emit }) => {
+  props: {
+    selectedGroup: {
+      type: String,
+      default: null,
+    },
+    groupsLoading: {
+      type: Boolean,
+      default: false,
+    },
+    groupLoadError: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  setup: (props) => {
     const { translate, I18NPopupKeys } = useTranslation()
-    const groups = ref<PiHoleGroup[]>([])
-    const selectedGroup = ref<string | null>(null)
     const groupPauseTimes = ref<number[]>([...GroupPauseTimeDefaults])
     const groupBlockingActive = ref(true)
     const groupSwitchDisabled = ref(true)
-    const groupsLoading = ref(false)
-    const groupLoadError = ref(false)
     const groupActionLoading = ref(false)
     const groupTimedActionLoading = ref<number | null>(null)
     const groupActionState = ref<'success' | 'error' | null>(null)
 
-    const groupItems = computed(() =>
-      groups.value.map((group) => ({ title: group.name, value: group.name })),
-    )
-
     const updateSelectedGroupStatus = async () => {
-      if (!selectedGroup.value) {
+      if (!props.selectedGroup) {
         groupSwitchDisabled.value = true
         return
       }
 
       groupSwitchDisabled.value = true
-      groupLoadError.value = false
       try {
         groupBlockingActive.value = !(await GroupPauseService.isGroupPaused(
-          selectedGroup.value,
+          props.selectedGroup,
         ))
         groupSwitchDisabled.value = false
       } catch (reason) {
         console.warn(reason)
         groupBlockingActive.value = false
-        groupLoadError.value = true
-      }
-    }
-
-    const loadGroups = async () => {
-      groupsLoading.value = true
-      groupLoadError.value = false
-      try {
-        groups.value = (await PiHoleApiService.getCommonGroups()).filter(
-          (group) => group.enabled,
-        )
-        const storedGroup = await StorageService.getPauseTarget()
-        selectedGroup.value = groups.value.some(
-          (group) => group.name === storedGroup,
-        )
-          ? storedGroup!
-          : groups.value[0]?.name || null
-      } catch (reason) {
-        console.warn(reason)
-        groupLoadError.value = true
-        selectedGroup.value = null
-      } finally {
-        groupsLoading.value = false
+        groupActionState.value = 'error'
       }
     }
 
@@ -156,7 +124,7 @@ export default defineComponent({
     }
 
     const changeGroupState = async (blockingEnabled: boolean | null) => {
-      if (typeof blockingEnabled !== 'boolean' || !selectedGroup.value) {
+      if (typeof blockingEnabled !== 'boolean' || !props.selectedGroup) {
         return
       }
 
@@ -166,14 +134,13 @@ export default defineComponent({
       groupSwitchDisabled.value = true
       try {
         if (blockingEnabled) {
-          await GroupPauseService.resumeGroup(selectedGroup.value)
+          await GroupPauseService.resumeGroup(props.selectedGroup)
         } else {
-          await GroupPauseService.pauseGroup(selectedGroup.value, 0)
+          await GroupPauseService.pauseGroup(props.selectedGroup, 0)
         }
 
         groupBlockingActive.value = blockingEnabled
-        groupActionState.value = 'success'
-        await DomainStatusService.refreshCurrentTabBadge(selectedGroup.value)
+        await DomainStatusService.refreshCurrentTabBadge(props.selectedGroup)
         if (!blockingEnabled) {
           await reloadAfterPause()
         }
@@ -183,12 +150,12 @@ export default defineComponent({
         await updateSelectedGroupStatus()
       } finally {
         groupActionLoading.value = false
-        groupSwitchDisabled.value = groupLoadError.value
+        groupSwitchDisabled.value = props.groupLoadError
       }
     }
 
     const pauseGroupFor = async (durationSeconds: number) => {
-      if (!selectedGroup.value || durationSeconds < 1) {
+      if (!props.selectedGroup || durationSeconds < 1) {
         return
       }
 
@@ -197,10 +164,9 @@ export default defineComponent({
       groupActionState.value = null
       groupSwitchDisabled.value = true
       try {
-        await GroupPauseService.pauseGroup(selectedGroup.value, durationSeconds)
+        await GroupPauseService.pauseGroup(props.selectedGroup, durationSeconds)
         groupBlockingActive.value = false
-        groupActionState.value = 'success'
-        await DomainStatusService.refreshCurrentTabBadge(selectedGroup.value)
+        await DomainStatusService.refreshCurrentTabBadge(props.selectedGroup)
         await reloadAfterPause()
       } catch (reason) {
         console.warn(reason)
@@ -209,38 +175,28 @@ export default defineComponent({
       } finally {
         groupTimedActionLoading.value = null
         groupActionLoading.value = false
-        groupSwitchDisabled.value = groupLoadError.value
+        groupSwitchDisabled.value = props.groupLoadError
       }
     }
 
-    watch(selectedGroup, async (groupName) => {
-      emit('selected-group-change', groupName)
-      if (!groupName) {
-        groupSwitchDisabled.value = true
-        return
-      }
-
-      StorageService.savePauseTarget(groupName)
-      groupActionState.value = null
-      await Promise.all([
-        updateSelectedGroupStatus(),
-        DomainStatusService.refreshCurrentTabBadge(groupName),
-      ])
-    })
+    watch(
+      () => props.selectedGroup,
+      async () => {
+        groupActionState.value = null
+        await updateSelectedGroupStatus()
+      },
+    )
 
     onMounted(async () => {
-      await Promise.all([loadGroups(), loadGroupPauseTimes()])
+      await loadGroupPauseTimes()
+      await updateSelectedGroupStatus()
     })
 
     return {
       mdiTimerOutline,
-      selectedGroup,
-      groupItems,
       groupPauseTimes,
       groupBlockingActive,
       groupSwitchDisabled,
-      groupsLoading,
-      groupLoadError,
       groupActionLoading,
       groupTimedActionLoading,
       groupActionState,
@@ -259,13 +215,9 @@ export default defineComponent({
 }
 
 .section-title {
-  margin-bottom: 7px;
+  margin-bottom: 5px;
   font-size: 14px;
   font-weight: 600;
-}
-
-.group-select {
-  margin-bottom: 5px;
 }
 
 .control-row {
