@@ -40,6 +40,8 @@ Domain rule precedence and multi-Pi-hole state aggregation are covered by `tests
 
 Pi-hole connection fields are saved only through the explicit Save action. Add PiHole creates another unsaved connection tab and no longer acts as an implicit save operation.
 
+Release candidate `v4.2.0-rc.9` contains the shared client-group selector, popup visibility preference and combined Pi-hole/domain badge states for manual Firefox and Chromium testing.
+
 ## Remaining release work
 
 1. Complete a manual popup and options-page smoke test in Firefox and Chromium.
