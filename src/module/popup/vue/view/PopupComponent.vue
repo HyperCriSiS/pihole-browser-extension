@@ -23,11 +23,17 @@
           v-if="isListFeatureActive"
           :current-url="currentUrl"
           :selected-group="selectedGroup"
+          :groups="groups"
+          :groups-loading="groupsLoading"
+          :hide-group-selector="hideGroupSelector"
+          @selected-group-change="setSelectedGroup"
         />
         <v-divider v-if="isListFeatureActive"></v-divider>
 
         <PopupStatusCardComponent
-          @selected-group-change="selectedGroup = $event"
+          :selected-group="selectedGroup"
+          :groups-loading="groupsLoading"
+          :group-load-error="groupLoadError"
         />
       </div>
     </main>
@@ -44,6 +50,8 @@ import { StorageService } from '../../../../service/StorageService'
 import TabService from '../../../../service/TabService'
 import useTranslation from '../../../../hooks/translation'
 import DomainStatusService from '../../../../service/DomainStatusService'
+import PiHoleApiService from '../../../../service/PiHoleApiService'
+import type { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
 
 export default defineComponent({
   name: 'PopupComponent',
@@ -56,6 +64,10 @@ export default defineComponent({
     const { translate, I18NPopupKeys, I18NOptionKeys } = useTranslation()
     const currentUrl = ref('')
     const selectedGroup = ref<string | null>(null)
+    const groups = ref<PiHoleGroup[]>([])
+    const groupsLoading = ref(false)
+    const groupLoadError = ref(false)
+    const hideGroupSelector = ref(false)
     const listFeatureDisabled = ref(false)
 
     const updateCurrentUrl = async () => {
@@ -70,6 +82,48 @@ export default defineComponent({
         (await StorageService.getDisableListFeature()) ?? false
     }
 
+    const loadGroupSettings = async () => {
+      groupsLoading.value = true
+      groupLoadError.value = false
+      const [storedGroup, hideSelector] = await Promise.all([
+        StorageService.getPauseTarget(),
+        StorageService.getHideGroupSelectorInPopup(),
+      ])
+      hideGroupSelector.value = hideSelector
+
+      try {
+        groups.value = (await PiHoleApiService.getCommonGroups()).filter(
+          (group) => group.enabled,
+        )
+        const storedGroupExists = groups.value.some(
+          (group) => group.name === storedGroup,
+        )
+        selectedGroup.value = storedGroupExists
+          ? storedGroup!
+          : groups.value[0]?.name || null
+
+        if (selectedGroup.value && !storedGroupExists) {
+          StorageService.savePauseTarget(selectedGroup.value)
+        }
+      } catch (reason) {
+        console.warn(reason)
+        groupLoadError.value = true
+        selectedGroup.value = storedGroup || null
+      } finally {
+        groupsLoading.value = false
+      }
+    }
+
+    const setSelectedGroup = async (groupName: string | null) => {
+      selectedGroup.value = groupName
+      if (!groupName) {
+        return
+      }
+
+      StorageService.savePauseTarget(groupName)
+      await DomainStatusService.refreshCurrentTabBadge(groupName)
+    }
+
     const isListFeatureActive = computed(
       () => !listFeatureDisabled.value && currentUrl.value.length > 0,
     )
@@ -77,14 +131,23 @@ export default defineComponent({
     const openOptions = () => chrome.runtime.openOptionsPage()
 
     onMounted(async () => {
-      await Promise.all([updateCurrentUrl(), updateListFeatureDisabled()])
+      await Promise.all([
+        updateCurrentUrl(),
+        updateListFeatureDisabled(),
+        loadGroupSettings(),
+      ])
     })
 
     return {
       mdiCog,
       currentUrl,
       selectedGroup,
+      groups,
+      groupsLoading,
+      groupLoadError,
+      hideGroupSelector,
       isListFeatureActive,
+      setSelectedGroup,
       openOptions,
       translate,
       I18NPopupKeys,
@@ -126,10 +189,6 @@ body {
 }
 
 .popup-content {
-  padding: 0 12px 9px;
-}
-
-.v-switch .v-selection-control {
-  min-height: 32px;
+  padding: 0 10px 8px;
 }
 </style>
