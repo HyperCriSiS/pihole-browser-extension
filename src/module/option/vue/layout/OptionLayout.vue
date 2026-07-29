@@ -43,7 +43,8 @@
       </v-list>
       <template #append>
         <v-alert color="primary" variant="outlined" class="mx-5">
-          {{ copyrightText }}
+          <div>(C) {{ copyrightYear }} - Pascal Glaser</div>
+          <div>(C) {{ copyrightYear }} - HyperCriSiS</div>
         </v-alert>
       </template>
     </v-navigation-drawer>
@@ -65,13 +66,10 @@ export default defineComponent({
   setup: () => {
     const { translate, LinkConfig, I18NOptionKeys } = useTranslation()
 
-    const copyrightText = computed(() => {
-      const year = new Date().getFullYear()
-      return `(C) ${year} - Pascal Glaser`
-    })
+    const copyrightYear = computed(() => new Date().getFullYear())
 
     return {
-      copyrightText,
+      copyrightYear,
       translate,
       LinkConfig,
       I18NOptionKeys,
