@@ -52,7 +52,7 @@
   "popup_second_card_blacklist": {"message": "Blacklist"},
   "popup_temporary_whitelist": {"message": "Temporäres Whitelisting für die Gruppe"},
   "popup_temporary_allow_duration": {"message": "Dauer des temporären Domain-Whitelistings"},
-  "popup_group_title": {"message": "Client-Gruppe"},
+  "popup_group_title": {"message": "Client-Gruppen-Aktionen"},
   "popup_group_select": {"message": "Client-Gruppe auswählen"},
   "popup_group_blocking_active": {"message": "Filterung für diese Gruppe eingeschaltet"},
   "popup_group_pause_times_title": {"message": "Gruppe ausschalten für"},
