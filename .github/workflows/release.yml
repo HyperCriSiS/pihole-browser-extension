@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Validate and package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+
+    steps:
+      - name: Check out tagged revision
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          show-progress: false
+
+      - name: Verify tag target
+        run: test "$(git rev-parse "${GITHUB_REF_NAME}^{commit}")" = "$GITHUB_SHA"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund --loglevel=error
+
+      - name: Verify release versions
+        run: npm run verify:release -- "$GITHUB_REF_NAME"
+
+      - name: Run complete project checks
+        run: npm run check
+
+      - name: Prepare browser artifacts
+        run: npm run package:artifacts
+
+      - name: Apply tag-specific artifact names
+        shell: bash
+        run: |
+          set -euo pipefail
+          package_version="$(node -p "require('./package.json').version")"
+          release_version="${GITHUB_REF_NAME#v}"
+          if [[ "$release_version" != "$package_version" ]]; then
+            mv \
+              "artifacts/pihole-browser-extension-${package_version}-firefox-unsigned.xpi" \
+              "artifacts/pihole-browser-extension-${release_version}-firefox-unsigned.xpi"
+            mv \
+              "artifacts/pihole-browser-extension-${package_version}-chrome.zip" \
+              "artifacts/pihole-browser-extension-${release_version}-chrome.zip"
+          fi
+
+      - name: Create source archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_version="${GITHUB_REF_NAME#v}"
+          source_dir="source-package"
+          source_archive="artifacts/pihole-browser-extension-${release_version}-source.zip"
+          source_date_epoch="$(git show -s --format=%ct HEAD)"
+
+          mkdir "$source_dir"
+          git archive --format=tar HEAD | tar -xf - -C "$source_dir"
+          printf '%s\n' "$GITHUB_SHA" > "$source_dir/SOURCE_COMMIT.txt"
+          find "$source_dir" -exec touch -h -d "@${source_date_epoch}" {} +
+          (
+            cd "$source_dir"
+            find . -type f -print | LC_ALL=C sort | zip -X -q "../${source_archive}" -@
+          )
+
+      - name: Regenerate SHA-256 checksums
+        shell: bash
+        run: |
+          find artifacts -maxdepth 1 -type f ! -name SHA256SUMS.txt -printf '%f\n' \
+            | LC_ALL=C sort \
+            | while IFS= read -r artifact; do sha256sum "artifacts/$artifact"; done \
+            | sed 's#  artifacts/#  #' > artifacts/SHA256SUMS.txt
+
+      - name: Upload validated release bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ github.ref_name }}
+          path: artifacts/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+  publish:
+    name: Publish GitHub release
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Refuse to overwrite an existing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+
+      - name: Download validated release bundle
+        uses: actions/download-artifact@v7
+        with:
+          name: release-${{ github.ref_name }}
+          path: release-assets
+
+      - name: Publish release and assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_flags=(--generate-notes)
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            release_flags+=(--prerelease)
+          fi
+          gh release create "$GITHUB_REF_NAME" release-assets/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            "${release_flags[@]}"
