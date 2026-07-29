@@ -1,11 +1,14 @@
-name: Removed temporary RC10 workflow
+name: Temporary RC10 workflow disabled
 
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  removed:
+  disabled:
     if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Temporary release workflow removed"
+      - run: echo "Disabled"
