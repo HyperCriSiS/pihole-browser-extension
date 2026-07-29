@@ -17,20 +17,22 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     env:
       TAG: v4.2.0-rc.10
       TARGET_SHA: 2b81d219a9736605f9f0703f80cc182478e3a5d5
     steps:
       - name: Check out release commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: ${{ env.TARGET_SHA }}
+          show-progress: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - name: Install dependencies
