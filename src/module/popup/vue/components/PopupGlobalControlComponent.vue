@@ -5,11 +5,12 @@
         translate(I18NPopupKeys.popup_global_title)
       }}</span>
       <v-switch
+        class="control-switch"
         :model-value="blockingActive"
         color="green"
         density="compact"
         hide-details
-        inset
+        size="small"
         :loading="loading"
         :disabled="disabled || loading"
         @update:model-value="changeGlobalState"
@@ -99,20 +100,30 @@ export default defineComponent({
 
 <style scoped lang="scss">
 .global-control {
-  padding: 4px 0 7px;
+  padding: 3px 0 6px;
 }
 
 .control-row {
   display: flex;
-  min-height: 36px;
+  min-height: 32px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
 
 .control-label {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.control-switch {
+  flex: 0 0 auto;
+  margin-inline-end: -2px;
+}
+
+.control-switch :deep(.v-selection-control) {
+  min-height: 32px;
 }
 
 .inline-error {

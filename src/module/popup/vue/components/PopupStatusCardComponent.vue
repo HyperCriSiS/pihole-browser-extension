@@ -5,11 +5,12 @@
         translate(I18NPopupKeys.popup_group_manual)
       }}</span>
       <v-switch
+        class="control-switch"
         :model-value="groupBlockingActive"
         color="green"
         density="compact"
         hide-details
-        inset
+        size="small"
         :loading="groupActionLoading && groupTimedActionLoading === null"
         :disabled="
           groupSwitchDisabled ||
@@ -215,7 +216,7 @@ export default defineComponent({
 
 .control-row {
   display: flex;
-  min-height: 35px;
+  min-height: 32px;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -224,11 +225,25 @@ export default defineComponent({
 .control-label,
 .timer-label {
   font-size: 12px;
+  line-height: 1.3;
+}
+
+.control-label {
   font-weight: 500;
+}
+
+.control-switch {
+  flex: 0 0 auto;
+  margin-inline-end: -2px;
+}
+
+.control-switch :deep(.v-selection-control) {
+  min-height: 32px;
 }
 
 .timer-label {
   margin: 3px 0 6px;
+  font-weight: 600;
 }
 
 .timer-row {
@@ -240,6 +255,8 @@ export default defineComponent({
 .timer-button {
   min-width: 0;
   padding-inline: 5px;
+  font-size: 12px;
+  letter-spacing: 0;
   text-transform: none;
 }
 
