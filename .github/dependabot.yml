@@ -9,6 +9,8 @@ updates:
       timezone: Europe/Berlin
     target-branch: master
     open-pull-requests-limit: 5
+    labels:
+      - dependencies
     groups:
       production-minor-and-patch:
         dependency-type: production
@@ -24,6 +26,19 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
+      day: monday
+      time: '06:15'
+      timezone: Europe/Berlin
     target-branch: master
     open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - github-actions
+    groups:
+      actions-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - minor
+          - patch

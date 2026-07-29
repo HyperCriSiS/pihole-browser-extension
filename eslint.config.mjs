@@ -7,6 +7,7 @@ import tseslint from 'typescript-eslint'
 export default tseslint.config(
   {
     ignores: [
+      'artifacts/**',
       'dist/**',
       '_locales/**',
       'node_modules/**',
@@ -47,7 +48,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['*.js', '*.mjs'],
+    files: ['*.js', '*.mjs', 'scripts/**/*.{js,mjs}'],
     languageOptions: {
       globals: {
         ...globals.node,
