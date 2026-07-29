@@ -19,7 +19,7 @@ export default tseslint.config(
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
-  ...pluginVue.configs['flat/vue2-recommended'],
+  ...pluginVue.configs['flat/recommended'],
   {
     files: ['src/**/*.{ts,vue}'],
     languageOptions: {

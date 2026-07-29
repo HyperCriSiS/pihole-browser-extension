@@ -9,6 +9,8 @@ const DOMAIN_ALARM_PREFIX = 'pihole.temporaryAllow.'
 const GROUP_ALARM_PREFIX = 'pihole.temporaryGroup.'
 const RESTORE_RETRY_DELAY = 60 * 1000
 const TEMPORARY_ALLOW_COMMENT = 'Temporary allow by PiHole Browser Extension'
+const TEMPORARY_GROUP_ALLOW_COMMENT =
+  'Temporary group allow by PiHole Browser Extension'
 
 type TemporaryDomainTarget = {
   pi_uri_base: string
@@ -24,6 +26,8 @@ type TemporaryGroupTarget = {
 
 type TemporaryDomainAction = {
   domain: string
+  ruleDomain?: string
+  kind?: 'exact' | 'regex'
   expiresAt: number
   targets: TemporaryDomainTarget[]
 }
@@ -153,7 +157,121 @@ export default class TemporaryActionService {
         storage.domains[key] = action
         // Persist after each successful Pi-hole mutation so a service-worker
         // shutdown cannot leave an untracked temporary allow entry behind.
+        await this.saveStorage(storage)
+      }
 
+      if (action.targets.length < 1) {
+        return false
+      }
+
+      storage.domains[key] = action
+      await this.saveStorage(storage)
+      await this.createAlarm(`${DOMAIN_ALARM_PREFIX}${key}`, action.expiresAt)
+      return true
+    } catch (reason) {
+      const failedTargets = await this.restoreDomainTargets(action)
+      storage = await this.getStorage()
+
+      if (failedTargets.length > 0) {
+        action.targets = failedTargets
+        action.expiresAt = Date.now() + RESTORE_RETRY_DELAY
+        storage.domains[key] = action
+        await this.saveStorage(storage)
+        await this.createAlarm(`${DOMAIN_ALARM_PREFIX}${key}`, action.expiresAt)
+      } else {
+        delete storage.domains[key]
+        await this.saveStorage(storage)
+      }
+
+      throw reason
+    }
+  }
+
+  public static async temporarilyAllowDomainForGroup(
+    domain: string,
+    groupName: string,
+    durationSeconds: number,
+  ): Promise<boolean> {
+    this.assertDuration(durationSeconds)
+    if (!domain) {
+      throw new Error("Domain can't be empty")
+    }
+    if (!groupName) {
+      throw new Error('Group name cannot be empty')
+    }
+
+    const key = this.createGroupDomainActionKey(domain, groupName)
+    let storage = await this.getStorage()
+    const existingAction = storage.domains[key]
+
+    if (existingAction && existingAction.expiresAt > Date.now()) {
+      existingAction.expiresAt = Date.now() + durationSeconds * 1000
+      await this.saveStorage(storage)
+      await this.createAlarm(
+        `${DOMAIN_ALARM_PREFIX}${key}`,
+        existingAction.expiresAt,
+      )
+      return true
+    }
+
+    if (existingAction) {
+      await this.restoreDomainAction(key)
+      storage = await this.getStorage()
+    }
+
+    const ruleDomain = this.createScopedDomainPattern(domain, groupName)
+    const action: TemporaryDomainAction = {
+      domain,
+      ruleDomain,
+      kind: 'regex',
+      expiresAt: Date.now() + durationSeconds * 1000,
+      targets: [],
+    }
+
+    try {
+      const piHoles = await PiHoleApiService.getConfiguredPiHoles()
+      for (const piHole of piHoles) {
+        const group = await PiHoleApiService.getGroup(piHole, groupName)
+        if (!group) {
+          throw new Error(`Group ${groupName} is missing on one Pi-hole`)
+        }
+
+        const current = await PiHoleApiService.getRegexDomain(
+          piHole,
+          ApiList.whitelist,
+          ruleDomain,
+        )
+        if (current && current.comment !== TEMPORARY_GROUP_ALLOW_COMMENT) {
+          throw new Error(
+            `The reserved temporary allow rule for ${groupName} already exists`,
+          )
+        }
+
+        const payload = {
+          comment: TEMPORARY_GROUP_ALLOW_COMMENT,
+          groups: [group.id],
+          enabled: true,
+        }
+        const expected = current
+          ? await PiHoleApiService.replaceRegexDomain(
+              piHole,
+              ApiList.whitelist,
+              ruleDomain,
+              payload,
+            )
+          : await PiHoleApiService.addRegexDomain(
+              piHole,
+              ApiList.whitelist,
+              ruleDomain,
+              payload,
+            )
+
+        action.targets.push({
+          pi_uri_base: piHole.pi_uri_base!,
+          original: null,
+          expected: this.cloneDomain(expected),
+        })
+        storage.domains[key] = action
         await this.saveStorage(storage)
       }
 
@@ -246,7 +364,6 @@ export default class TemporaryActionService {
         })
 
         storage.groups[key] = action
-
         await this.saveStorage(storage)
       }
 
@@ -275,6 +392,21 @@ export default class TemporaryActionService {
 
       throw reason
     }
+  }
+
+  public static async cancelTemporaryGroupAction(
+    groupName: string,
+  ): Promise<void> {
+    const key = encodeURIComponent(groupName)
+    const storage = await this.getStorage()
+
+    if (!storage.groups[key]) {
+      return
+    }
+
+    delete storage.groups[key]
+    await this.saveStorage(storage)
+    await this.clearAlarm(`${GROUP_ALARM_PREFIX}${key}`)
   }
 
   private static async restoreDomainAction(key: string): Promise<void> {
@@ -337,11 +469,19 @@ export default class TemporaryActionService {
       }
 
       try {
-        const current = await PiHoleApiService.getExactDomain(
-          piHole,
-          ApiList.whitelist,
-          action.domain,
-        )
+        const ruleDomain = action.ruleDomain ?? action.domain
+        const isRegex = action.kind === 'regex'
+        const current = isRegex
+          ? await PiHoleApiService.getRegexDomain(
+              piHole,
+              ApiList.whitelist,
+              ruleDomain,
+            )
+          : await PiHoleApiService.getExactDomain(
+              piHole,
+              ApiList.whitelist,
+              ruleDomain,
+            )
 
         // A user changed or removed the entry while the timer was running.
         // In that case their newer state wins and we do not overwrite it.
@@ -350,21 +490,37 @@ export default class TemporaryActionService {
         }
 
         if (target.original) {
-          await PiHoleApiService.replaceExactDomain(
+          const payload = {
+            comment: target.original.comment,
+            groups: target.original.groups,
+            enabled: target.original.enabled,
+          }
+          if (isRegex) {
+            await PiHoleApiService.replaceRegexDomain(
+              piHole,
+              ApiList.whitelist,
+              ruleDomain,
+              payload,
+            )
+          } else {
+            await PiHoleApiService.replaceExactDomain(
+              piHole,
+              ApiList.whitelist,
+              ruleDomain,
+              payload,
+            )
+          }
+        } else if (isRegex) {
+          await PiHoleApiService.deleteRegexDomain(
             piHole,
             ApiList.whitelist,
-            action.domain,
-            {
-              comment: target.original.comment,
-              groups: target.original.groups,
-              enabled: target.original.enabled,
-            },
+            ruleDomain,
           )
         } else {
           await PiHoleApiService.deleteExactDomain(
             piHole,
             ApiList.whitelist,
-            action.domain,
+            ruleDomain,
           )
         }
       } catch (reason) {
@@ -413,6 +569,27 @@ export default class TemporaryActionService {
     }
 
     return failedTargets
+  }
+
+  private static createGroupDomainActionKey(
+    domain: string,
+    groupName: string,
+  ): string {
+    return encodeURIComponent(`${domain}::${groupName}`)
+  }
+
+  private static createScopedDomainPattern(
+    domain: string,
+    groupName: string,
+  ): string {
+    const escapedDomain = domain.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      (match) => `\\${match}`,
+    )
+    const suffix = Array.from(`${domain}:${groupName}`)
+      .map((character) => character.codePointAt(0)!.toString(16))
+      .join('_')
+    return `^${escapedDomain}$|^__pihole_browser_extension_domain_${suffix}__$`
   }
 
   private static findPiHole(

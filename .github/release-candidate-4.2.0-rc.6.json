@@ -1,0 +1,11 @@
+{
+  "tag": "v4.2.0-rc.6",
+  "release_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/tag/v4.2.0-rc.6",
+  "xpi_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.6/pihole-browser-extension-4.2.0-rc.6-unsigned.xpi",
+  "xpi_sha256": "f3b299c65616777c0f23d041c27d2ef34db77c545af6e4abadb8b722a5fe6429",
+  "chrome_url": "https://github.com/HyperCriSiS/pihole-browser-extension/releases/download/v4.2.0-rc.6/pihole-browser-extension-4.2.0-rc.6-chrome.zip",
+  "chrome_sha256": "ab9bc3fb225f39d7f5997874d7df0d98bff195ee8db6eca0b19ca7632c829b49",
+  "source_commit": "070f56a8bf3dd7783d795c0790c35eca408f2d5f",
+  "release_commit": "775b069b846f0259b74e38914e2c2502ede57e56",
+  "scope": "Permanent domain rules apply to all client groups; timed domain whitelist rules apply only to the selected client group."
+}

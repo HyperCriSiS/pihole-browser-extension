@@ -1,22 +1,77 @@
 <template>
   <div>
-    <v-text-field
-      v-model.number="disableTime"
-      :label="translate(I18NOptionKeys.options_default_time_label)"
-      type="number"
-      min="10"
-      outlined
-      :rules="[(v) => Number(v) >= 10 || '≥ 10']"
-      :suffix="translate(I18NOptionKeys.options_default_time_unit)"
-    ></v-text-field>
+    <div class="text-subtitle-1 mb-2">
+      {{ translate(I18NOptionKeys.options_client_group_title) }}
+    </div>
+    <v-select
+      v-model="selectedGroup"
+      :items="groupItems"
+      :label="translate(I18NOptionKeys.options_default_client_group)"
+      :loading="groupsLoading"
+      :disabled="groupsLoading || groupItems.length === 0"
+      :error-messages="
+        groupLoadError
+          ? [translate(I18NOptionKeys.options_client_group_load_error)]
+          : []
+      "
+      variant="outlined"
+      density="compact"
+    ></v-select>
+    <v-checkbox
+      v-model="hideGroupSelectorInPopup"
+      class="mt-n3"
+      :label="translate(I18NOptionKeys.options_hide_group_selector_in_popup)"
+      hide-details
+    ></v-checkbox>
+    <v-checkbox
+      v-model="hideGroupListActionsInPopup"
+      :label="
+        translate(I18NOptionKeys.options_hide_group_list_actions_in_popup)
+      "
+      hide-details
+    ></v-checkbox>
+    <v-checkbox
+      v-model="badgeUsesSelectedGroup"
+      class="mb-2"
+      :label="translate(I18NOptionKeys.options_badge_uses_selected_group)"
+      hide-details
+    ></v-checkbox>
 
-    <div class="subtitle-1 mb-2">
+    <v-divider class="mb-4"></v-divider>
+
+    <div class="text-subtitle-1 mb-2">
+      {{ translate(I18NOptionKeys.options_group_pause_times_title) }}
+    </div>
+    <v-row>
+      <v-col
+        v-for="(_, index) in groupPauseTimes"
+        :key="`group-${index}`"
+        cols="12"
+        sm="4"
+      >
+        <v-text-field
+          v-model.number="groupPauseTimes[index]"
+          :label="`${translate(
+            I18NOptionKeys.options_group_pause_time_label,
+          )} ${index + 1}`"
+          type="number"
+          min="10"
+          variant="outlined"
+          :rules="[(v) => Number(v) >= 10 || '≥ 10']"
+          :suffix="translate(I18NOptionKeys.options_default_time_unit)"
+          :hint="translate(I18NOptionKeys.options_group_pause_time_hint)"
+          persistent-hint
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
+    <div class="text-subtitle-1 mt-4 mb-2">
       {{ translate(I18NOptionKeys.options_temporary_allow_times_title) }}
     </div>
-    <v-row dense>
+    <v-row>
       <v-col
         v-for="(_, index) in temporaryAllowTimes"
-        :key="index"
+        :key="`domain-${index}`"
         cols="12"
         sm="4"
       >
@@ -27,7 +82,7 @@
           )} ${index + 1}`"
           type="number"
           min="10"
-          outlined
+          variant="outlined"
           :rules="[(v) => Number(v) >= 10 || '≥ 10']"
           :suffix="translate(I18NOptionKeys.options_default_time_unit)"
           :hint="translate(I18NOptionKeys.options_temporary_allow_time_hint)"
@@ -39,65 +94,144 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref, watch } from 'vue'
+import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import {
-  PiHoleSettingsDefaults,
+  GroupPauseTimeDefaults,
   StorageService,
   TemporaryAllowTimeDefaults,
 } from '../../../../service/StorageService'
 import useTranslation from '../../../../hooks/translation'
+import PiHoleApiService from '../../../../service/PiHoleApiService'
+import type { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
+
+const areValidPresetTimes = (times: number[]): boolean => {
+  const normalizedTimes = times.map(Number)
+  return (
+    normalizedTimes.length === 3 &&
+    normalizedTimes.every((time) => Number.isInteger(time) && time >= 10)
+  )
+}
 
 export default defineComponent({
-  name: 'OptionDisableTimeComponent',
+  name: 'OptionActionTimesComponent',
   setup: () => {
     const { translate, I18NOptionKeys } = useTranslation()
-    const disableTime = ref(PiHoleSettingsDefaults.default_disable_time)
+    const groups = ref<PiHoleGroup[]>([])
+    const groupsLoading = ref(false)
+    const groupLoadError = ref(false)
+    const selectedGroup = ref<string | null>(null)
+    const hideGroupSelectorInPopup = ref(false)
+    const hideGroupListActionsInPopup = ref(false)
+    const badgeUsesSelectedGroup = ref(false)
+    const groupPauseTimes = ref<number[]>([...GroupPauseTimeDefaults])
     const temporaryAllowTimes = ref<number[]>([...TemporaryAllowTimeDefaults])
 
-    const updateTimes = async () => {
-      const [storedDisableTime, storedTemporaryAllowTimes] = await Promise.all([
-        StorageService.getDefaultDisableTime(),
+    const groupItems = computed(() =>
+      groups.value.map((group) => ({ title: group.name, value: group.name })),
+    )
+
+    const updateSettings = async () => {
+      groupsLoading.value = true
+      groupLoadError.value = false
+
+      const [
+        storedGroupPauseTimes,
+        storedTemporaryAllowTimes,
+        storedGroup,
+        hideSelector,
+        hideGroupActions,
+        useSelectedGroupForBadge,
+      ] = await Promise.all([
+        StorageService.getGroupPauseTimes(),
         StorageService.getTemporaryAllowTimes(),
+        StorageService.getPauseTarget(),
+        StorageService.getHideGroupSelectorInPopup(),
+        StorageService.getHideGroupListActionsInPopup(),
+        StorageService.getBadgeUsesSelectedGroup(),
       ])
 
-      if (typeof storedDisableTime !== 'undefined') {
-        disableTime.value = storedDisableTime
+      if (storedGroupPauseTimes?.length === 3) {
+        groupPauseTimes.value = [...storedGroupPauseTimes]
       }
       if (storedTemporaryAllowTimes?.length === 3) {
         temporaryAllowTimes.value = [...storedTemporaryAllowTimes]
       }
+      hideGroupSelectorInPopup.value = hideSelector
+      hideGroupListActionsInPopup.value = hideGroupActions
+      badgeUsesSelectedGroup.value = useSelectedGroupForBadge
+
+      try {
+        groups.value = await PiHoleApiService.getCommonGroups()
+        const validStoredGroup = groups.value.some(
+          (group) => group.name === storedGroup,
+        )
+        selectedGroup.value = validStoredGroup
+          ? storedGroup!
+          : groups.value[0]?.name || null
+
+        if (selectedGroup.value && !validStoredGroup) {
+          StorageService.savePauseTarget(selectedGroup.value)
+        }
+      } catch (reason) {
+        console.warn(reason)
+        groupLoadError.value = true
+        selectedGroup.value = storedGroup || null
+      } finally {
+        groupsLoading.value = false
+      }
     }
 
-    watch(disableTime, () => {
-      const normalizedDisableTime = Number(disableTime.value)
-      if (
-        Number.isInteger(normalizedDisableTime) &&
-        normalizedDisableTime >= 10
-      ) {
-        StorageService.saveDefaultDisableTime(normalizedDisableTime)
+    watch(selectedGroup, (groupName) => {
+      if (groupName) {
+        StorageService.savePauseTarget(groupName)
       }
     })
 
+    watch(hideGroupSelectorInPopup, (state) => {
+      StorageService.saveHideGroupSelectorInPopup(state)
+    })
+
+    watch(hideGroupListActionsInPopup, (state) => {
+      StorageService.saveHideGroupListActionsInPopup(state)
+    })
+
+    watch(badgeUsesSelectedGroup, (state) => {
+      StorageService.saveBadgeUsesSelectedGroup(state)
+    })
+
     watch(
-      temporaryAllowTimes,
+      groupPauseTimes,
       (times) => {
-        const normalizedTimes = times.map(Number)
-        if (
-          normalizedTimes.length === 3 &&
-          normalizedTimes.every((time) => Number.isInteger(time) && time >= 10)
-        ) {
-          StorageService.saveTemporaryAllowTimes(normalizedTimes)
+        if (areValidPresetTimes(times)) {
+          StorageService.saveGroupPauseTimes(times.map(Number))
         }
       },
       { deep: true },
     )
 
-    onMounted(() => updateTimes())
+    watch(
+      temporaryAllowTimes,
+      (times) => {
+        if (areValidPresetTimes(times)) {
+          StorageService.saveTemporaryAllowTimes(times.map(Number))
+        }
+      },
+      { deep: true },
+    )
+
+    onMounted(() => updateSettings())
 
     return {
       translate,
       I18NOptionKeys,
-      disableTime,
+      groupItems,
+      groupsLoading,
+      groupLoadError,
+      selectedGroup,
+      hideGroupSelectorInPopup,
+      hideGroupListActionsInPopup,
+      badgeUsesSelectedGroup,
+      groupPauseTimes,
       temporaryAllowTimes,
     }
   },

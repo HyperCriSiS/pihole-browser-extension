@@ -1,0 +1,2 @@
+483c04a1c2028e55fba19ace2343c0a7a1ceb4c597edb094d002921ba288a8b1  pihole-browser-extension-4.2.0-rc.9-unsigned.xpi
+5debe70cb672feb9555fc596fdcd079eeb0891fb23d6b8b693629ca667ef4edc  pihole-browser-extension-4.2.0-rc.9-chrome.zip

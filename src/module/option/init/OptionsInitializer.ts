@@ -1,6 +1,6 @@
-import Vue from 'vue'
+import { createApp, h, nextTick } from 'vue'
 import vueDebounce from 'vue-debounce'
-import VueRouter from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import { Initializer } from '../../general/Initializer'
 import vuetify from '../../../plugins/vuetify'
 import { I18NOptionKeys, I18NService } from '../../../service/i18NService'
@@ -8,7 +8,8 @@ import OptionLayout from '../vue/layout/OptionLayout.vue'
 
 export default class OptionsInitializer implements Initializer {
   public init(): void {
-    const router = new VueRouter({
+    const router = createRouter({
+      history: createWebHashHistory(),
       routes: [
         {
           path: '/',
@@ -28,23 +29,20 @@ export default class OptionsInitializer implements Initializer {
     })
 
     router.afterEach((to) => {
-      Vue.nextTick(() => {
+      nextTick(() => {
         document.title = I18NService.translate(I18NOptionKeys.options_title, [
-          to.meta!.title || '',
+          String(to.meta.title || ''),
         ])
       })
     })
 
-    const vueComponent = {
-      router,
-      vuetify,
-      el: '#main',
-      render: (h: any) => h(OptionLayout),
-    }
+    const app = createApp({
+      render: () => h(OptionLayout),
+    })
 
-    Vue.use(VueRouter)
-    Vue.use(vueDebounce)
-
-    new Vue(vueComponent)
+    app.use(router)
+    app.use(vuetify)
+    app.use(vueDebounce)
+    app.mount('#main')
   }
 }

@@ -1,97 +1,204 @@
 <template>
   <v-app id="popup">
-    <v-container fluid>
-      <PopupStatusCardComponent
-        v-if="isActiveByBadgeLoaded"
-        v-model="isActiveByRealStatus"
-        :is-active-by-badge="isActiveByBadge"
-        class="mb-5"
-      />
-      <PopupListCardComponent
-        v-if="isListFeatureActive"
-        :current-url="currentUrl"
-        class="mb-5"
-      />
-    </v-container>
+    <main class="popup-shell">
+      <header class="popup-header">
+        <span>{{ translate(I18NPopupKeys.popup_status_card_title) }}</span>
+        <v-btn
+          class="settings-button"
+          :title="translate(I18NOptionKeys.options_settings)"
+          icon
+          size="x-small"
+          variant="text"
+          @click="openOptions"
+        >
+          <v-icon size="21">{{ mdiCog }}</v-icon>
+        </v-btn>
+      </header>
+
+      <div class="popup-content">
+        <PopupGlobalControlComponent />
+        <v-divider></v-divider>
+
+        <PopupListCardComponent
+          v-if="currentUrl"
+          :current-url="currentUrl"
+          :selected-group="selectedGroup"
+          :groups="groups"
+          :groups-loading="groupsLoading"
+          :hide-group-selector="hideGroupSelector"
+          :hide-global-list-actions="hideGlobalListActions"
+          :hide-group-list-actions="hideGroupListActions"
+          :status-refresh-key="groupStatusRefreshKey"
+          @selected-group-change="setSelectedGroup"
+        />
+
+        <PopupStatusCardComponent
+          :selected-group="selectedGroup"
+          :groups-loading="groupsLoading"
+          :group-load-error="groupLoadError"
+          @group-state-change="refreshGroupStatus"
+        />
+      </div>
+    </main>
   </v-app>
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from 'vue'
+import { mdiCog } from '@mdi/js'
+import { defineComponent, onMounted, ref } from 'vue'
 import PopupStatusCardComponent from '../components/PopupStatusCardComponent.vue'
 import PopupListCardComponent from '../components/PopupListCardComponent.vue'
-import {
-  BadgeService,
-  ExtensionBadgeTextEnum,
-} from '../../../../service/BadgeService'
+import PopupGlobalControlComponent from '../components/PopupGlobalControlComponent.vue'
 import { StorageService } from '../../../../service/StorageService'
 import TabService from '../../../../service/TabService'
+import useTranslation from '../../../../hooks/translation'
+import DomainStatusService from '../../../../service/DomainStatusService'
+import PiHoleApiService from '../../../../service/PiHoleApiService'
+import type { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
 
 export default defineComponent({
   name: 'PopupComponent',
   components: {
+    PopupGlobalControlComponent,
     PopupListCardComponent,
     PopupStatusCardComponent,
   },
   setup: () => {
-    const isActiveByBadge = ref(false)
-    const isActiveByBadgeLoaded = ref(false)
-    const isActiveByRealStatus = ref(false)
+    const { translate, I18NPopupKeys, I18NOptionKeys } = useTranslation()
     const currentUrl = ref('')
-    const listFeatureDisabled = ref(false)
-
-    const updateIsActiveByBadge = async () => {
-      const badgeText = await BadgeService.getBadgeText()
-
-      isActiveByBadge.value = badgeText === ExtensionBadgeTextEnum.enabled
-      isActiveByBadgeLoaded.value = true
-    }
+    const selectedGroup = ref<string | null>(null)
+    const groups = ref<PiHoleGroup[]>([])
+    const groupsLoading = ref(false)
+    const groupLoadError = ref(false)
+    const hideGroupSelector = ref(false)
+    const hideGlobalListActions = ref(false)
+    const hideGroupListActions = ref(false)
+    const groupStatusRefreshKey = ref(0)
 
     const updateCurrentUrl = async () => {
-      const currentUrlLoaded = await TabService.getCurrentTabUrlCleaned()
-      if (currentUrlLoaded.length > 0) {
-        currentUrl.value = currentUrlLoaded
+      currentUrl.value = await TabService.getCurrentTabUrlCleaned()
+      if (!currentUrl.value) {
+        await DomainStatusService.refreshCurrentTabBadge()
       }
     }
 
-    const updateListFeatureDisabled = async () => {
-      const listFeatureDisabledByStorage =
-        await StorageService.getDisableListFeature()
+    const loadPopupSettings = async () => {
+      const [hideSelector, hideGlobalActions, hideGroupActions] =
+        await Promise.all([
+          StorageService.getHideGroupSelectorInPopup(),
+          StorageService.getDisableListFeature(),
+          StorageService.getHideGroupListActionsInPopup(),
+        ])
 
-      if (listFeatureDisabledByStorage !== undefined) {
-        listFeatureDisabled.value = listFeatureDisabledByStorage
+      hideGroupSelector.value = hideSelector
+      hideGlobalListActions.value = hideGlobalActions ?? false
+      hideGroupListActions.value = hideGroupActions
+    }
+
+    const loadGroupSettings = async () => {
+      groupsLoading.value = true
+      groupLoadError.value = false
+      const storedGroup = await StorageService.getPauseTarget()
+
+      try {
+        groups.value = await PiHoleApiService.getCommonGroups()
+        const storedGroupExists = groups.value.some(
+          (group) => group.name === storedGroup,
+        )
+        selectedGroup.value = storedGroupExists
+          ? storedGroup!
+          : groups.value[0]?.name || null
+
+        if (selectedGroup.value && !storedGroupExists) {
+          StorageService.savePauseTarget(selectedGroup.value)
+        }
+      } catch (reason) {
+        console.warn(reason)
+        groupLoadError.value = true
+        selectedGroup.value = storedGroup || null
+      } finally {
+        groupsLoading.value = false
       }
     }
 
-    /**
-     * Determines if the list feature should be shown or not
-     */
-    const isListFeatureActive = computed(
-      () =>
-        !listFeatureDisabled.value &&
-        isActiveByRealStatus.value &&
-        currentUrl.value.length > 0,
-    )
+    const setSelectedGroup = async (groupName: string | null) => {
+      selectedGroup.value = groupName
+      if (!groupName) {
+        return
+      }
 
-    onMounted(() => {
-      updateIsActiveByBadge()
-      updateCurrentUrl()
-      updateListFeatureDisabled()
+      await StorageService.savePauseTarget(groupName)
+      await DomainStatusService.refreshCurrentTabBadge()
+    }
+
+    const refreshGroupStatus = () => {
+      groupStatusRefreshKey.value += 1
+    }
+
+    const openOptions = () => chrome.runtime.openOptionsPage()
+
+    onMounted(async () => {
+      await Promise.all([
+        updateCurrentUrl(),
+        loadPopupSettings(),
+        loadGroupSettings(),
+      ])
     })
 
     return {
+      mdiCog,
       currentUrl,
-      isActiveByBadge,
-      isActiveByBadgeLoaded,
-      isActiveByRealStatus,
-      isListFeatureActive,
+      selectedGroup,
+      groups,
+      groupsLoading,
+      groupLoadError,
+      hideGroupSelector,
+      hideGlobalListActions,
+      hideGroupListActions,
+      groupStatusRefreshKey,
+      refreshGroupStatus,
+      setSelectedGroup,
+      openOptions,
+      translate,
+      I18NPopupKeys,
+      I18NOptionKeys,
     }
   },
 })
 </script>
 
 <style lang="scss">
+html,
+body {
+  min-width: 320px;
+  background: rgb(var(--v-theme-surface));
+}
+
 #popup {
-  width: 340px;
+  width: 320px;
+  min-height: 0;
+  background: rgb(var(--v-theme-surface));
+}
+
+.popup-shell {
+  width: 100%;
+}
+
+.popup-header {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px 5px 12px;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.settings-button {
+  flex: 0 0 auto;
+}
+
+.popup-content {
+  padding: 0 10px 8px;
 }
 </style>

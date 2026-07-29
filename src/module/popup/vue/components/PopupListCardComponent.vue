@@ -1,79 +1,153 @@
 <template>
-  <v-card>
-    <v-card-title>
+  <section class="popup-section domain-control">
+    <div class="section-title">
       {{ translate(I18NPopupKeys.popup_second_card_current_url) }}
-    </v-card-title>
-    <v-card-text class="text-center">
-      <v-alert color="primary" outlined>
-        {{ currentUrl }}
-      </v-alert>
-      <v-select
-        v-model="selectedTemporaryAllowTime"
-        :items="temporaryAllowTimeItems"
-        :label="translate(I18NPopupKeys.popup_temporary_allow_duration)"
-        outlined
-        dense
-        hide-details
-      ></v-select>
-    </v-card-text>
-    <v-card-actions class="justify-center">
+    </div>
+
+    <div class="domain-display" :title="currentUrl">{{ currentUrl }}</div>
+
+    <div v-if="!hideGlobalListActions" class="permanent-actions">
       <v-btn
         id="list_action_white"
-        :disabled="buttonsDisabled"
-        :title="translate(I18NPopupKeys.popup_second_card_whitelist)"
-        size="sm"
+        class="domain-action"
         color="green"
-        :loading="whitelistingActive"
-        @click="whitelistUrl"
-      >
-        <v-icon color="white">{{ mdiCheckCircleOutline }}</v-icon>
-      </v-btn>
-      <v-btn
-        id="list_action_temporary_white"
+        size="small"
+        variant="flat"
         :disabled="buttonsDisabled"
-        :title="translate(I18NPopupKeys.popup_temporary_whitelist)"
-        size="sm"
-        color="orange"
-        :loading="temporaryWhitelistingActive"
-        @click="temporarilyWhitelistUrl"
+        :loading="globalActionLoading === ApiList.whitelist"
+        @click="listDomain(ApiList.whitelist)"
       >
-        <v-icon color="white">{{ mdiTimerOutline }}</v-icon>
+        <v-icon size="17" start>{{ mdiCheck }}</v-icon>
+        {{ translate(I18NPopupKeys.popup_second_card_whitelist) }}
       </v-btn>
       <v-btn
         id="list_action_black"
-        :disabled="buttonsDisabled"
-        :title="translate(I18NPopupKeys.popup_second_card_blacklist)"
-        size="sm"
+        class="domain-action"
         color="red"
-        :loading="blacklistingActive"
-        @click="blackListUrl"
+        size="small"
+        variant="flat"
+        :disabled="buttonsDisabled"
+        :loading="globalActionLoading === ApiList.blacklist"
+        @click="listDomain(ApiList.blacklist)"
       >
-        <v-icon color="white">{{ mdiAlphaXCircleOutline }}</v-icon>
+        <v-icon size="17" start>{{ mdiClose }}</v-icon>
+        {{ translate(I18NPopupKeys.popup_second_card_blacklist) }}
       </v-btn>
-    </v-card-actions>
-  </v-card>
+    </div>
+
+    <v-divider class="section-divider"></v-divider>
+
+    <div class="section-heading-row">
+      <div class="section-title">
+        {{ translate(I18NPopupKeys.popup_group_title) }}
+      </div>
+      <v-chip
+        class="domain-status"
+        :color="domainStatusColor"
+        size="x-small"
+        variant="flat"
+      >
+        <v-progress-circular
+          v-if="statusLoading"
+          class="mr-1"
+          indeterminate
+          size="11"
+          width="2"
+        ></v-progress-circular>
+        {{ domainStatusText }}
+      </v-chip>
+    </div>
+
+    <v-select
+      v-if="!hideGroupSelector"
+      v-model="selectedGroupModel"
+      class="group-select"
+      :items="groupItems"
+      :label="translate(I18NPopupKeys.popup_group_select)"
+      :loading="groupsLoading"
+      :disabled="groupsLoading || groupItems.length === 0 || buttonsDisabled"
+      variant="outlined"
+      density="compact"
+      hide-details
+    ></v-select>
+
+    <div v-if="!hideGroupListActions" class="permanent-actions group-actions">
+      <v-btn
+        id="group_list_action_white"
+        class="domain-action"
+        color="green"
+        size="small"
+        variant="flat"
+        :disabled="buttonsDisabled || !selectedGroup"
+        :loading="groupActionLoading === ApiList.whitelist"
+        @click="listDomainForGroup(ApiList.whitelist)"
+      >
+        <v-icon size="17" start>{{ mdiCheck }}</v-icon>
+        {{ translate(I18NPopupKeys.popup_second_card_whitelist) }}
+      </v-btn>
+      <v-btn
+        id="group_list_action_black"
+        class="domain-action"
+        color="red"
+        size="small"
+        variant="flat"
+        :disabled="buttonsDisabled || !selectedGroup"
+        :loading="groupActionLoading === ApiList.blacklist"
+        @click="listDomainForGroup(ApiList.blacklist)"
+      >
+        <v-icon size="17" start>{{ mdiClose }}</v-icon>
+        {{ translate(I18NPopupKeys.popup_second_card_blacklist) }}
+      </v-btn>
+    </div>
+
+    <div class="temporary-heading">
+      {{ translate(I18NPopupKeys.popup_temporary_whitelist) }}
+    </div>
+    <div class="timer-row">
+      <v-btn
+        v-for="time in temporaryAllowTimes"
+        :key="time"
+        class="timer-button"
+        color="orange-darken-2"
+        size="small"
+        variant="flat"
+        :disabled="buttonsDisabled || !selectedGroup"
+        :loading="temporaryWhitelistingActive === time"
+        @click="temporarilyWhitelistUrl(time)"
+      >
+        <v-icon size="16" start>{{ mdiTimerOutline }}</v-icon>
+        {{ time }} s
+      </v-btn>
+    </div>
+
+    <div v-if="actionError" class="inline-error">
+      {{ translate(I18NPopupKeys.popup_domain_action_error) }}
+    </div>
+  </section>
 </template>
 
 <script lang="ts">
+import { mdiCheck, mdiClose, mdiTimerOutline } from '@mdi/js'
 import {
-  mdiAlphaXCircleOutline,
-  mdiCheckCircleOutline,
-  mdiTimerOutline,
-} from '@mdi/js'
-import { computed, defineComponent, onMounted, ref } from 'vue'
+  computed,
+  defineComponent,
+  onMounted,
+  ref,
+  watch,
+  type PropType,
+} from 'vue'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
 import ApiList from '../../../../api/enum/ApiList'
 import useTranslation from '../../../../hooks/translation'
-import TemporaryActionService from '../../../../service/TemporaryActionService'
 import {
   StorageService,
   TemporaryAllowTimeDefaults,
 } from '../../../../service/StorageService'
 import TabService from '../../../../service/TabService'
-import {
-  BadgeService,
-  ExtensionBadgeTextEnum,
-} from '../../../../service/BadgeService'
+import DomainStatusService from '../../../../service/DomainStatusService'
+import type { DomainBlockingState } from '../../../../service/DomainStatusEvaluator'
+import type { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
+import GroupDomainService from '../../../../service/GroupDomainService'
 
 export default defineComponent({
   name: 'PopupListCardComponent',
@@ -82,29 +156,98 @@ export default defineComponent({
       type: String,
       required: true,
     },
+    selectedGroup: {
+      type: String,
+      default: null,
+    },
+    groups: {
+      type: Array as PropType<PiHoleGroup[]>,
+      default: () => [],
+    },
+    groupsLoading: {
+      type: Boolean,
+      default: false,
+    },
+    hideGroupSelector: {
+      type: Boolean,
+      default: false,
+    },
+    hideGlobalListActions: {
+      type: Boolean,
+      default: false,
+    },
+    hideGroupListActions: {
+      type: Boolean,
+      default: false,
+    },
+    statusRefreshKey: {
+      type: Number,
+      default: 0,
+    },
   },
-  setup: ({ currentUrl }) => {
+  emits: ['selected-group-change'],
+  setup: (props, { emit }) => {
+    const { translate, I18NPopupKeys } = useTranslation()
     const buttonsDisabled = ref(false)
-    const whitelistingActive = ref(false)
-    const temporaryWhitelistingActive = ref(false)
-    const blacklistingActive = ref(false)
+    const globalActionLoading = ref<ApiList | null>(null)
+    const groupActionLoading = ref<ApiList | null>(null)
+    const temporaryWhitelistingActive = ref<number | null>(null)
     const temporaryAllowTimes = ref<number[]>([...TemporaryAllowTimeDefaults])
-    const selectedTemporaryAllowTime = ref(TemporaryAllowTimeDefaults[0])
+    const domainStatus = ref<DomainBlockingState>('unknown')
+    const statusLoading = ref(false)
+    const actionError = ref(false)
 
-    const temporaryAllowTimeItems = computed(() =>
-      temporaryAllowTimes.value.map((time) => ({
-        text: `${time} s`,
-        value: time,
-      })),
+    const groupItems = computed(() =>
+      props.groups.map((group) => ({ title: group.name, value: group.name })),
     )
 
-    const setActionFinished = () => {
-      setTimeout(() => {
-        whitelistingActive.value = false
-        temporaryWhitelistingActive.value = false
-        blacklistingActive.value = false
-        buttonsDisabled.value = false
-      }, 500)
+    const selectedGroupModel = computed({
+      get: () => props.selectedGroup,
+      set: (groupName: string | null) =>
+        emit('selected-group-change', groupName),
+    })
+
+    const domainStatusText = computed(() => {
+      if (statusLoading.value) {
+        return translate(I18NPopupKeys.popup_domain_status_checking)
+      }
+      if (domainStatus.value === 'blocked') {
+        return translate(I18NPopupKeys.popup_domain_status_blocked)
+      }
+      if (domainStatus.value === 'allowed') {
+        return translate(I18NPopupKeys.popup_domain_status_allowed)
+      }
+      return translate(I18NPopupKeys.popup_domain_status_unknown)
+    })
+
+    const domainStatusColor = computed(() => {
+      if (statusLoading.value || domainStatus.value === 'unknown') {
+        return 'grey-darken-1'
+      }
+      return domainStatus.value === 'blocked' ? 'red' : 'green'
+    })
+
+    const refreshDomainStatus = async () => {
+      statusLoading.value = true
+      try {
+        domainStatus.value = await DomainStatusService.getDomainStatus(
+          props.currentUrl,
+          props.selectedGroup,
+        )
+        await DomainStatusService.refreshCurrentTabBadge()
+      } catch (reason) {
+        console.warn(reason)
+        domainStatus.value = 'unknown'
+      } finally {
+        statusLoading.value = false
+      }
+    }
+
+    const finishAction = () => {
+      globalActionLoading.value = null
+      groupActionLoading.value = null
+      temporaryWhitelistingActive.value = null
+      buttonsDisabled.value = false
     }
 
     const reloadAfterWhitelist = async () => {
@@ -114,90 +257,210 @@ export default defineComponent({
     }
 
     const listDomain = async (mode: ApiList) => {
-      if (!currentUrl) {
+      if (!props.currentUrl) {
         return
       }
 
       buttonsDisabled.value = true
-      if (mode === ApiList.whitelist) {
-        whitelistingActive.value = true
-      } else {
-        blacklistingActive.value = true
-      }
+      actionError.value = false
+      globalActionLoading.value = mode
 
       try {
-        // Permanent list changes keep the existing behavior: remove the
-        // opposite exact entry before adding the requested one.
+        await GroupDomainService.cancelTemporaryAllowsForDomain(
+          props.currentUrl,
+        )
         await PiHoleApiService.subDomainFromList(
           mode === ApiList.whitelist ? ApiList.blacklist : ApiList.whitelist,
-          currentUrl,
+          props.currentUrl,
         )
-        await PiHoleApiService.addDomainToList(mode, currentUrl)
-        BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
+        await PiHoleApiService.addDomainToList(mode, props.currentUrl)
+        await refreshDomainStatus()
 
         if (mode === ApiList.whitelist) {
           await reloadAfterWhitelist()
         }
       } catch (reason) {
         console.warn(reason)
-        BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
+        actionError.value = true
       } finally {
-        setActionFinished()
+        finishAction()
       }
     }
 
-    const temporarilyWhitelistUrl = async () => {
-      if (!currentUrl || selectedTemporaryAllowTime.value < 1) {
+    const listDomainForGroup = async (mode: ApiList) => {
+      if (!props.currentUrl || !props.selectedGroup) {
         return
       }
 
       buttonsDisabled.value = true
-      temporaryWhitelistingActive.value = true
+      actionError.value = false
+      groupActionLoading.value = mode
 
       try {
-        // Do not remove an existing deny entry. Exact allow entries have
-        // higher priority in Pi-hole and removing only the temporary allow
-        // entry later restores the previous blocking behavior automatically.
-        await TemporaryActionService.temporarilyAllowDomain(
-          currentUrl,
-          selectedTemporaryAllowTime.value,
+        await GroupDomainService.setDomainListForGroup(
+          mode,
+          props.currentUrl,
+          props.selectedGroup,
         )
-        BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
-        await reloadAfterWhitelist()
+        await refreshDomainStatus()
+
+        if (mode === ApiList.whitelist) {
+          await reloadAfterWhitelist()
+        }
       } catch (reason) {
         console.warn(reason)
-        BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
+        actionError.value = true
       } finally {
-        setActionFinished()
+        finishAction()
       }
     }
 
-    const whitelistUrl = () => listDomain(ApiList.whitelist)
-    const blackListUrl = () => listDomain(ApiList.blacklist)
+    const temporarilyWhitelistUrl = async (durationSeconds: number) => {
+      if (!props.currentUrl || !props.selectedGroup || durationSeconds < 1) {
+        return
+      }
+
+      buttonsDisabled.value = true
+      actionError.value = false
+      temporaryWhitelistingActive.value = durationSeconds
+
+      try {
+        await GroupDomainService.temporarilyAllowDomainForGroup(
+          props.currentUrl,
+          props.selectedGroup,
+          durationSeconds,
+        )
+        await refreshDomainStatus()
+        await reloadAfterWhitelist()
+      } catch (reason) {
+        console.warn(reason)
+        actionError.value = true
+      } finally {
+        finishAction()
+      }
+    }
+
+    watch(
+      () => [props.currentUrl, props.selectedGroup, props.statusRefreshKey],
+      refreshDomainStatus,
+    )
 
     onMounted(async () => {
       const storedTimes = await StorageService.getTemporaryAllowTimes()
       if (storedTimes?.length === 3) {
         temporaryAllowTimes.value = storedTimes
-        selectedTemporaryAllowTime.value = storedTimes[0]
       }
+      await refreshDomainStatus()
     })
 
     return {
-      whitelistingActive,
+      ApiList,
+      globalActionLoading,
+      groupActionLoading,
       temporaryWhitelistingActive,
-      blacklistingActive,
       buttonsDisabled,
-      temporaryAllowTimeItems,
-      selectedTemporaryAllowTime,
-      mdiCheckCircleOutline,
+      temporaryAllowTimes,
+      groupItems,
+      selectedGroupModel,
+      domainStatusText,
+      domainStatusColor,
+      statusLoading,
+      actionError,
+      mdiCheck,
+      mdiClose,
       mdiTimerOutline,
-      mdiAlphaXCircleOutline,
-      whitelistUrl,
+      listDomain,
+      listDomainForGroup,
       temporarilyWhitelistUrl,
-      blackListUrl,
-      ...useTranslation(),
+      translate,
+      I18NPopupKeys,
     }
   },
 })
 </script>
+
+<style scoped lang="scss">
+.popup-section {
+  padding: 10px 0 4px;
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+
+.section-title {
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.section-heading-row .section-title {
+  margin-bottom: 0;
+}
+
+.domain-status {
+  flex: 0 0 auto;
+  font-size: 10px;
+}
+
+.domain-display {
+  overflow: hidden;
+  margin-bottom: 8px;
+  padding: 7px 9px;
+  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+  border-radius: 5px;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.permanent-actions,
+.timer-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.domain-action,
+.timer-button {
+  min-width: 0;
+  text-transform: none;
+}
+
+.section-divider {
+  margin: 10px 0;
+}
+
+.group-select {
+  margin-bottom: 8px;
+}
+
+.group-actions {
+  margin-bottom: 9px;
+}
+
+.temporary-heading {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.timer-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.timer-button {
+  padding-inline: 5px;
+}
+
+.inline-error {
+  margin-top: 6px;
+  color: rgb(var(--v-theme-error));
+  font-size: 11px;
+  line-height: 1.3;
+}
+</style>

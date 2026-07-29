@@ -27,6 +27,6 @@
 		"src/**/*"
 	],
 	"vueCompilerOptions": {
-		"target": 2.7
+		"target": 3.5
 	}
 }

@@ -1,171 +1,83 @@
 {
-	"manifest_description": {
-		"message": "Browser extension to control your PiHole."
-	},
-	"options_title": {
-		"message": "$page$ - PiHole Browser Extension",
-		"placeholders": {
-			"page": {
-				"content": "$1"
-			}
-		}
-	},
-	"options_settings": {
-		"message": "Settings"
-	},
-	"option_settings_general_settings": {
-		"message": "General Settings"
-	},
-	"options_about": {
-		"message": "About"
-	},
-	"options_report_error": {
-		"message": "Report an issue"
-	},
-	"options_about_licences": {
-		"message": "Licences"
-	},
-	"option_report_error_github": {
-		"message": "Create an issue on Github"
-	},
-	"option_troubleshooting": {
-		"message": "Troubleshooting"
-	},
-	"option_extension": {
-		"message": "Extension"
-	},
-	"option_about_copy_debug": {
-		"message": "Please paste the following Debug-Information into the issue:"
-	},
-	"option_contributors": {
-		"message": "Contributors:"
-	},
-	"option_donation": {
-		"message": "Donate"
-	},
-	"options_headline_info": {
-		"message": "PiHole Configuration"
-	},
-	"options_headline_additional_info": {
-		"message": "Enter the Pi-hole address and web interface password."
-	},
-	"options_default_time_label": {
-		"message": "Default disable time:"
-	},
-	"options_default_time_unit": {
-		"message": "seconds"
-	},
-	"options_temporary_allow_times_title": {
-		"message": "Temporary action presets"
-	},
-	"options_temporary_allow_time_label": {
-		"message": "Preset"
-	},
-	"options_temporary_allow_time_hint": {
-		"message": "Minimum: 10 seconds"
-	},
-	"options_reload_after_disable": {
-		"message": "Reload current tab after Disabling"
-	},
-	"options_reload_after_white_list": {
-		"message": "Reload current tab after Whitelisting"
-	},
-	"options_api_key": {
-		"message": "Password"
-	},
-	"options_pi_hole_address": {
-		"message": "PiHole Address"
-	},
-	"options_add_button": {
-		"message": "Add PiHole"
-	},
-	"options_remove_button": {
-		"message": "Remove PiHole $num$",
-		"placeholders": {
-			"num": {
-				"content": "$1"
-			}
-		}
-	},
-	"options_url_invalid_warning": {
-		"message": "The url is invalid. (Missing http(s), invalid scheme or empty)"
-	},
-	"options_disable_list_feature": {
-		"message": "Disable black/white list feature in the popup"
-	},
-	"popup_status_card_title": {
-		"message": "PiHole Switch"
-	},
-	"popup_status_card_info_text": {
-		"message": "0 for permanent"
-	},
-	"popup_second_card_current_url": {
-		"message": "Current Url"
-	},
-	"popup_second_card_whitelist": {
-		"message": "Whitelist"
-	},
-	"popup_second_card_blacklist": {
-		"message": "Blacklist"
-	},
-	"popup_temporary_whitelist": {
-		"message": "Temporarily allow"
-	},
-	"popup_temporary_allow_duration": {
-		"message": "Temporary action duration"
-	},
-	"popup_group_title": {
-		"message": "Client group"
-	},
-	"popup_group_select": {
-		"message": "Select group"
-	},
-	"popup_group_disable": {
-		"message": "Disable group"
-	},
-	"popup_group_warning": {
-		"message": "This disables the selected Pi-hole group. Clients that also use another enabled group may still be filtered."
-	},
-	"popup_group_success": {
-		"message": "Group disabled temporarily."
-	},
-	"popup_group_error": {
-		"message": "Group action failed or no common group is available."
-	},
-	"option_hotkey_settings": {
-		"message": "Hotkey Settings"
-	},
-	"option_disable_context_menu": {
-		"message": "Disable the context menu shortcuts"
-	},
-	"popup_update_card_info": {
-		"message": "Update available for PiHole"
-	},
-	"context_menu_toggle_pi_holes": {
-		"message": "Toggle PiHole(s)"
-	},
-	"context_menu_blacklist_current_domain": {
-		"message": "Blacklist current domain"
-	},
-	"context_menu_whitelist_current_domain": {
-		"message": "Whitelist current domain"
-	},
-	"context_menu_open_settings": {
-		"message": "Open Settings"
-	},
-	"option_connection_check_idle": {
-		"message": "Connection check in progress"
-	},
-	"option_connection_check_ok": {
-		"message": "Connection successful"
-	},
-	"option_connection_check_error": {
-		"message": "Connection failed"
-	},
-	"option_connection_check_update_available": {
-		"message": "Update available for PiHole"
-	},
-	"option_multiple_connections": {
-		"message": "The usage of multiple PiHole instances can be unstable. Please use with caution."
-	}
+  "manifest_description": {"message": "Browser extension to control your PiHole."},
+  "options_title": {"message": "$page$ - PiHole Browser Extension", "placeholders": {"page": {"content": "$1"}}},
+  "options_settings": {"message": "Settings"},
+  "option_settings_general_settings": {"message": "General Settings"},
+  "options_about": {"message": "About"},
+  "options_report_error": {"message": "Report an issue"},
+  "options_about_licences": {"message": "Licences"},
+  "option_report_error_github": {"message": "Create an issue on Github"},
+  "option_troubleshooting": {"message": "Troubleshooting"},
+  "option_extension": {"message": "Extension"},
+  "option_about_copy_debug": {"message": "Please paste the following Debug-Information into the issue:"},
+  "option_contributors": {"message": "Contributors:"},
+  "option_donation": {"message": "Donate"},
+  "options_headline_info": {"message": "PiHole Configuration"},
+  "options_headline_additional_info": {"message": "Enter the Pi-hole address and web interface password, then save the connection explicitly."},
+  "options_default_time_label": {"message": "Default pause duration:"},
+  "options_default_time_unit": {"message": "seconds"},
+  "options_client_group_title": {"message": "Client group"},
+  "options_default_client_group": {"message": "Default client group"},
+  "options_client_group_load_error": {"message": "Client groups could not be loaded. Save a working Pi-hole connection first."},
+  "options_hide_group_selector_in_popup": {"message": "Hide the client-group selector in the popup"},
+  "options_hide_group_list_actions_in_popup": {"message": "Hide group-specific whitelist and blacklist actions in the popup"},
+  "options_badge_uses_selected_group": {"message": "Determine the extension icon's blocking status from the selected client group"},
+  "options_group_pause_times_title": {"message": "Client-group pause presets"},
+  "options_group_pause_time_label": {"message": "Group pause"},
+  "options_group_pause_time_hint": {"message": "Used by the three orange client-group buttons. Minimum: 10 seconds"},
+  "options_temporary_allow_times_title": {"message": "Temporary domain allow presets"},
+  "options_temporary_allow_time_label": {"message": "Domain allow"},
+  "options_temporary_allow_time_hint": {"message": "Used by the three orange domain buttons for the selected client group. Minimum: 10 seconds"},
+  "options_reload_after_disable": {"message": "Reload current tab after disabling global or group blocking"},
+  "options_reload_after_white_list": {"message": "Reload current tab after allowing a domain"},
+  "options_api_key": {"message": "Password"},
+  "options_pi_hole_address": {"message": "PiHole Address"},
+  "options_save_button": {"message": "Save"},
+  "options_save_success": {"message": "Pi-hole connection settings saved."},
+  "options_save_error": {"message": "Pi-hole connection settings could not be saved."},
+  "options_add_button": {"message": "Add PiHole"},
+  "options_remove_button": {"message": "Remove PiHole $num$", "placeholders": {"num": {"content": "$1"}}},
+  "options_url_invalid_warning": {"message": "The URL is invalid. (Missing http(s), invalid scheme or empty)"},
+  "options_disable_list_feature": {"message": "Hide global whitelist and blacklist actions in the popup"},
+  "popup_status_card_title": {"message": "Pi-hole control"},
+  "popup_status_card_info_text": {"message": "Pause duration"},
+  "popup_global_title": {"message": "Global Pi-hole"},
+  "popup_global_blocking_active": {"message": "Pi-hole blocking enabled globally"},
+  "popup_global_success": {"message": "Global Pi-hole blocking state updated."},
+  "popup_global_error": {"message": "Global Pi-hole blocking state could not be changed."},
+  "popup_blocking_active": {"message": "Blocking active"},
+  "popup_entire_pihole": {"message": "Entire Pi-hole"},
+  "popup_second_card_current_url": {"message": "Current domain"},
+  "popup_second_card_whitelist": {"message": "Whitelist"},
+  "popup_second_card_blacklist": {"message": "Blacklist"},
+  "popup_temporary_whitelist": {"message": "Temporary whitelist for this group"},
+  "popup_temporary_allow_duration": {"message": "Temporary domain whitelist duration"},
+  "popup_group_title": {"message": "Client group"},
+  "popup_group_select": {"message": "Select client group"},
+  "popup_group_blocking_active": {"message": "Blocking enabled for this group"},
+  "popup_group_pause_times_title": {"message": "Disable group for"},
+  "popup_group_disable": {"message": "Disable group"},
+  "popup_group_warning": {"message": "The selected client group is disabled completely and enabled again automatically when the timer expires."},
+  "popup_group_success": {"message": "Client-group state updated."},
+  "popup_group_error": {"message": "The selected client group could not be changed."},
+  "option_hotkey_settings": {"message": "Hotkey Settings"},
+  "option_disable_context_menu": {"message": "Disable the context menu shortcuts"},
+  "popup_update_card_info": {"message": "Update available for PiHole"},
+  "context_menu_toggle_pi_holes": {"message": "Toggle PiHole(s)"},
+  "context_menu_blacklist_current_domain": {"message": "Blacklist current domain"},
+  "context_menu_whitelist_current_domain": {"message": "Whitelist current domain"},
+  "context_menu_open_settings": {"message": "Open Settings"},
+  "option_connection_check_idle": {"message": "Connection check in progress"},
+  "option_connection_check_ok": {"message": "Connection successful"},
+  "option_connection_check_error": {"message": "Connection failed"},
+  "option_connection_check_update_available": {"message": "Update available for PiHole"},
+  "option_multiple_connections": {"message": "The usage of multiple PiHole instances can be unstable. Please use with caution."},
+  "popup_domain_general_actions": {"message": "Permanent rule for all client groups"},
+  "popup_temporary_whitelist_group": {"message": "Selected client group"},
+  "popup_group_manual": {"message": "Group blocking active"},
+  "popup_domain_status_checking": {"message": "Checking…"},
+  "popup_domain_status_blocked": {"message": "Blocked"},
+  "popup_domain_status_allowed": {"message": "Not blocked"},
+  "popup_domain_status_unknown": {"message": "Status unknown"},
+  "popup_domain_action_error": {"message": "The domain action failed."}
 }

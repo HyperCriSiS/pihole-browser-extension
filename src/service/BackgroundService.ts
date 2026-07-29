@@ -1,117 +1,85 @@
 import PiHoleApiStatusEnum from '../api/enum/PiHoleApiStatusEnum'
-import { BadgeService, ExtensionBadgeTextEnum } from './BadgeService'
-import { PiHoleSettingsDefaults, StorageService } from './StorageService'
+import { BadgeService } from './BadgeService'
+import { StorageService } from './StorageService'
 import PiHoleApiService from './PiHoleApiService'
 import TabService from './TabService'
 import ApiList from '../api/enum/ApiList'
+import DomainStatusService from './DomainStatusService'
 
 export default class BackgroundService {
-  public static togglePiHole(): void {
-    let newStatus: PiHoleApiStatusEnum
-    BadgeService.getBadgeText().then((result) => {
-      if (result === ExtensionBadgeTextEnum.disabled) {
-        newStatus = PiHoleApiStatusEnum.enabled
-      } else if (result === ExtensionBadgeTextEnum.enabled) {
-        newStatus = PiHoleApiStatusEnum.disabled
-      } else {
+  public static async togglePiHole(): Promise<void> {
+    try {
+      const currentStatus = await PiHoleApiService.getPiHoleStatusCombined()
+      if (currentStatus === PiHoleApiStatusEnum.error) {
+        BadgeService.setGlobalStatus(PiHoleApiStatusEnum.error)
         return
       }
 
-      StorageService.getDefaultDisableTime().then((value) => {
-        let disableTime = value
-        if (typeof disableTime === 'undefined') {
-          disableTime = PiHoleSettingsDefaults.default_disable_time
-        }
+      const newStatus =
+        currentStatus === PiHoleApiStatusEnum.enabled
+          ? PiHoleApiStatusEnum.disabled
+          : PiHoleApiStatusEnum.enabled
+      const responses = await PiHoleApiService.changePiHoleStatus(newStatus, 0)
+      if (responses.some((response) => response.data.blocking !== newStatus)) {
+        throw new Error('One Pi-hole returned an unexpected blocking state')
+      }
 
-        PiHoleApiService.changePiHoleStatus(newStatus, disableTime)
-          .then((data) => {
-            for (const piHoleStatus of data) {
-              if (
-                piHoleStatus.data.blocking === PiHoleApiStatusEnum.error ||
-                piHoleStatus.data.blocking !== newStatus
-              ) {
-                console.warn(
-                  'One PiHole returned Error from its request. Please check the API Key.',
-                )
-                BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
-                return
-              }
-            }
-            BadgeService.setBadgeText(
-              newStatus === PiHoleApiStatusEnum.disabled
-                ? ExtensionBadgeTextEnum.disabled
-                : ExtensionBadgeTextEnum.enabled,
-            )
-
-            StorageService.getReloadAfterDisable().then((state) => {
-              if (typeof state !== 'undefined' && state) {
-                TabService.reloadCurrentTab(1500)
-              }
-            })
-          })
-          .catch((reason) => {
-            console.warn(reason)
-            BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
-          })
-      })
-    })
+      BadgeService.setGlobalStatus(newStatus)
+      await DomainStatusService.refreshActiveTabBadges()
+      if (await StorageService.getReloadAfterDisable()) {
+        TabService.reloadCurrentTab(1500)
+      }
+    } catch (reason) {
+      console.warn(reason)
+      BadgeService.setGlobalStatus(PiHoleApiStatusEnum.error)
+    }
   }
 
-  public static blacklistCurrentDomain(): void {
-    TabService.getCurrentTabUrlCleaned().then((url) => {
-      if (url.length < 1) {
-        return
-      }
-      PiHoleApiService.subDomainFromList(ApiList.whitelist, url)
-        .then(() => {
-          PiHoleApiService.addDomainToList(ApiList.blacklist, url)
-            .then(() => {
-              BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
-            })
-            .catch((reason) => {
-              console.warn(reason)
-              BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
-            })
-        })
-        .catch((reason) => {
-          console.warn(reason)
-          BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
-        })
-    })
+  public static async blacklistCurrentDomain(): Promise<void> {
+    const domain = await TabService.getCurrentTabUrlCleaned()
+    if (!domain) {
+      await this.refreshBadges()
+      return
+    }
+
+    try {
+      await PiHoleApiService.subDomainFromList(ApiList.whitelist, domain)
+      await PiHoleApiService.addDomainToList(ApiList.blacklist, domain)
+      await this.refreshBadges()
+    } catch (reason) {
+      console.warn(reason)
+      BadgeService.setGlobalStatus(PiHoleApiStatusEnum.error)
+    }
   }
 
-  public static whitelistCurrentDomain(): void {
-    TabService.getCurrentTabUrlCleaned().then((url) => {
-      if (url.length < 1) {
-        return
+  public static async whitelistCurrentDomain(): Promise<void> {
+    const domain = await TabService.getCurrentTabUrlCleaned()
+    if (!domain) {
+      await this.refreshBadges()
+      return
+    }
+
+    try {
+      await PiHoleApiService.subDomainFromList(ApiList.blacklist, domain)
+      await PiHoleApiService.addDomainToList(ApiList.whitelist, domain)
+      await this.refreshBadges()
+
+      if (await StorageService.getReloadAfterWhitelist()) {
+        TabService.reloadCurrentTab(1500)
       }
-      PiHoleApiService.subDomainFromList(ApiList.blacklist, url)
-        .then(() => {
-          PiHoleApiService.addDomainToList(ApiList.whitelist, url)
-            .then(() => {
-              StorageService.getReloadAfterWhitelist().then((state) => {
-                if (typeof state === 'undefined') {
-                  return
-                }
-                if (state) {
-                  TabService.reloadCurrentTab(1500)
-                }
-              })
-              BadgeService.setBadgeText(ExtensionBadgeTextEnum.ok)
-            })
-            .catch((reason) => {
-              console.warn(reason)
-              BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
-            })
-        })
-        .catch((reason) => {
-          console.warn(reason)
-          BadgeService.setBadgeText(ExtensionBadgeTextEnum.error)
-        })
-    })
+    } catch (reason) {
+      console.warn(reason)
+      BadgeService.setGlobalStatus(PiHoleApiStatusEnum.error)
+    }
   }
 
   public static openOptions(): void {
     chrome.runtime.openOptionsPage()
+  }
+
+  private static async refreshBadges(): Promise<void> {
+    const status = await PiHoleApiService.getPiHoleStatusCombined()
+    BadgeService.setGlobalStatus(status)
+    await DomainStatusService.refreshActiveTabBadges()
   }
 }

@@ -8,7 +8,7 @@
         {{ translate(I18NOptionKeys.options_headline_info) }}
       </v-card-title>
       <v-card-text style="min-height: 525px">
-        <v-alert outlined type="info">
+        <v-alert variant="outlined" type="info">
           {{ translate(I18NOptionKeys.options_headline_additional_info) }}
         </v-alert>
         <OptionTabComponent class="mb-5" />
