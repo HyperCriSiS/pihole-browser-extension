@@ -11,7 +11,7 @@
           variant="text"
           @click="openOptions"
         >
-          <v-icon size="21">{{ mdiCog }}</v-icon>
+          <v-icon size="20">{{ mdiCog }}</v-icon>
         </v-btn>
       </header>
 
@@ -186,12 +186,13 @@ body {
 
 .popup-header {
   display: flex;
-  min-height: 42px;
+  min-height: 40px;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 10px 5px 12px;
-  font-size: 17px;
+  padding: 6px 9px 5px 12px;
+  font-size: 16px;
   font-weight: 600;
+  line-height: 1.25;
 }
 
 .settings-button {
@@ -200,5 +201,56 @@ body {
 
 .popup-content {
   padding: 0 10px 8px;
+}
+
+#popup .section-heading-row {
+  min-height: 22px;
+  margin-bottom: 6px;
+}
+
+#popup .section-title,
+#popup .global-control .control-label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+#popup .domain-status {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+#popup .domain-display {
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+#popup .group-control .control-label,
+#popup .temporary-heading,
+#popup .timer-label {
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+#popup .domain-action,
+#popup .timer-button {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+#popup .group-select {
+  --v-input-control-height: 36px;
+}
+
+#popup .group-select .v-field-label {
+  display: none;
+}
+
+#popup .group-select .v-field__input {
+  min-height: 36px;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 12px;
+  line-height: 1.3;
 }
 </style>
