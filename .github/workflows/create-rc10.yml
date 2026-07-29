@@ -6,6 +6,11 @@ on:
       - feat/add-hypercrisis-credits
     paths:
       - .github/workflows/create-rc10.yml
+  pull_request:
+    branches:
+      - master
+    paths:
+      - .github/workflows/create-rc10.yml
 
 permissions:
   contents: write
