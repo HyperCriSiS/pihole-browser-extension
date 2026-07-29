@@ -1,7 +1,24 @@
 <template>
   <section class="popup-section domain-control">
-    <div class="section-title">
-      {{ translate(I18NPopupKeys.popup_second_card_current_url) }}
+    <div class="section-heading-row">
+      <div class="section-title">
+        {{ translate(I18NPopupKeys.popup_second_card_current_url) }}
+      </div>
+      <v-chip
+        class="domain-status"
+        :color="globalDomainStatusColor"
+        size="x-small"
+        variant="flat"
+      >
+        <v-progress-circular
+          v-if="globalStatusLoading"
+          class="mr-1"
+          indeterminate
+          size="11"
+          width="2"
+        ></v-progress-circular>
+        {{ globalDomainStatusText }}
+      </v-chip>
     </div>
 
     <div class="domain-display" :title="currentUrl">{{ currentUrl }}</div>
@@ -43,18 +60,18 @@
       </div>
       <v-chip
         class="domain-status"
-        :color="domainStatusColor"
+        :color="groupDomainStatusColor"
         size="x-small"
         variant="flat"
       >
         <v-progress-circular
-          v-if="statusLoading"
+          v-if="groupStatusLoading"
           class="mr-1"
           indeterminate
           size="11"
           width="2"
         ></v-progress-circular>
-        {{ domainStatusText }}
+        {{ groupDomainStatusText }}
       </v-chip>
     </div>
 
@@ -193,8 +210,10 @@ export default defineComponent({
     const groupActionLoading = ref<ApiList | null>(null)
     const temporaryWhitelistingActive = ref<number | null>(null)
     const temporaryAllowTimes = ref<number[]>([...TemporaryAllowTimeDefaults])
-    const domainStatus = ref<DomainBlockingState>('unknown')
-    const statusLoading = ref(false)
+    const globalDomainStatus = ref<DomainBlockingState>('unknown')
+    const groupDomainStatus = ref<DomainBlockingState>('unknown')
+    const globalStatusLoading = ref(false)
+    const groupStatusLoading = ref(false)
     const actionError = ref(false)
 
     const groupItems = computed(() =>
@@ -207,40 +226,97 @@ export default defineComponent({
         emit('selected-group-change', groupName),
     })
 
-    const domainStatusText = computed(() => {
-      if (statusLoading.value) {
+    const getDomainStatusText = (
+      status: DomainBlockingState,
+      loading: boolean,
+    ) => {
+      if (loading) {
         return translate(I18NPopupKeys.popup_domain_status_checking)
       }
-      if (domainStatus.value === 'blocked') {
+      if (status === 'blocked') {
         return translate(I18NPopupKeys.popup_domain_status_blocked)
       }
-      if (domainStatus.value === 'allowed') {
+      if (status === 'allowed') {
         return translate(I18NPopupKeys.popup_domain_status_allowed)
       }
       return translate(I18NPopupKeys.popup_domain_status_unknown)
-    })
+    }
 
-    const domainStatusColor = computed(() => {
-      if (statusLoading.value || domainStatus.value === 'unknown') {
+    const getDomainStatusColor = (
+      status: DomainBlockingState,
+      loading: boolean,
+    ) => {
+      if (loading || status === 'unknown') {
         return 'grey-darken-1'
       }
-      return domainStatus.value === 'blocked' ? 'red' : 'green'
-    })
+      return status === 'blocked' ? 'red' : 'green'
+    }
 
-    const refreshDomainStatus = async () => {
-      statusLoading.value = true
+    const globalDomainStatusText = computed(() =>
+      getDomainStatusText(globalDomainStatus.value, globalStatusLoading.value),
+    )
+
+    const groupDomainStatusText = computed(() =>
+      getDomainStatusText(groupDomainStatus.value, groupStatusLoading.value),
+    )
+
+    const globalDomainStatusColor = computed(() =>
+      getDomainStatusColor(globalDomainStatus.value, globalStatusLoading.value),
+    )
+
+    const groupDomainStatusColor = computed(() =>
+      getDomainStatusColor(groupDomainStatus.value, groupStatusLoading.value),
+    )
+
+    const refreshGlobalDomainStatus = async () => {
+      globalStatusLoading.value = true
       try {
-        domainStatus.value = await DomainStatusService.getDomainStatus(
+        globalDomainStatus.value = await DomainStatusService.getDomainStatus(
+          props.currentUrl,
+        )
+      } catch (reason) {
+        console.warn(reason)
+        globalDomainStatus.value = 'unknown'
+      } finally {
+        globalStatusLoading.value = false
+      }
+    }
+
+    const refreshGroupDomainStatus = async () => {
+      if (!props.selectedGroup) {
+        groupDomainStatus.value = 'unknown'
+        groupStatusLoading.value = false
+        return
+      }
+
+      groupStatusLoading.value = true
+      try {
+        groupDomainStatus.value = await DomainStatusService.getDomainStatus(
           props.currentUrl,
           props.selectedGroup,
         )
+      } catch (reason) {
+        console.warn(reason)
+        groupDomainStatus.value = 'unknown'
+      } finally {
+        groupStatusLoading.value = false
+      }
+    }
+
+    const refreshCurrentTabBadge = async () => {
+      try {
         await DomainStatusService.refreshCurrentTabBadge()
       } catch (reason) {
         console.warn(reason)
-        domainStatus.value = 'unknown'
-      } finally {
-        statusLoading.value = false
       }
+    }
+
+    const refreshDomainStatuses = async () => {
+      await Promise.all([
+        refreshGlobalDomainStatus(),
+        refreshGroupDomainStatus(),
+      ])
+      await refreshCurrentTabBadge()
     }
 
     const finishAction = () => {
@@ -274,7 +350,7 @@ export default defineComponent({
           props.currentUrl,
         )
         await PiHoleApiService.addDomainToList(mode, props.currentUrl)
-        await refreshDomainStatus()
+        await refreshDomainStatuses()
 
         if (mode === ApiList.whitelist) {
           await reloadAfterWhitelist()
@@ -302,7 +378,7 @@ export default defineComponent({
           props.currentUrl,
           props.selectedGroup,
         )
-        await refreshDomainStatus()
+        await refreshDomainStatuses()
 
         if (mode === ApiList.whitelist) {
           await reloadAfterWhitelist()
@@ -330,7 +406,7 @@ export default defineComponent({
           props.selectedGroup,
           durationSeconds,
         )
-        await refreshDomainStatus()
+        await refreshDomainStatuses()
         await reloadAfterWhitelist()
       } catch (reason) {
         console.warn(reason)
@@ -342,7 +418,7 @@ export default defineComponent({
 
     watch(
       () => [props.currentUrl, props.selectedGroup, props.statusRefreshKey],
-      refreshDomainStatus,
+      refreshDomainStatuses,
     )
 
     onMounted(async () => {
@@ -350,7 +426,7 @@ export default defineComponent({
       if (storedTimes?.length === 3) {
         temporaryAllowTimes.value = storedTimes
       }
-      await refreshDomainStatus()
+      await refreshDomainStatuses()
     })
 
     return {
@@ -362,9 +438,12 @@ export default defineComponent({
       temporaryAllowTimes,
       groupItems,
       selectedGroupModel,
-      domainStatusText,
-      domainStatusColor,
-      statusLoading,
+      globalDomainStatusText,
+      groupDomainStatusText,
+      globalDomainStatusColor,
+      groupDomainStatusColor,
+      globalStatusLoading,
+      groupStatusLoading,
       actionError,
       mdiCheck,
       mdiClose,
