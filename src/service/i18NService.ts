@@ -96,6 +96,7 @@ export enum LinkConfig {
   github_issue = 'https://github.com/HyperCriSiS/pihole-browser-extension/issues',
   github_user_badsgahhl = 'https://github.com/badsgahhl',
   github_user_erikr729 = 'https://github.com/Limatationz',
+  github_user_hypercrisis = 'https://github.com/HyperCriSiS',
 }
 
 export enum I18NContextMenuKeys {

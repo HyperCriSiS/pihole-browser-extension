@@ -16,6 +16,10 @@
         <a :href="LinkConfig.github_user_erikr729" target="_blank">
           Erik Rill
         </a>
+        <br />
+        <a :href="LinkConfig.github_user_hypercrisis" target="_blank">
+          HyperCriSiS
+        </a>
       </p>
     </v-card-text>
   </v-card>
