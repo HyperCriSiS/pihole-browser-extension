@@ -1,12 +1,16 @@
 # Pi-hole Browser Extension ![Extension icon](https://github.com/HyperCriSiS/pihole-browser-extension/blob/master/icon/icon-48.png?raw=true)
 
-[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ngoafjpapneaopfkpboebcahajopcifi)](https://chrome.google.com/webstore/detail/switch-for-pihole/ngoafjpapneaopfkpboebcahajopcifi)
-[![Mozilla Add-on](https://img.shields.io/amo/v/pihole-browser-extension)](https://addons.mozilla.org/firefox/addon/pihole-browser-extension/)
-[![Chrome users](https://img.shields.io/chrome-web-store/users/ngoafjpapneaopfkpboebcahajopcifi?label=chrome%20users)](https://chrome.google.com/webstore/detail/switch-for-pihole/ngoafjpapneaopfkpboebcahajopcifi)
-[![Mozilla users](https://img.shields.io/amo/users/pihole-browser-extension?color=green&label=mozilla%20users)](https://addons.mozilla.org/firefox/addon/pihole-browser-extension/)
 ![GitHub license](https://img.shields.io/github/license/HyperCriSiS/pihole-browser-extension)
 
 An unofficial browser extension for controlling Pi-hole directly from Firefox and Chromium-based browsers. The current version targets **Pi-hole v6 and later** and provides both global and client-group-specific controls.
+
+## Further Development of the Original Project
+
+This project is a continuation of the original [Pi-hole Browser Extension by Pascal Glaser](https://github.com/badsgahhl/pihole-browser-extension).
+
+Unfortunately, this great project is now in maintenance mode. Since I use the extension extensively myself, I have added numerous features, modernized it, and adapted it to my needs.
+
+This fork is actively maintained.
 
 ## Features
 
