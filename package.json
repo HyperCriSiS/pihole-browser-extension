@@ -36,7 +36,7 @@
 		"ts-loader": "^9.6.2",
 		"ts-node": "^10.9.2",
 		"tsconfig-paths": "^4.2.0",
-		"typescript": "6.0.3",
+		"typescript": "7.0.2",
 		"typescript-eslint": "^8.65.0",
 		"vue-eslint-parser": "^10.4.0",
 		"vue-loader": "^17.4.2",
