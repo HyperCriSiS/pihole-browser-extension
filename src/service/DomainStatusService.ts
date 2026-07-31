@@ -8,6 +8,7 @@ import { BadgeService } from './BadgeService'
 import PiHoleApiService from './PiHoleApiService'
 import { StorageService } from './StorageService'
 import TabService from './TabService'
+import TemporaryIconStateService from './TemporaryIconStateService'
 
 export type CurrentDomainStatus = {
   domain: string
@@ -77,7 +78,7 @@ export default class DomainStatusService {
     return combineDomainStates(states)
   }
 
-  public static async refreshCurrentTabBadge(
+  public static async refreshCurrentTabIcon(
     preferredGroupName?: string | null,
   ): Promise<CurrentDomainStatus> {
     const tab = await TabService.getCurrentTab()
@@ -85,10 +86,10 @@ export default class DomainStatusService {
       return { domain: '', state: 'unknown', groupName: null }
     }
 
-    return this.refreshTabBadge(tab, preferredGroupName)
+    return this.refreshTabIcon(tab, preferredGroupName)
   }
 
-  public static async refreshTabBadge(
+  public static async refreshTabIcon(
     tab: chrome.tabs.Tab,
     preferredGroupName?: string | null,
   ): Promise<CurrentDomainStatus> {
@@ -96,30 +97,54 @@ export default class DomainStatusService {
     const domain = await TabService.getTabUrlCleaned(tab)
     const groupName =
       typeof preferredGroupName === 'undefined'
-        ? await this.getBadgeGroupName()
+        ? await this.getIconGroupName()
         : preferredGroupName
 
     if (typeof tabId === 'undefined' || !domain) {
       if (typeof tabId !== 'undefined') {
-        await BadgeService.setDomainBlockedBadge(tabId, false)
+        await BadgeService.setDomainStatusIcon(tabId, 'unknown', false)
       }
       return { domain: '', state: 'unknown', groupName }
     }
 
     const state = await this.getDomainStatus(domain, groupName)
-    await BadgeService.setDomainBlockedBadge(tabId, state === 'blocked')
+    const temporary =
+      state === 'allowed' &&
+      (await TemporaryIconStateService.isActive(domain, groupName))
+
+    await BadgeService.setDomainStatusIcon(tabId, state, temporary)
     return { domain, state, groupName }
   }
 
-  public static async refreshActiveTabBadges(): Promise<void> {
+  public static async refreshActiveTabIcons(): Promise<void> {
     const tabs = await new Promise<chrome.tabs.Tab[]>((resolve) => {
       chrome.tabs.query({ active: true }, resolve)
     })
 
-    await Promise.all(tabs.map((tab) => this.refreshTabBadge(tab)))
+    await Promise.all(tabs.map((tab) => this.refreshTabIcon(tab)))
   }
 
-  private static async getBadgeGroupName(): Promise<string | null> {
+  /**
+   * Backwards-compatible aliases retained for existing popup/background callers.
+   */
+  public static async refreshCurrentTabBadge(
+    preferredGroupName?: string | null,
+  ): Promise<CurrentDomainStatus> {
+    return this.refreshCurrentTabIcon(preferredGroupName)
+  }
+
+  public static async refreshTabBadge(
+    tab: chrome.tabs.Tab,
+    preferredGroupName?: string | null,
+  ): Promise<CurrentDomainStatus> {
+    return this.refreshTabIcon(tab, preferredGroupName)
+  }
+
+  public static async refreshActiveTabBadges(): Promise<void> {
+    return this.refreshActiveTabIcons()
+  }
+
+  private static async getIconGroupName(): Promise<string | null> {
     if (!(await StorageService.getBadgeUsesSelectedGroup())) {
       return null
     }
