@@ -1,10 +1,7 @@
 export type GlobalToolbarIconState = 'active' | 'disabled' | 'error' | 'unknown'
 
 export type DomainToolbarIconState =
-  | 'allowed'
-  | 'blocked'
-  | 'temporary'
-  | 'unknown'
+  'allowed' | 'blocked' | 'temporary' | 'unknown'
 
 export type ToolbarIconState = GlobalToolbarIconState | 'blocked' | 'temporary'
 
