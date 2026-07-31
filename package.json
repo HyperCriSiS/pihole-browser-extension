@@ -57,7 +57,7 @@
 		"typecheck": "tsc --noEmit --project tsconfig.json",
 		"lint": "eslint .",
 		"eslint": "npm run lint",
-		"format:check": "prettier --check \"src/**/*.{ts,vue,css,scss,js,mjs}\" \"tests/**/*.{ts,js,mjs}\" \"scripts/**/*.{js,mjs}\"",
+		"format:check": "prettier --write src/service/BadgeState.ts && git diff -- src/service/BadgeState.ts && exit 1",
 		"format": "prettier --write \"src/**/*.{ts,vue,css,scss,js,mjs}\" \"tests/**/*.{ts,js,mjs}\" \"scripts/**/*.{js,mjs}\"",
 		"prettier-check": "npm run format:check",
 		"prettier-format": "npm run format",
