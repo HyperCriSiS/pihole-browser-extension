@@ -9,6 +9,11 @@ import PiHoleApiService from './PiHoleApiService'
 import { StorageService } from './StorageService'
 import TabService from './TabService'
 import TemporaryIconStateService from './TemporaryIconStateService'
+import {
+  composeToolbarIconState,
+  type GlobalToolbarIconState,
+  type ToolbarIconState,
+} from './BadgeState'
 
 export type CurrentDomainStatus = {
   domain: string
@@ -17,6 +22,36 @@ export type CurrentDomainStatus = {
 }
 
 export default class DomainStatusService {
+  public static async getCurrentToolbarIconState(): Promise<ToolbarIconState> {
+    const globalStatus = await PiHoleApiService.getPiHoleStatusCombined()
+    const globalState = this.toGlobalToolbarIconState(globalStatus)
+
+    if (globalState !== 'active') {
+      return globalState
+    }
+
+    const tab = await TabService.getCurrentTab()
+    if (!tab) {
+      return composeToolbarIconState(globalState, 'unknown')
+    }
+
+    const domain = await TabService.getTabUrlCleaned(tab)
+    if (!domain) {
+      return composeToolbarIconState(globalState, 'unknown')
+    }
+
+    const groupName = await this.getIconGroupName()
+    const domainState = await this.getDomainStatus(domain, groupName)
+    const temporary =
+      domainState === 'allowed' &&
+      (await TemporaryIconStateService.isActive(domain, groupName))
+
+    return composeToolbarIconState(
+      globalState,
+      temporary ? 'temporary' : domainState,
+    )
+  }
+
   public static async getDomainStatus(
     domain: string,
     preferredGroupName?: string | null,
@@ -150,5 +185,20 @@ export default class DomainStatusService {
     }
 
     return (await StorageService.getPauseTarget()) || null
+  }
+
+  private static toGlobalToolbarIconState(
+    status: PiHoleApiStatusEnum,
+  ): GlobalToolbarIconState {
+    if (status === PiHoleApiStatusEnum.enabled) {
+      return 'active'
+    }
+    if (status === PiHoleApiStatusEnum.disabled) {
+      return 'disabled'
+    }
+    if (status === PiHoleApiStatusEnum.error) {
+      return 'error'
+    }
+    return 'unknown'
   }
 }

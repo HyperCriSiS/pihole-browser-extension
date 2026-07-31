@@ -3,7 +3,13 @@
     <v-navigation-drawer>
       <v-list-item class="py-3">
         <template #prepend>
-          <v-avatar size="60" image="icon/icon-128.png" />
+          <img
+            class="navigation-logo"
+            src="icon/icon-128.png"
+            alt=""
+            width="60"
+            height="60"
+          />
         </template>
         <v-list-item-title class="text-h6">
           PiHole<br />Browser<br />Extension
@@ -81,3 +87,13 @@ export default defineComponent({
   },
 })
 </script>
+
+<style scoped lang="scss">
+.navigation-logo {
+  display: block;
+  flex: 0 0 auto;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+</style>

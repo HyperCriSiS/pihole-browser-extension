@@ -202,7 +202,7 @@ export default defineComponent({
       default: 0,
     },
   },
-  emits: ['selected-group-change'],
+  emits: ['selected-group-change', 'icon-state-change'],
   setup: (props, { emit }) => {
     const { translate, I18NPopupKeys } = useTranslation()
     const buttonsDisabled = ref(false)
@@ -308,6 +308,8 @@ export default defineComponent({
         await DomainStatusService.refreshCurrentTabBadge()
       } catch (reason) {
         console.warn(reason)
+      } finally {
+        emit('icon-state-change')
       }
     }
 
