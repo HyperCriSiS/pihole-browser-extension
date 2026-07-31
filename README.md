@@ -1,4 +1,8 @@
-# Pi-hole Browser Extension ![Extension icon](https://github.com/HyperCriSiS/pihole-browser-extension/blob/master/icon/icon-48.png?raw=true)
+<p align="center">
+  <img src="icon_raw/icon-raw.png" alt="Pi-hole Browser Extension logo" width="240">
+</p>
+
+<h1 align="center">Pi-hole Browser Extension</h1>
 
 ![GitHub license](https://img.shields.io/github/license/HyperCriSiS/pihole-browser-extension)
 
@@ -33,7 +37,7 @@ This fork is actively maintained.
 
 ### Customization and shortcuts
 
-- Show active, blocked, temporarily allowed, disabled, unknown and error states directly through the toolbar icon.
+- Show active, blocked, temporarily allowed, disabled and error/unknown states directly through the toolbar icon.
 - Configure the three presets used for temporary domain whitelisting and group pauses.
 - Hide the client-group selector or individual action sections from the popup.
 - Use keyboard shortcuts and browser context-menu actions.

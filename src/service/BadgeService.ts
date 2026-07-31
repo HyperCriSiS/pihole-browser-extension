@@ -40,26 +40,32 @@ export class BadgeService {
     unknown: {
       16: 'icon/status/unknown-16.png',
       32: 'icon/status/unknown-32.png',
+      48: 'icon/status/unknown-48.png',
     },
     active: {
       16: 'icon/status/active-16.png',
       32: 'icon/status/active-32.png',
+      48: 'icon/status/active-48.png',
     },
     blocked: {
       16: 'icon/status/blocked-16.png',
       32: 'icon/status/blocked-32.png',
+      48: 'icon/status/blocked-48.png',
     },
     temporary: {
       16: 'icon/status/temporary-16.png',
       32: 'icon/status/temporary-32.png',
+      48: 'icon/status/temporary-48.png',
     },
     disabled: {
       16: 'icon/status/disabled-16.png',
       32: 'icon/status/disabled-32.png',
+      48: 'icon/status/disabled-48.png',
     },
     error: {
       16: 'icon/status/error-16.png',
       32: 'icon/status/error-32.png',
+      48: 'icon/status/error-48.png',
     },
   }
 
