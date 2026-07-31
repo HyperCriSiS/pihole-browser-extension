@@ -10,10 +10,7 @@ export type DomainToolbarIconState =
   | 'temporary'
   | 'unknown'
 
-export type ToolbarIconState =
-  | GlobalToolbarIconState
-  | 'blocked'
-  | 'temporary'
+export type ToolbarIconState = GlobalToolbarIconState | 'blocked' | 'temporary'
 
 export const composeToolbarIconState = (
   globalState: GlobalToolbarIconState,
