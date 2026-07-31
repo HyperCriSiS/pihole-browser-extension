@@ -1,8 +1,4 @@
-export type GlobalToolbarIconState =
-  | 'active'
-  | 'disabled'
-  | 'error'
-  | 'unknown'
+export type GlobalToolbarIconState = 'active' | 'disabled' | 'error' | 'unknown'
 
 export type DomainToolbarIconState =
   | 'allowed'
