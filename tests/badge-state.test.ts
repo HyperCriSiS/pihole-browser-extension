@@ -1,21 +1,46 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { composeTabBadgeText } from '../src/service/BadgeState.ts'
+import { readFile } from 'node:fs/promises'
+import { composeToolbarIconState } from '../src/service/BadgeState.ts'
 
-test('blocked domains extend an enabled Pi-hole badge', () => {
-  assert.equal(composeTabBadgeText('On', true), 'On!')
+test('blocked domains replace an active icon with the blocked variant', () => {
+  assert.equal(composeToolbarIconState('active', 'blocked'), 'blocked')
 })
 
-test('allowed domains keep the enabled Pi-hole badge', () => {
-  assert.equal(composeTabBadgeText('On', false), 'On')
+test('allowed domains keep the active variant', () => {
+  assert.equal(composeToolbarIconState('active', 'allowed'), 'active')
 })
 
-test('disabled and error states are never replaced by a domain badge', () => {
-  assert.equal(composeTabBadgeText('Off', true), 'Off')
-  assert.equal(composeTabBadgeText('Err', true), 'Err')
+test('temporary domain rules use the temporary variant', () => {
+  assert.equal(composeToolbarIconState('active', 'temporary'), 'temporary')
 })
 
-test('an unset global badge remains unset', () => {
-  assert.equal(composeTabBadgeText('', false), '')
-  assert.equal(composeTabBadgeText('', true), '')
+test('disabled and error states override domain states', () => {
+  assert.equal(composeToolbarIconState('disabled', 'blocked'), 'disabled')
+  assert.equal(composeToolbarIconState('error', 'temporary'), 'error')
+})
+
+test('unknown global or domain states use the neutral variant', () => {
+  assert.equal(composeToolbarIconState('unknown', 'allowed'), 'unknown')
+  assert.equal(composeToolbarIconState('active', 'unknown'), 'unknown')
+})
+
+test('all toolbar icon variants exist in 16 and 32 pixels', async () => {
+  const states = [
+    'unknown',
+    'active',
+    'blocked',
+    'temporary',
+    'disabled',
+    'error',
+  ]
+
+  for (const state of states) {
+    for (const size of [16, 32]) {
+      const fileName = `icon/status/${state}-${size}.png`
+      const buffer = await readFile(fileName)
+      assert.equal(buffer.readUInt32BE(16), size, `${fileName} width`)
+      assert.equal(buffer.readUInt32BE(20), size, `${fileName} height`)
+    }
+  }
 })

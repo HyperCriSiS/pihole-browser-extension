@@ -25,11 +25,11 @@ export default class BackgroundInitializer implements Initializer {
     this.addAlarmListener()
     this.addTabListeners()
     this.addStorageListener()
-    this.refreshAllBadges().catch((reason) => {
-      console.error('Failed to initialize extension badges', reason)
+    this.refreshAllIcons().catch((reason) => {
+      console.error('Failed to initialize extension toolbar icons', reason)
     })
     this.createAlarm().catch(() => {
-      console.error('Failed to create badge refresh alarm')
+      console.error('Failed to create toolbar icon refresh alarm')
     })
     TemporaryActionService.initialize().catch((reason) => {
       console.error('Failed to initialize temporary actions', reason)
@@ -58,8 +58,8 @@ export default class BackgroundInitializer implements Initializer {
   private addAlarmListener(): void {
     const alarmHandler = (alarm: { name: string }) => {
       if (alarm.name === this.ALARM_NAME) {
-        this.refreshAllBadges().catch((reason) => {
-          console.error('Failed to refresh extension badges', reason)
+        this.refreshAllIcons().catch((reason) => {
+          console.error('Failed to refresh extension toolbar icons', reason)
         })
         return
       }
@@ -69,7 +69,7 @@ export default class BackgroundInitializer implements Initializer {
         GroupDomainService.handleAlarm(alarm.name),
         TemporaryActionService.handleAlarm(alarm.name),
       ])
-        .then(() => this.refreshAllBadges())
+        .then(() => this.refreshAllIcons())
         .catch((reason) => {
           console.error('Failed to handle extension alarm', reason)
         })
@@ -85,8 +85,8 @@ export default class BackgroundInitializer implements Initializer {
   private addTabListeners(): void {
     chrome.tabs.onActivated.addListener(({ tabId }) => {
       chrome.tabs.get(tabId, (tab) => {
-        DomainStatusService.refreshTabBadge(tab).catch((reason) => {
-          console.error('Failed to refresh the activated tab badge', reason)
+        DomainStatusService.refreshTabIcon(tab).catch((reason) => {
+          console.error('Failed to refresh the activated tab icon', reason)
         })
       })
     })
@@ -96,14 +96,14 @@ export default class BackgroundInitializer implements Initializer {
         return
       }
 
-      DomainStatusService.refreshTabBadge(tab).catch((reason) => {
-        console.error('Failed to refresh the updated tab badge', reason)
+      DomainStatusService.refreshTabIcon(tab).catch((reason) => {
+        console.error('Failed to refresh the updated tab icon', reason)
       })
     })
 
     chrome.windows.onFocusChanged.addListener(() => {
-      DomainStatusService.refreshActiveTabBadges().catch((reason) => {
-        console.error('Failed to refresh focused-window badges', reason)
+      DomainStatusService.refreshActiveTabIcons().catch((reason) => {
+        console.error('Failed to refresh focused-window icons', reason)
       })
     })
   }
@@ -119,18 +119,18 @@ export default class BackgroundInitializer implements Initializer {
         return
       }
 
-      this.refreshAllBadges().catch((reason) => {
+      this.refreshAllIcons().catch((reason) => {
         console.error(
-          'Failed to refresh badges after a settings change',
+          'Failed to refresh toolbar icons after a settings change',
           reason,
         )
       })
     })
   }
 
-  private async refreshAllBadges(): Promise<void> {
+  private async refreshAllIcons(): Promise<void> {
     const status = await PiHoleApiService.getPiHoleStatusCombined()
     BadgeService.setGlobalStatus(status)
-    await DomainStatusService.refreshActiveTabBadges()
+    await DomainStatusService.refreshActiveTabIcons()
   }
 }
