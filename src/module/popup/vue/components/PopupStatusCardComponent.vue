@@ -65,7 +65,6 @@ import DomainStatusService from '../../../../service/DomainStatusService'
 
 export default defineComponent({
   name: 'PopupStatusCardComponent',
-  emits: ['group-state-change'],
   props: {
     selectedGroup: {
       type: String,
@@ -80,6 +79,7 @@ export default defineComponent({
       default: false,
     },
   },
+  emits: ['group-state-change'],
   setup: (props, { emit }) => {
     const { translate, I18NPopupKeys } = useTranslation()
     const groupPauseTimes = ref<number[]>([...GroupPauseTimeDefaults])

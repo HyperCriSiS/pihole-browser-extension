@@ -2,7 +2,16 @@
   <v-app id="popup">
     <main class="popup-shell">
       <header class="popup-header">
-        <span>{{ translate(I18NPopupKeys.popup_status_card_title) }}</span>
+        <div class="popup-heading">
+          <img
+            class="popup-status-icon"
+            :src="headerIconPath"
+            alt=""
+            width="32"
+            height="32"
+          />
+          <span>{{ translate(I18NPopupKeys.popup_status_card_title) }}</span>
+        </div>
         <v-btn
           class="settings-button"
           :title="translate(I18NOptionKeys.options_settings)"
@@ -16,7 +25,7 @@
       </header>
 
       <div class="popup-content">
-        <PopupGlobalControlComponent />
+        <PopupGlobalControlComponent @icon-state-change="refreshHeaderIcon" />
         <v-divider></v-divider>
 
         <PopupListCardComponent
@@ -30,6 +39,7 @@
           :hide-group-list-actions="hideGroupListActions"
           :status-refresh-key="groupStatusRefreshKey"
           @selected-group-change="setSelectedGroup"
+          @icon-state-change="refreshHeaderIcon"
         />
 
         <PopupStatusCardComponent
@@ -45,7 +55,7 @@
 
 <script lang="ts">
 import { mdiCog } from '@mdi/js'
-import { defineComponent, onMounted, ref } from 'vue'
+import { computed, defineComponent, onMounted, ref } from 'vue'
 import PopupStatusCardComponent from '../components/PopupStatusCardComponent.vue'
 import PopupListCardComponent from '../components/PopupListCardComponent.vue'
 import PopupGlobalControlComponent from '../components/PopupGlobalControlComponent.vue'
@@ -55,6 +65,7 @@ import useTranslation from '../../../../hooks/translation'
 import DomainStatusService from '../../../../service/DomainStatusService'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
 import type { PiHoleGroup } from '../../../../api/models/PiHoleGroups'
+import type { ToolbarIconState } from '../../../../service/BadgeState'
 
 export default defineComponent({
   name: 'PopupComponent',
@@ -74,6 +85,28 @@ export default defineComponent({
     const hideGlobalListActions = ref(false)
     const hideGroupListActions = ref(false)
     const groupStatusRefreshKey = ref(0)
+    const headerIconState = ref<ToolbarIconState>('unknown')
+    let headerIconRequestId = 0
+
+    const headerIconPath = computed(
+      () => `icon/status/${headerIconState.value}-48.png`,
+    )
+
+    const refreshHeaderIcon = async () => {
+      const requestId = ++headerIconRequestId
+
+      try {
+        const state = await DomainStatusService.getCurrentToolbarIconState()
+        if (requestId === headerIconRequestId) {
+          headerIconState.value = state
+        }
+      } catch (reason) {
+        console.warn(reason)
+        if (requestId === headerIconRequestId) {
+          headerIconState.value = 'error'
+        }
+      }
+    }
 
     const updateCurrentUrl = async () => {
       currentUrl.value = await TabService.getCurrentTabUrlCleaned()
@@ -129,10 +162,12 @@ export default defineComponent({
 
       await StorageService.savePauseTarget(groupName)
       await DomainStatusService.refreshCurrentTabBadge()
+      await refreshHeaderIcon()
     }
 
     const refreshGroupStatus = () => {
       groupStatusRefreshKey.value += 1
+      void refreshHeaderIcon()
     }
 
     const openOptions = () => chrome.runtime.openOptionsPage()
@@ -143,6 +178,7 @@ export default defineComponent({
         loadPopupSettings(),
         loadGroupSettings(),
       ])
+      await refreshHeaderIcon()
     })
 
     return {
@@ -156,6 +192,8 @@ export default defineComponent({
       hideGlobalListActions,
       hideGroupListActions,
       groupStatusRefreshKey,
+      headerIconPath,
+      refreshHeaderIcon,
       refreshGroupStatus,
       setSelectedGroup,
       openOptions,
@@ -193,6 +231,21 @@ body {
   font-size: 16px;
   font-weight: 600;
   line-height: 1.25;
+}
+
+.popup-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+}
+
+.popup-status-icon {
+  display: block;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .settings-button {

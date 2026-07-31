@@ -34,7 +34,8 @@ import TabService from '../../../../service/TabService'
 
 export default defineComponent({
   name: 'PopupGlobalControlComponent',
-  setup: () => {
+  emits: ['icon-state-change'],
+  setup: (_props, { emit }) => {
     const { translate, I18NPopupKeys } = useTranslation()
     const blockingActive = ref(false)
     const disabled = ref(true)
@@ -48,6 +49,7 @@ export default defineComponent({
       disabled.value = error.value
       blockingActive.value = status === PiHoleApiStatusEnum.enabled
       await DomainStatusService.refreshActiveTabBadges()
+      emit('icon-state-change')
     }
 
     const changeGlobalState = async (enabled: boolean | null) => {
@@ -70,6 +72,7 @@ export default defineComponent({
         blockingActive.value = enabled
         BadgeService.setGlobalStatus(mode)
         await DomainStatusService.refreshActiveTabBadges()
+        emit('icon-state-change')
         if (!enabled && (await StorageService.getReloadAfterDisable())) {
           TabService.reloadCurrentTab(1000)
         }
