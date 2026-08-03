@@ -91,12 +91,6 @@ npm run package:artifacts
 
 `npm run check` performs the same source, test, browser-build, Firefox-lint and package-structure checks used by CI. Production builds are written to `dist/`. Validated ZIP/XPI packages and SHA-256 checksums are written to `artifacts/` by `npm run package:artifacts`.
 
-## Releases
-
-Stable release tags must match the exact version in `package.json`, `manifest.firefox.json` and `manifest.chrome.json`, for example `v4.2.0`. Release candidates append a prerelease suffix to the same base version, for example `v4.2.0-rc.11`.
-
-The release workflow validates the source from a clean checkout, builds separate Firefox and Chrome packages, creates a source archive containing `SOURCE_COMMIT.txt`, generates SHA-256 checksums and refuses to overwrite an existing GitHub release. Tags with a prerelease suffix are published as prereleases.
-
 ## Troubleshooting
 
 ### A switch or action reports an error
