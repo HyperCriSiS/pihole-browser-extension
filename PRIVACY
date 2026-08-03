@@ -1,6 +1,17 @@
+# Privacy Policy
+
+The Pi-hole Browser Extension needs access to the current browser tab and to the Pi-hole addresses configured by the user in order to provide its core functionality.
+
+## Data processed
+
+- The current domain is sent to the configured Pi-hole instances for status checks and whitelist or blacklist actions.
+- The Pi-hole address and authentication information are sent only to the corresponding configured Pi-hole instance.
+- Pi-hole connection details, preferences and temporary-action state are stored locally in the browser's extension storage and are not placed in browser synchronization storage.
+
+## Data sharing
+
+The extension does not send user data to the developers, analytics services or unrelated third parties. It does not use telemetry or advertising services. Network requests made for Pi-hole control are directed only to addresses explicitly configured by the user.
+
+Links opened by the user, such as the GitHub issue tracker, donation page or uninstall survey, are external websites and are governed by their respective privacy policies.
+
 Copyright (c) 2020 Pascal Glaser
-
-The browser extension "pihole-extension" has the possibility to access private data and confidential information via your browser.
-
-These permissions are needed to send so called "requests" to your local PiHole server.
-The extension neither collects user data, nor does it establish a connection to servers outside of the addresses you provide.

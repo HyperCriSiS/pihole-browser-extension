@@ -21,7 +21,7 @@
   "options_client_group_load_error": {"message": "Client groups could not be loaded. Save a working Pi-hole connection first."},
   "options_hide_group_selector_in_popup": {"message": "Hide the client-group selector in the popup"},
   "options_hide_group_list_actions_in_popup": {"message": "Hide group-specific whitelist and blacklist actions in the popup"},
-  "options_badge_uses_selected_group": {"message": "Determine the extension icon's blocking status from the selected client group"},
+  "options_badge_uses_selected_group": {"message": "Determine the toolbar badge's blocking status from the selected client group"},
   "options_group_pause_times_title": {"message": "Client-group pause presets"},
   "options_group_pause_time_label": {"message": "Group pause"},
   "options_group_pause_time_hint": {"message": "Used by the three orange client-group buttons. Minimum: 10 seconds"},

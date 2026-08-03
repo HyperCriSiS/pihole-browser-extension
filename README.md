@@ -4,17 +4,19 @@
 
 <h1 align="center">Pi-hole Browser Extension</h1>
 
-![GitHub license](https://img.shields.io/github/license/HyperCriSiS/pihole-browser-extension)
+<p align="center">
+  <a href="https://github.com/HyperCriSiS/pihole-browser-extension/releases"><img src="https://img.shields.io/github/v/release/HyperCriSiS/pihole-browser-extension?include_prereleases&amp;sort=semver" alt="Latest release"></a>
+  <a href="https://github.com/HyperCriSiS/pihole-browser-extension/actions/workflows/lint.yml"><img src="https://github.com/HyperCriSiS/pihole-browser-extension/actions/workflows/lint.yml/badge.svg" alt="CI status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/HyperCriSiS/pihole-browser-extension" alt="MIT license"></a>
+</p>
 
-An unofficial browser extension for controlling Pi-hole directly from Firefox and Chromium-based browsers. The current version targets **Pi-hole v6 and later** and provides both global and client-group-specific controls.
+Control Pi-hole directly from Firefox or a Chromium-based browser without opening the Pi-hole administration interface. The extension targets **Pi-hole v6 and later** and provides global, domain-specific and client-group-specific controls.
 
 ## Further Development of the Original Project
 
-This project is a continuation of the original [Pi-hole Browser Extension by Pascal Glaser](https://github.com/badsgahhl/pihole-browser-extension).
+This project is an actively maintained continuation of the original [Pi-hole Browser Extension by Pascal Glaser](https://github.com/badsgahhl/pihole-browser-extension).
 
-Unfortunately, this great project is now in maintenance mode. Since I use the extension extensively myself, I have added numerous features, modernized it, and adapted it to my needs.
-
-This fork is actively maintained.
+The original project is now in maintenance mode. Since I use the extension extensively myself, I have modernized the codebase, added numerous features and continue development in this repository.
 
 ## Features
 
@@ -33,16 +35,28 @@ This fork is actively maintained.
 - Assign whitelist or blacklist rules specifically to the selected group.
 - Temporarily whitelist the current domain for configurable durations.
 - Enable, disable or temporarily pause filtering for the selected group.
-- Use the selected group's domain status for the toolbar icon.
+- Use the selected group's domain status for the toolbar badge.
 
 ### Customization and shortcuts
 
-- Show active, blocked, temporarily allowed, disabled and error/unknown states directly through the toolbar icon.
+- Keep the extension logo recognizable and show active, blocked, temporarily allowed, disabled and error/unknown states through a native, color-coded toolbar badge.
 - Configure the three presets used for temporary domain whitelisting and group pauses.
 - Hide the client-group selector or individual action sections from the popup.
 - Use keyboard shortcuts and browser context-menu actions.
 - Check saved Pi-hole connections from the settings page.
 - Follow the browser's light or dark appearance.
+
+### Toolbar status
+
+The extension keeps its main logo visible and uses a native browser badge for status information:
+
+| Badge | Meaning |
+| --- | --- |
+| Green `✓` | Pi-hole is active and the current domain is allowed |
+| Red `×` | The current domain is blocked |
+| Orange time, for example `5m` | The current domain is temporarily allowed |
+| Blue-grey `OFF` | Pi-hole filtering is disabled |
+| Yellow `!` | The current status is unavailable or an error occurred |
 
 ## Requirements
 
@@ -51,13 +65,28 @@ This fork is actively maintained.
 - Network access from the browser to the configured Pi-hole address.
 - A valid Pi-hole web-interface password when authentication is enabled.
 
+## Installation
+
+Download the package for your browser from the [GitHub Releases](https://github.com/HyperCriSiS/pihole-browser-extension/releases) page.
+
+### Chromium-based browsers
+
+1. Download and extract the `chrome.zip` package.
+2. Open the browser's extensions page, for example `chrome://extensions`.
+3. Enable **Developer mode**.
+4. Select **Load unpacked** and choose the extracted directory.
+
+### Firefox
+
+The release currently contains an unsigned Firefox package for testing. In Firefox, open `about:debugging#/runtime/this-firefox`, select **Load Temporary Add-on** and choose the downloaded XPI file. Temporary add-ons are removed when Firefox closes. A permanent installation in standard Firefox requires a Mozilla-signed package.
+
 ## Setup
 
 1. Open the extension popup and select the cog button.
 2. Enter the complete Pi-hole address, including `http://` or `https://` and any required path.
 3. Enter the Pi-hole web-interface password.
 4. Save the connection and verify it with the connection check.
-5. Optionally select a default client group and customize the popup, toolbar icon and timer presets.
+5. Optionally select a default client group and customize the popup, toolbar badge and timer presets.
 
 Multiple Pi-hole instances are supported, but combined behavior can vary with the network and Pi-hole configuration. Test the intended actions before relying on a multi-instance setup.
 
@@ -67,35 +96,7 @@ Pi-hole addresses, passwords and extension preferences are stored in the browser
 
 The extension requires access to HTTP and HTTPS addresses so it can communicate with user-configured Pi-hole instances, including devices hosted on local network addresses. Access to the active tab is used to identify the current domain for status checks and list actions. Context-menu and alarm permissions support the corresponding shortcuts and temporary actions.
 
-## Development
-
-The project uses Vue, TypeScript, Vuetify, Webpack and npm. Node.js versions 22 through 24 are supported. The committed `package-lock.json` is the source of truth for dependency installation.
-
-```bash
-npm ci --prefer-offline --no-audit --no-fund
-npm run check
-```
-
-Useful commands:
-
-```bash
-npm test
-npm run typecheck
-npm run lint
-npm run format:check
-npm run build
-npm run build:firefox
-npm run build:chrome
-npm run package:artifacts
-```
-
-`npm run check` performs the same source, test, browser-build, Firefox-lint and package-structure checks used by CI. Production builds are written to `dist/`. Validated ZIP/XPI packages and SHA-256 checksums are written to `artifacts/` by `npm run package:artifacts`.
-
-## Releases
-
-Stable release tags must match the exact version in `package.json`, `manifest.firefox.json` and `manifest.chrome.json`, for example `v4.2.0`. Release candidates append a prerelease suffix to the same base version, for example `v4.2.0-rc.11`.
-
-The release workflow validates the source from a clean checkout, builds separate Firefox and Chrome packages, creates a source archive containing `SOURCE_COMMIT.txt`, generates SHA-256 checksums and refuses to overwrite an existing GitHub release. Tags with a prerelease suffix are published as prereleases.
+To perform its core functions, the extension sends the configured authentication information and the current domain to the Pi-hole addresses you provide. It does not send this information to the developers, analytics services or unrelated third parties. See the complete [privacy policy](PRIVACY).
 
 ## Troubleshooting
 
@@ -110,6 +111,17 @@ A status can only be determined when the current page has a usable domain, the P
 ### Group actions are unavailable
 
 Save and verify a working Pi-hole v6 connection first. The selected client group must exist on every Pi-hole instance involved in the action.
+
+## Development
+
+The project uses Vue, TypeScript, Vuetify, Webpack and npm. Node.js versions 22 through 24 are supported.
+
+```bash
+npm ci --prefer-offline --no-audit --no-fund
+npm run check
+```
+
+`npm run check` performs the complete TypeScript, lint, formatting, test and browser-build validation used by CI. See [CONTRIBUTING.md](CONTRIBUTING.md) for development details.
 
 ## Contributors
 

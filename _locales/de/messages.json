@@ -21,7 +21,7 @@
   "options_client_group_load_error": {"message": "Client-Gruppen konnten nicht geladen werden. Speichere zuerst eine funktionierende Pi-hole-Verbindung."},
   "options_hide_group_selector_in_popup": {"message": "Client-Gruppen-Auswahl im Popup ausblenden"},
   "options_hide_group_list_actions_in_popup": {"message": "Gruppenbezogene Whitelist- und Blacklist-Aktionen im Popup ausblenden"},
-  "options_badge_uses_selected_group": {"message": "Blockstatus im Erweiterungs-Icon anhand der ausgewählten Client-Gruppe bestimmen"},
+  "options_badge_uses_selected_group": {"message": "Blockstatus im Toolbar-Badge anhand der ausgewählten Client-Gruppe bestimmen"},
   "options_group_pause_times_title": {"message": "Zeitvorgaben für Gruppenpausen"},
   "options_group_pause_time_label": {"message": "Gruppenpause"},
   "options_group_pause_time_hint": {"message": "Wird für die drei orangefarbenen Gruppen-Buttons verwendet. Mindestens 10 Sekunden"},
