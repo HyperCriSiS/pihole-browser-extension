@@ -28,6 +28,14 @@
 		"persistent": true,
 		"page": "background.html"
 	},
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "pihole-browser-extension@hypercrisis.dev",
+			"data_collection_permissions": {
+				"required": ["authenticationInfo", "browsingActivity"]
+			}
+		}
+	},
 	"permissions": [
 		"storage",
 		"<all_urls>",

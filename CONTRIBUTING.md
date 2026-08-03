@@ -33,12 +33,11 @@ Generated directories and browser packages must not be committed.
 
 ## Pull requests
 
+- Use `dev` as the integration branch. Normal pull requests should target `dev`; `master` contains release-ready code.
+- Small, low-risk maintainer changes may be committed directly to `dev`. Larger or experimental changes should use a short-lived branch.
 - Keep code, workflows, commit messages and pull-request text in English.
 - Keep functional changes separate from CI, dependency or formatting-only changes.
 - Update or add tests when behavior changes.
 - Do not commit secrets, Pi-hole credentials, local configuration, generated archives or build output.
 - Ensure `npm run check` succeeds before requesting review.
-
-## Releases
-
-A stable release tag must exactly match the version in `package.json` and both browser manifests, for example `v4.2.0`. A release-candidate tag uses the same base version plus a prerelease suffix, for example `v4.2.0-rc.11`. The release workflow validates and packages the tagged commit, marks prerelease tags automatically and refuses to replace an existing release.
+- Delete short-lived branches after their pull requests are merged or closed.
