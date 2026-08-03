@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { readFile } from 'node:fs/promises'
-import { composeToolbarIconState } from '../src/service/BadgeState.ts'
+import {
+  composeToolbarIconState,
+  formatTemporaryBadgeText,
+  getToolbarBadgePresentation,
+} from '../src/service/BadgeState.ts'
 
 test('blocked domains replace an active icon with the blocked variant', () => {
   assert.equal(composeToolbarIconState('active', 'blocked'), 'blocked')
@@ -25,7 +29,35 @@ test('unknown global or domain states use the unknown variant', () => {
   assert.equal(composeToolbarIconState('active', 'unknown'), 'unknown')
 })
 
-test('all toolbar icon variants exist in 16, 32 and 48 pixels', async () => {
+test('native toolbar badges use short, distinct status labels', () => {
+  assert.deepEqual(getToolbarBadgePresentation('active'), {
+    text: '✓',
+    backgroundColor: '#16A34A',
+    textColor: '#FFFFFF',
+  })
+  assert.equal(getToolbarBadgePresentation('blocked').text, '×')
+  assert.equal(getToolbarBadgePresentation('disabled').text, 'OFF')
+  assert.equal(getToolbarBadgePresentation('error').text, '!')
+  assert.deepEqual(
+    getToolbarBadgePresentation('unknown'),
+    getToolbarBadgePresentation('error'),
+  )
+})
+
+test('temporary badge text remains within the native four-character limit', () => {
+  assert.equal(formatTemporaryBadgeText(null), '…')
+  assert.equal(formatTemporaryBadgeText(45), '45s')
+  assert.equal(formatTemporaryBadgeText(300), '5m')
+  assert.equal(formatTemporaryBadgeText(7200), '2h')
+  assert.equal(formatTemporaryBadgeText(259200), '3d')
+  assert.equal(formatTemporaryBadgeText(1000 * 86400), '>99d')
+
+  for (const seconds of [1, 59, 60, 3599, 3600, 86399, 86400]) {
+    assert.ok(formatTemporaryBadgeText(seconds).length <= 4)
+  }
+})
+
+test('all popup status icon variants exist in 16, 32 and 48 pixels', async () => {
   const states = [
     'unknown',
     'active',

@@ -33,11 +33,11 @@ This fork is actively maintained.
 - Assign whitelist or blacklist rules specifically to the selected group.
 - Temporarily whitelist the current domain for configurable durations.
 - Enable, disable or temporarily pause filtering for the selected group.
-- Use the selected group's domain status for the toolbar icon.
+- Use the selected group's domain status for the toolbar badge.
 
 ### Customization and shortcuts
 
-- Show active, blocked, temporarily allowed, disabled and error/unknown states directly through the toolbar icon.
+- Keep the extension logo recognizable and show active, blocked, temporarily allowed, disabled and error/unknown states through a native, color-coded toolbar badge.
 - Configure the three presets used for temporary domain whitelisting and group pauses.
 - Hide the client-group selector or individual action sections from the popup.
 - Use keyboard shortcuts and browser context-menu actions.
@@ -57,7 +57,7 @@ This fork is actively maintained.
 2. Enter the complete Pi-hole address, including `http://` or `https://` and any required path.
 3. Enter the Pi-hole web-interface password.
 4. Save the connection and verify it with the connection check.
-5. Optionally select a default client group and customize the popup, toolbar icon and timer presets.
+5. Optionally select a default client group and customize the popup, toolbar badge and timer presets.
 
 Multiple Pi-hole instances are supported, but combined behavior can vary with the network and Pi-hole configuration. Test the intended actions before relying on a multi-instance setup.
 

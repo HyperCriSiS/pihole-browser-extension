@@ -1,20 +1,18 @@
 <template>
   <v-app>
     <v-navigation-drawer>
-      <v-list-item class="py-3">
-        <template #prepend>
-          <img
-            class="navigation-logo"
-            src="icon/icon-128.png"
-            alt=""
-            width="60"
-            height="60"
-          />
-        </template>
-        <v-list-item-title class="text-h6">
+      <div class="navigation-header">
+        <img
+          class="navigation-logo"
+          src="icon/icon-128.png"
+          alt=""
+          width="44"
+          height="44"
+        />
+        <div class="navigation-title text-h6">
           PiHole<br />Browser<br />Extension
-        </v-list-item-title>
-      </v-list-item>
+        </div>
+      </div>
 
       <v-divider></v-divider>
 
@@ -91,9 +89,21 @@ export default defineComponent({
 <style scoped lang="scss">
 .navigation-logo {
   display: block;
-  flex: 0 0 auto;
-  width: 60px;
-  height: 60px;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
+}
+
+.navigation-header {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 12px;
+  min-height: 76px;
+  padding: 12px 12px 12px 16px;
+}
+
+.navigation-title {
+  line-height: 1.15;
 }
 </style>

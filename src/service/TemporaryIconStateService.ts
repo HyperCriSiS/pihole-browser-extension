@@ -15,19 +15,34 @@ export default class TemporaryIconStateService {
     domain: string,
     groupName?: string | null,
   ): Promise<boolean> {
+    return (await this.getRemainingSeconds(domain, groupName)) !== null
+  }
+
+  public static async getRemainingSeconds(
+    domain: string,
+    groupName?: string | null,
+  ): Promise<number | null> {
     if (!domain) {
-      return false
+      return null
     }
 
     const storage = await this.getStorage()
     const now = Date.now()
 
-    return Object.values(storage.actions).some(
-      (action) =>
-        action.domain === domain &&
-        action.expiresAt > now &&
-        (!groupName || action.groupName === groupName),
-    )
+    const matchingExpiryTimes = Object.values(storage.actions)
+      .filter(
+        (action) =>
+          action.domain === domain &&
+          action.expiresAt > now &&
+          (!groupName || action.groupName === groupName),
+      )
+      .map((action) => action.expiresAt)
+
+    if (matchingExpiryTimes.length === 0) {
+      return null
+    }
+
+    return Math.ceil((Math.max(...matchingExpiryTimes) - now) / 1000)
   }
 
   private static async getStorage(): Promise<TemporaryStorage> {
