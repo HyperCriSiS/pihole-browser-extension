@@ -1,17 +1,21 @@
 # Privacy Policy
 
-The Pi-hole Browser Extension needs access to the current browser tab and to the Pi-hole addresses configured by the user in order to provide its core functionality.
+Wormhole Connector needs access to the current browser tab and to the Pi-hole addresses configured by the user in order to provide its core functionality.
 
 ## Data processed
 
 - The current domain is sent to the configured Pi-hole instances for status checks and whitelist or blacklist actions.
 - The Pi-hole address and authentication information are sent only to the corresponding configured Pi-hole instance.
-- Pi-hole connection details, preferences and temporary-action state are stored locally in the browser's extension storage and are not placed in browser synchronization storage.
+- Pi-hole connection details, passwords, preferences and temporary-action state are stored in the browser's local extension storage.
+- Pi-hole session IDs are stored only in the browser's non-persistent extension session storage and are removed when sessions are closed or connection settings are replaced.
+- Settings backups exclude passwords by default. The user must explicitly enable credential inclusion for an exported file.
+- Browser-account synchronization is disabled by default. When enabled explicitly, it synchronizes only safe settings and connection addresses. Pi-hole passwords and session IDs are never synchronized.
 
 ## Data sharing
 
-The extension does not send user data to the developers, analytics services or unrelated third parties. It does not use telemetry or advertising services. Network requests made for Pi-hole control are directed only to addresses explicitly configured by the user.
+Wormhole Connector does not send user data to the developers, analytics services, advertising services or unrelated third parties. Network requests made for Pi-hole control are directed only to addresses explicitly configured by the user.
 
-Links opened by the user, such as the GitHub issue tracker, donation page or uninstall survey, are external websites and are governed by their respective privacy policies.
+The extension does not install or contact an uninstall survey. Links opened deliberately by the user, such as the GitHub issue tracker or donation page, are external websites and are governed by their respective privacy policies.
 
 Copyright (c) 2020 Pascal Glaser
+Copyright (c) 2026 HyperCriSiS
