@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
-	"name": "PiHole Browser Extension",
+	"name": "Wormhole Connector",
 	"version": "4.2.0",
-	"author": "Pascal Glaser",
+	"author": "Pascal Glaser, HyperCriSiS",
 	"description": "__MSG_manifest_description__",
 	"default_locale": "en",
 	"icons": {
