@@ -34,6 +34,8 @@
         </v-btn>
       </v-card-text>
     </v-card>
+
+    <OptionDataManagementComponent />
   </div>
 </template>
 
@@ -46,13 +48,15 @@ import useTranslation from '../../../../hooks/translation'
 import OptionCheckboxComponent from '../settings/OptionCheckboxComponent.vue'
 import OptionTabComponent from '../settings/OptionTabComponent.vue'
 import OptionDisableTimeComponent from '../settings/OptionDisableTimeComponent.vue'
+import OptionDataManagementComponent from '../settings/OptionDataManagementComponent.vue'
 
 export default defineComponent({
-  name: 'OptionAboutExtension',
+  name: 'OptionSettingsView',
   components: {
     OptionDisableTimeComponent,
     OptionTabComponent,
     OptionCheckboxComponent,
+    OptionDataManagementComponent,
   },
   setup: () => {
     const { translate } = useTranslation()
@@ -104,9 +108,6 @@ export default defineComponent({
   },
 })
 
-/**
- * Interface that represents a checkbox option in the settings
- */
 interface GenericCheckboxComponent {
   labelTextKey: I18NOptionKeys
   getterFunction: () => Promise<boolean | undefined> | Promise<boolean>
