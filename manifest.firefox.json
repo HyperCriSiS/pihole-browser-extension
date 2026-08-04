@@ -1,8 +1,8 @@
 {
 	"manifest_version": 2,
-	"name": "PiHole Browser Extension",
+	"name": "Wormhole Connector",
 	"version": "4.2.0",
-	"author": "Pascal Glaser",
+	"author": "Pascal Glaser, HyperCriSiS",
 	"description": "__MSG_manifest_description__",
 	"default_locale": "en",
 	"icons": {
@@ -31,6 +31,7 @@
 	"browser_specific_settings": {
 		"gecko": {
 			"id": "pihole-browser-extension@hypercrisis.dev",
+			"strict_min_version": "140.0",
 			"data_collection_permissions": {
 				"required": ["authenticationInfo", "browsingActivity"]
 			}
