@@ -1,6 +1,6 @@
 import OperationLockService from './OperationLockService'
 
-export type TransactionParticipant<TSnapshot, TResult> = {
+export type TransactionParticipant<TSnapshot = any, TResult = any> = {
   id: string
   preflight: () => Promise<TSnapshot>
   apply: (snapshot: TSnapshot) => Promise<TResult>
@@ -36,7 +36,7 @@ const RECOVERY_KEY = 'wormhole_connector_pending_transaction'
  * recovery record remains available when rollback itself is incomplete.
  */
 export default class MultiInstanceTransactionService {
-  public static async run<TSnapshot, TResult>(
+  public static async run<TSnapshot = any, TResult = any>(
     operation: string,
     participants: TransactionParticipant<TSnapshot, TResult>[],
   ): Promise<TResult[]> {
@@ -44,62 +44,67 @@ export default class MultiInstanceTransactionService {
       return []
     }
 
-    return OperationLockService.runExclusive(`transaction:${operation}`, async () => {
-      const snapshots = new Map<string, TSnapshot>()
-      for (const participant of participants) {
-        snapshots.set(participant.id, await participant.preflight())
-      }
-
-      const record: TransactionRecoveryRecord<TSnapshot> = {
-        operation,
-        startedAt: Date.now(),
-        participantIds: participants.map(({ id }) => id),
-        snapshots: Object.fromEntries(snapshots),
-        appliedParticipantIds: [],
-        rollbackFailures: [],
-      }
-      await this.saveRecoveryRecord(record)
-
-      const results: TResult[] = []
-      const applied: TransactionParticipant<TSnapshot, TResult>[] = []
-
-      try {
+    return OperationLockService.runExclusive(
+      `transaction:${operation}`,
+      async () => {
+        const snapshots = new Map<string, TSnapshot>()
         for (const participant of participants) {
-          const snapshot = snapshots.get(participant.id) as TSnapshot
-          results.push(await participant.apply(snapshot))
-          applied.push(participant)
-          record.appliedParticipantIds.push(participant.id)
-          await this.saveRecoveryRecord(record)
+          snapshots.set(participant.id, await participant.preflight())
         }
 
-        await this.clearRecoveryRecord()
-        return results
-      } catch (cause) {
-        for (const participant of [...applied].reverse()) {
-          try {
-            await participant.rollback(snapshots.get(participant.id) as TSnapshot)
-          } catch (rollbackError) {
-            console.error(
-              `Rollback failed for ${participant.id} during ${operation}`,
-              rollbackError,
-            )
-            record.rollbackFailures.push(participant.id)
+        const record: TransactionRecoveryRecord<TSnapshot> = {
+          operation,
+          startedAt: Date.now(),
+          participantIds: participants.map(({ id }) => id),
+          snapshots: Object.fromEntries(snapshots),
+          appliedParticipantIds: [],
+          rollbackFailures: [],
+        }
+        await this.saveRecoveryRecord(record)
+
+        const results: TResult[] = []
+        const applied: TransactionParticipant<TSnapshot, TResult>[] = []
+
+        try {
+          for (const participant of participants) {
+            const snapshot = snapshots.get(participant.id) as TSnapshot
+            results.push(await participant.apply(snapshot))
+            applied.push(participant)
+            record.appliedParticipantIds.push(participant.id)
+            await this.saveRecoveryRecord(record)
           }
-        }
 
-        if (record.rollbackFailures.length === 0) {
           await this.clearRecoveryRecord()
-        } else {
-          await this.saveRecoveryRecord(record)
-        }
+          return results
+        } catch (cause) {
+          for (const participant of [...applied].reverse()) {
+            try {
+              await participant.rollback(
+                snapshots.get(participant.id) as TSnapshot,
+              )
+            } catch (rollbackError) {
+              console.error(
+                `Rollback failed for ${participant.id} during ${operation}`,
+                rollbackError,
+              )
+              record.rollbackFailures.push(participant.id)
+            }
+          }
 
-        throw new MultiInstanceTransactionError(
-          `The operation '${operation}' failed and was rolled back where possible.`,
-          cause,
-          record.rollbackFailures,
-        )
-      }
-    })
+          if (record.rollbackFailures.length === 0) {
+            await this.clearRecoveryRecord()
+          } else {
+            await this.saveRecoveryRecord(record)
+          }
+
+          throw new MultiInstanceTransactionError(
+            `The operation '${operation}' failed and was rolled back where possible.`,
+            cause,
+            record.rollbackFailures,
+          )
+        }
+      },
+    )
   }
 
   public static async getRecoveryRecord(): Promise<
