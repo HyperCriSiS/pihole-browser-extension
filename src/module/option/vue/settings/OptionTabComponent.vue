@@ -7,7 +7,7 @@
         :value="index"
         @click="resetConnectionCheckAndCheck"
       >
-        PiHole {{ index + 1 }}
+        Pi-hole {{ index + 1 }}
       </v-tab>
     </v-tabs>
     <v-window v-model="currentTab">
@@ -148,6 +148,7 @@ import {
 } from '../../../../service/StorageService'
 import { PiHoleVersionsV6 } from '../../../../api/models/PiHoleVersions'
 import PiHoleApiService from '../../../../service/PiHoleApiService'
+import { normalizePiHoleUrl } from '../../../../service/UrlService'
 import useTranslation from '../../../../hooks/translation'
 
 enum ConnectionCheckStatus {
@@ -185,24 +186,29 @@ export default defineComponent({
 
     const currentSelectedSettings = computed(() => tabs.value[currentTab.value])
 
+    const isValidUrlSchema = (piHoleUrl: string) => {
+      try {
+        normalizePiHoleUrl(String(piHoleUrl ?? ''))
+        return true
+      } catch {
+        return false
+      }
+    }
+
     const normalizeSettings = (): PiHoleSettingsStorage[] =>
       tabs.value.map((setting) => ({
-        pi_uri_base: String(setting.pi_uri_base ?? '').replace(/\s+/g, ''),
-        api_key: String(setting.api_key ?? '').replace(/\s+/g, ''),
+        pi_uri_base: normalizePiHoleUrl(String(setting.pi_uri_base ?? '')),
+        // Pi-hole passwords are opaque. Spaces are valid and must be retained.
+        api_key: String(setting.api_key ?? ''),
       }))
 
-    const isValidUrlSchema = (piHoleUrl: string) =>
-      /^(http|https):\/\/[^ "]+$/.test(String(piHoleUrl ?? ''))
-
-    const canSave = computed(() => {
-      const normalizedSettings = normalizeSettings()
-      return (
-        normalizedSettings.length > 0 &&
-        normalizedSettings.every((setting) =>
-          isValidUrlSchema(setting.pi_uri_base ?? ''),
-        )
-      )
-    })
+    const canSave = computed(
+      () =>
+        tabs.value.length > 0 &&
+        tabs.value.every((setting) =>
+          isValidUrlSchema(String(setting.pi_uri_base ?? '')),
+        ),
+    )
 
     const connectionCheck = () => {
       connectionCheckStatus.value = ConnectionCheckStatus.IDLE
@@ -250,6 +256,10 @@ export default defineComponent({
       saving.value = true
       saveState.value = null
       try {
+        const previousSettings =
+          (await StorageService.getPiHoleSettingsArray()) ?? []
+        await PiHoleApiService.closeAllSessions(previousSettings)
+
         const normalizedSettings = normalizeSettings()
         await StorageService.savePiHoleSettingsArray(normalizedSettings)
         tabs.value = normalizedSettings
@@ -279,11 +289,10 @@ export default defineComponent({
     })
 
     const toggleApiKeyVisibility = () => {
-      if (passwordInputType.value === PasswordInputType.password) {
-        passwordInputType.value = PasswordInputType.text
-      } else {
-        passwordInputType.value = PasswordInputType.password
-      }
+      passwordInputType.value =
+        passwordInputType.value === PasswordInputType.password
+          ? PasswordInputType.text
+          : PasswordInputType.password
     }
 
     const addNewPiHole = () => {
