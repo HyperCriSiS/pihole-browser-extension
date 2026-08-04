@@ -54,6 +54,19 @@ export enum I18NOptionKeys {
   option_connection_check_ok = 'option_connection_check_ok',
   option_connection_check_error = 'option_connection_check_error',
   option_multiple_connections = 'option_multiple_connections',
+  options_data_management_title = 'options_data_management_title',
+  options_data_management_info = 'options_data_management_info',
+  options_backup_include_credentials = 'options_backup_include_credentials',
+  options_backup_export = 'options_backup_export',
+  options_backup_import_select = 'options_backup_import_select',
+  options_backup_import_preview = 'options_backup_import_preview',
+  options_backup_import_apply = 'options_backup_import_apply',
+  options_backup_error = 'options_backup_error',
+  options_backup_success = 'options_backup_success',
+  options_safe_sync = 'options_safe_sync',
+  options_safe_sync_hint = 'options_safe_sync_hint',
+  options_yes = 'options_yes',
+  options_no = 'options_no',
 }
 
 export enum I18NPopupKeys {
@@ -92,7 +105,6 @@ export enum I18NPopupKeys {
 export enum LinkConfig {
   paypal_donation_link = 'https://www.paypal.com/donate/?hosted_button_id=CXLHH44DFQCY4',
   github_troubleshooting = 'https://github.com/HyperCriSiS/pihole-browser-extension#troubleshooting',
-  uninstall_survey = 'https://forms.gle/RsGUyrmB1jtsGhYQ9',
   github_issue = 'https://github.com/HyperCriSiS/pihole-browser-extension/issues',
   github_user_badsgahhl = 'https://github.com/badsgahhl',
   github_user_erikr729 = 'https://github.com/Limatationz',
